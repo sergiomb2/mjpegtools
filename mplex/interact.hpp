@@ -95,7 +95,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.2"
-#define MPLEX_DATE   "$Date: 2003/02/10 16:51:16 $"
+#define MPLEX_DATE   "$Date: 2003/02/12 19:32:03 $"
 
 
 #endif // __INTERACT_H__
