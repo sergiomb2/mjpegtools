@@ -1061,7 +1061,8 @@ char *argv[];
    dv_init();
    decoder->quality = DV_QUALITY_BEST;
 #endif
-   streamout();
+   if (delta_lum_threshold != -1) streamout();
+   else write_edit_list(param_scenefile, 0, el.video_frames, &el);
 
    return 0;
 }
