@@ -37,7 +37,7 @@
 *************************************************************************/
  
 #define MPLEX_VER    "1.5.1"
-#define MPLEX_DATE   "$Date: 2001/07/13 06:51:37 $"
+#define MPLEX_DATE   "$Date: 2001/08/05 15:32:37 $"
 
 
 
@@ -160,6 +160,7 @@ extern int opt_packets_per_pack;
 extern clockticks opt_max_PTS;
 extern int opt_emul_vcdmplex;
 extern bool opt_stills;
+extern bool opt_ignore_underrun;
 extern int verbose;
 
 extern unsigned int audio_buffer_size;
