@@ -1,6 +1,6 @@
 
 /*
- * $Id: y4mblackfix.c,v 1.4 2003/03/13 05:21:25 sms00 Exp $
+ * $Id: y4mblackfix.c,v 1.5 2003/03/13 05:31:47 sms00 Exp $
  *
  * written by Steven M. Schultz <sms@2BSD.COM>
  * Simple filter to reduce the wandering grey blocks that can be seen in
@@ -213,7 +213,8 @@ gotenough:
 					}
 				}
 			}
-		mjpeg_info("frame %d replaced %d", frames, num_replaced);
+		if	(num_replaced)
+			mjpeg_info("frame %d replaced %d", frames,num_replaced);
 outputframe:
                 y4m_write_frame(fileno(stdout), &ostream, &iframe, yuv);
                 }
