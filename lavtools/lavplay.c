@@ -148,7 +148,7 @@ void x_shutdown(int a);
 void add_new_frames(char *movie, int nc1, int nc2, int dest);
 void cut_copy_frames(int nc1, int nc2, char cut_or_copy);
 void paste_frames(int dest);
-
+void check_min_max(void);
 
 int  verbose = 6;
 
@@ -477,6 +477,21 @@ void x_shutdown(int a)
    these easier. Think about a move a scene (nc1, nc2) to position nc3,
    delete a scene (nc1, nc2), etc. */
 
+void check_min_max()
+{
+	/* A few simple checks to make sure things don't go wrong */
+	if (min_frame_num < 0)
+		min_frame_num = 0;
+	if (max_frame_num < 0)
+		max_frame_num = 0;
+	if (min_frame_num >= el.video_frames)
+		min_frame_num = el.video_frames-1;
+	if (max_frame_num >= el.video_frames)
+		max_frame_num = el.video_frames-1;
+	if (min_frame_num>max_frame_num)
+		max_frame_num = min_frame_num;
+}
+
 void add_new_frames(char *movie, int nc1, int nc2, int dest)
 {
 	/* This will add frames nc1->nc2 from new
@@ -548,8 +563,14 @@ void cut_copy_frames(int nc1, int nc2, char cut_or_copy)
 		{
 			if(nframe>=nc1 && nframe<=nc2) nframe = nc1-1;
 			if(nframe>nc2) nframe -= k;
-			for(i=nc2+1;i<el.video_frames;i++) el.frame_list[i-k] = el.frame_list[i];
+			for(i=nc2+1;i<el.video_frames;i++)
+			{
+				el.frame_list[i-k] = el.frame_list[i];
+				if(i-k < min_frame_num) min_frame_num--;
+				if(i-k <= max_frame_num) max_frame_num--;
+			}
 			el.video_frames -= k;
+			check_min_max();
 		}
 		printf("Cut/Copy done ---- !!!!\n");
 	}
@@ -571,8 +592,14 @@ void paste_frames(int dest)
 	k = save_list_len;
 	for(i=el.video_frames-1;i>=dest;i--) el.frame_list[i+k] = el.frame_list[i];
 	k = dest;
-	for(i=0;i<save_list_len;i++) el.frame_list[k++] = save_list[i];
+	for(i=0;i<save_list_len;i++)
+	{
+		if(k<=min_frame_num) min_frame_num++;
+		if(k<max_frame_num) max_frame_num++;
+		el.frame_list[k++] = save_list[i];
+	}
 	el.video_frames += save_list_len;
+	check_min_max();
 	printf("Paste done ---- !!!!\n");
 
 	inc_frames(dest-nframe);
@@ -957,7 +984,7 @@ int main(int argc, char ** argv)
    
    /* Set field polarity for interlaced video */
    
-	bp.odd_even = (el.video_inter==LAV_INTER_EVEN_FIRST);
+	bp.odd_even = (el.video_inter==LAV_INTER_ODD_FIRST);
 	if(exchange_fields) bp.odd_even = !bp.odd_even;
 
 	mjpeg_set_params(mjpeg, &bp);
@@ -1170,8 +1197,14 @@ int main(int argc, char ** argv)
 					k = nc2 - nc1+1;
 					if(nframe>=nc1 && nframe<=nc2) nframe = nc1-1;
 					if(nframe>nc2) nframe -= k;
-					for(i=nc2+1;i<el.video_frames;i++) el.frame_list[i-k] = el.frame_list[i];
+					for(i=nc2+1;i<el.video_frames;i++)
+					{
+						el.frame_list[i-k] = el.frame_list[i];
+						if(i-k < min_frame_num) min_frame_num--;
+						if(i-k <= max_frame_num) max_frame_num--;
+					}
 					el.video_frames -= k;
+					check_min_max();
 				}
 
 				if(input_buffer[1]=='a')
