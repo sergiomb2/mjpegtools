@@ -1,5 +1,5 @@
 /* 
- * $Id: y4munsharp.c,v 1.2 2004/11/12 01:43:57 sms00 Exp $
+ * $Id: y4munsharp.c,v 1.3 2004/11/17 05:00:49 sms00 Exp $
  *
  * Constructed using:
  * unsharp.c 0.10 -- This is a plug-in for the GIMP 1.0
@@ -71,7 +71,7 @@ static int gen_convolve_matrix(double, double **);
 	int	cmatrix_y_len, cmatrix_uv_len;
 	double	*cmatrix_y, *cmatrix_uv, *ctable_y, *ctable_uv;
 
-	int	lowy = 16, highy = 240, lowuv = 16, highuv = 235;
+	int	lowy = 16, highy = 235, lowuv = 16, highuv = 240;
 
 main(int argc, char **argv)
 	{
@@ -357,7 +357,7 @@ merging:
 				diff = 0;
 			value = *i_ptr + (y_amount * diff);
 /*
- * For video the limits are 16 and 240 for the luma rather than 0 and 255!
+ * For video the limits are 16 and 235 for the luma rather than 0 and 255!
 */
 			if	(value < lowy)
 				value = lowy;
@@ -644,8 +644,8 @@ void usage(void)
 	fprintf(stderr, "%s:\tchroma not filtered UNLESS -C used, no default\n",
 		__progname);
 	fprintf(stderr, "%s:-v verbose 0=quiet 1=normal 2=debug (default: 1)\n", __progname);
-	fprintf(stderr, "%s:-N disables the Y' 16-240 clip/core\n", __progname);
-	fprintf(stderr, "%s:   disables the CbCr 16-235 clip/core\n", __progname);
+	fprintf(stderr, "%s:-N disables the Y' 16-235 clip/core\n", __progname);
+	fprintf(stderr, "%s:   disables the CbCr 16-240 clip/core\n", __progname);
 	fprintf(stderr, "%s:   (allow the entire 0 to 255 range).\n", __progname);
 	exit(1);
 	}
