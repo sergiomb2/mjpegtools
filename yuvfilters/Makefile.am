@@ -1,3 +1,6 @@
+EXTRA_DIST = install_symlink.sh README.yuvkineco README.2-3pulldown .cvsignore
+MAINTAINERCLEANFILES = Makefile.in
+
 YUVFILTER =\
  libyuvthru.la\
  #
@@ -5,19 +8,19 @@ YUVFILTER =\
 # for buggy version of libtools, link $(YSTMEDIA) if not USE_DLFCN_H
 
 if USE_MEDIA_FILE
-YSTFILE = $(top_srcdir)/mjpegtools/libystfile.la
+YSTFILE = $(top_builddir)/mjpegtools/libystfile.la
 else
 YSTFILE =
 endif
 
 if USE_MEDIA_STACK
-YSTSTACK = $(top_srcdir)/mjpegtools/libyststack.la
+YSTSTACK = $(top_builddir)/mjpegtools/libyststack.la
 else
 YSTSTACK =
 endif
 
 if USE_MEDIA_GST
-YSTGST = $(top_srcdir)/mjpegtools/libystgst.la
+YSTGST = $(top_builddir)/mjpegtools/libystgst.la
 else
 YSTGST =
 endif
@@ -25,70 +28,45 @@ endif
 YSTMEDIA = $(YSTFILE) $(YSTSTACK) $(YSTGST)
 
 if USE_DLFCN_H
-YSTLIBRARIES = $(top_srcdir)/mjpegtools/libyst.la
+YSTLIBRARIES = $(top_builddir)/mjpegtools/libyst.la
 else
-YSTLIBRARIES = $(YUVFILTER) $(top_srcdir)/mjpegtools/libyst.la $(YSTMEDIA)
+YSTLIBRARIES = $(YUVFILTER) $(top_builddir)/mjpegtools/libyst.la $(YSTMEDIA)
 endif
 
 LIBLDFLAGS = -release $(VERSION)
 
-bin_PROGRAMS = yuvfilter
-yuvfilter_SOURCES =\
- yuvfilter.c yuvfilter_static.c yuvfilter_static.h
-yuvfilter_LDADD = $(YSTLIBRARIES) -L$(top_srcdir)/utils -lmjpegutils @LIBGETOPT_LIB@ -ldl
+bin_PROGRAMS = yuvycsnoise yuvkineco yuvfilter
+noinst_LIBRARIES = libyuvfilters.a
+pkglib_LTLIBRARIES = $(YUVFILTER)
+
+AM_CPPFLAGS = -I$(top_srcdir)/utils -I$(top_srcdir)/mjpegtools \
+	-DPKGLIBDIR=\"$(pkglibdir)\" -DUSE_LIBYST=1
+MJPEGLIB = $(top_builddir)/utils/libmjpegutils.a
+
+yuvfilter_SOURCES = \
+	yuvfilter.c yuvfilter_static.c yuvfilter_static.h
+yuvfilter_LDADD = $(YSTLIBRARIES) $(MJPEGLIB) @LIBGETOPT_LIB@ -ldl
 yuvfilter_LDFLAGS = -export-dynamic
 
-pkglib_LTLIBRARIES = $(YUVFILTER)
 libyuvthru_la_SOURCES = yuvthru.c
 libyuvthru_la_LDFLAGS = $(LIBLDFLAGS)
 
-O		= .$(if $(OBJEXT),$(OBJEXT),o)
-X		= $(EXEEXT)
+libyuvfilters_a_SOURCES = \
+	yuvfilters.h \
+	addtask.c alloctask.c initframe.c putframe.c yuvstdin.c yuvstdout.c \
+	yuvycsnoise.c yuvkineco.c
 
-READERS		=
-WRITERS		=
-FILTERS		= yuvycsnoise$X yuvkineco$X
-COREOBJS	= addtask$O
-STDOBJS		= $(COREOBJS) alloctask$O initframe$O putframe$O yuvstdin$O yuvstdout$O
-CORECFLAGS	= $(DEBUG) -O2 -Wall -Wpointer-arith -Wcast-align -Wwrite-strings
-CPPFLAGS	= $(INCLUDES) -DPKGLIBDIR=\"$(pkglibdir)\" -DUSE_LIBYST=1
-CFLAGS		= $(CORECFLAGS) -Wcast-qual
-L		= libyuvfilters.a
-BINARIES	= $(READERS) $(WRITERS) $(FILTERS)
-READERMAINS	= $(READERS:$X=_main$O)
-WRITERMAINS	= $(WRITERS:$X=_main$O)
-FILTERMAINS	= $(FILTERS:$X=_main$O)
-MAINS		= $(BINARIES:$X=_main$O)
+yuvkineco_SOURCES = main.c
+yuvkineco_CFLAGS = -DFILTER=yuvkineco
+yuvkineco_LDADD = libyuvfilters.a $(MJPEGLIB)
 
-SYMLINKS        = $(YUVFILTER:lib%.la=%)
-bin_SCRIPTS	= $(BINARIES) $(SYMLINKS)
-INSTALL_SCRIPT  = sh install_symlink.sh
-INCLUDES	= -I$(top_srcdir) -I$(top_srcdir)/mjpegtools -I$(top_srcdir)/utils
-DEPENDENCIES	= $(top_srcdir)/utils/libmjpegutils.a
-LDADD		= -L$(top_srcdir)/utils -lmjpegutils
-CLEANFILES	= $(BINARIES) $(MAINS) $L $(SYMLINKS)
-YFSOURCES	= main.c $(BINARIES:$X=.c) $(STDOBJS:$O=.c) yuvfilters.h
-EXTRA_DIST	= README.yuvkineco README.2-3pulldown .cvsignore install_symlink.sh $(YFSOURCES)
-MAINTAINERCLEANFILES = Makefile.in
+yuvycsnoise_SOURCES = main.c
+yuvycsnoise_CFLAGS = -DFILTER=yuvycsnoise
+yuvycsnoise_LDADD = libyuvfilters.a $(MJPEGLIB)
 
-#%$X: %_main$O $L(%$O $(STDOBJS)) $(DEPENDENCIES)
-#	$(CC) $(LDFLAGS) -o $@ $< $L $(LDADD)
-yuvycsnoise$X: yuvycsnoise_main$O $L(yuvycsnoise$O $(STDOBJS)) $(DEPENDENCIES)
-	$(CC) $(LDFLAGS) -o $@ $< $L $(LDADD)
-yuvkineco$X: yuvkineco_main$O $L(yuvkineco$O $(STDOBJS)) $(DEPENDENCIES)
-	$(CC) $(LDFLAGS) -o $@ $< $L $(LDADD)
-yuvkineco$X: $L(yuvkineco$O)
-yuvycsnoise$X: $L(yuvycsnoise$O)
+SYMLINKS	= $(YUVFILTER:lib%.la=%)
+bin_SCRIPTS	= $(SYMLINKS)
+INSTALL_SCRIPT	= sh $(srcdir)/install_symlink.sh
+CLEANFILES	= $(SYMLINKS)
+
 $(SYMLINKS): yuvfilter ; $(LN_S) yuvfilter $@
-
-$(MAINS): main.c yuvfilters.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
-$(READERMAINS): override CPPFLAGS += -DREADER=$(@:_main$O=)
-$(WRITERMAINS): override CPPFLAGS += -DWRITER=$(@:_main$O=)
-$(FILTERMAINS): override CPPFLAGS += -DFILTER=$(@:_main$O=)
-
-$L(%$O): %.c yuvfilters.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $*$O -c $<
-	$(AR) r $L $*$O
-	$(RM) $*$O
-$L($(COREOBJS)): override CFLAGS = $(CORECFLAGS)
