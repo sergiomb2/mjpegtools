@@ -584,6 +584,7 @@ void outputstream ( char 		*video_file,
 	  Of course, when we start we're starting a new segment with no bytes output...
 	    */
 
+	printf( "%d %d %d\n", video_buffer_size, mux_rate, opt_mux_format );
 	
 	seg_state = start_segment;
 
