@@ -1,5 +1,5 @@
 /*
-    $Id: format_codes.h,v 1.1 2001/06/17 08:57:07 wackston Exp $
+    $Id: format_codes.h,v 1.2 2001/06/26 06:55:02 wackston Exp $
 
     Copyright (C) 2001 Andrew Stevens <andrew.stevens@planet-interkom.de>
 
@@ -27,7 +27,9 @@
 #define MPEG_FORMAT_MPEG2   3
 #define MPEG_FORMAT_SVCD     4
 #define MPEG_FORMAT_SVCD_NSR 5
-#define MPEG_FORMAT_DVD      6
+#define MPEG_FORMAT_VCD_STILL 6
+#define MPEG_FORMAT_SVCD_STILL 7
+#define MPEG_FORMAT_DVD      8
 
 #define MPEG_FORMAT_FIRST 0
 #define MPEG_FORMAT_LAST 5
