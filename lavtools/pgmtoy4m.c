@@ -1,5 +1,5 @@
 /*
- * $Id: pgmtoy4m.c,v 1.8 2003/05/29 06:03:50 sms00 Exp $
+ * $Id: pgmtoy4m.c,v 1.9 2003/09/07 09:31:08 rbultje Exp $
  *
  * pgmtoy4m converts the PGM output of "mpeg2dec -o pgmpipe" to YUV4MPEG2 on
  * stdout.
@@ -70,6 +70,7 @@ piperead(int fd, u_char *buf, int len)
 	return(r);
 	}
 
+int
 main(int argc, char **argv)
 	{
 	int	width, height, uvlen, verbose = 1, fdout, fdin, c, i;
@@ -254,7 +255,8 @@ main(int argc, char **argv)
 		}
 	y4m_fini_frame_info(&oframe);
 	y4m_fini_stream_info(&ostream);
-	exit(0);
+
+	return 0;
 	}
 
 static void
