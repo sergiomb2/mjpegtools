@@ -23,13 +23,13 @@
 
 #include <config.h>
 #include "mjpeg_types.h"
-#include "synchrolib.h"
 #include "picture.hh"
 
 class MPEG2Encoder;
 class EncoderParams;
 class MPEG2Coder;
 class PictureReader;
+class Despatcher;
 
 struct StreamState 
 {
@@ -53,6 +53,7 @@ struct StreamState
 	uint64_t seq_split_length;
 };
 
+
 class SeqEncoder
 {
 public:
@@ -67,9 +68,6 @@ public:
 
 	void Encode();
 private:
-    void CreateThreads( pthread_t *threads,
-                        int num, void *(*start_routine)(void *),
-                        SeqEncoder *seqencoder );
 	int FindGopLength( int gop_start_frame, 
 					   int I_frame_temp_ref,
 					   int gop_min_len, int gop_max_len,
@@ -78,20 +76,15 @@ private:
 	void NextSeqState( StreamState *ss );
 	void LinkPictures( Picture *ref_pictures[], 
 					   Picture *b_pictures[] );
-	static void *ParallelEncodeWrapper( void *seqencoder );
-	void ParallelEncodeWorker();
-	void ParallelEncode( Picture *picture );
-	void SequentialEncode( Picture *picture );
+	void EncodePicture( Picture *picture );
     EncoderParams &encparams;
     PictureReader &reader;
     Quantizer &quantizer;
     ElemStrmWriter &writer;
     MPEG2Coder &coder;
     RateCtl    &ratecontroller;
-
-	mp_semaphore_t worker_available;
-	mp_semaphore_t picture_available;
-	mp_semaphore_t picture_started;
+    
+    Despatcher &despatcher;
 	
 	/*
 	  Ohh, lovely C type syntax... more or less have to introduce a named
@@ -99,9 +92,6 @@ private:
 	  data it points to. K&R: hang your heads in shame...
 	*/
 	
-	typedef Picture * pict_data_ptr;
-
-	volatile pict_data_ptr picture_to_encode;
 };
 
 

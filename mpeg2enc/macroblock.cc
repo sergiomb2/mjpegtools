@@ -25,6 +25,14 @@
 #include "mpeg2syntaxcodes.h"
 #include "picture.hh"
 
+void MacroBlock::Encode()
+{ 
+    MotionEstimate();
+    SelectCodingModeOnVariance();
+    Predict();
+    Transform();
+}
+
 void MacroBlock::MotionEstimate()
 {
 	if (picture->pict_struct==FRAME_PICTURE)

@@ -90,7 +90,7 @@ public:
         qdctblocks(_qdctblocks)
         {
         }
-    
+    void Encode();
     void MotionEstimate();
     void SelectCodingModeOnVariance();
     void FrameME();            // In motionest.cc

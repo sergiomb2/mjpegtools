@@ -367,6 +367,8 @@ void Picture::Set_B_Frame(  StreamState *ss )
 	new_seq = false;
 }
 
+
+
 void Picture::EncodeMacroBlocks()
 { 
     vector<MacroBlock>::iterator mbi = mbinfo.begin();
@@ -374,14 +376,12 @@ void Picture::EncodeMacroBlocks()
 	for( mbi = mbinfo.begin(); mbi < mbinfo.end(); ++mbi)
 	{
         mbi->MotionEstimate();
-        // TODO: Eventually we will allow alternative selectors to be used!
         mbi->SelectCodingModeOnVariance();
         mbi->Predict();
         mbi->Transform();
 	}
 
 }
-
 
 void Picture::IQuantize()
 {

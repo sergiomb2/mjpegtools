@@ -26,31 +26,89 @@
 
 class EncoderParams;
 
-class ElemStrmWriter
+/******************************
+ *
+ * Elementry stream buffering state: used to hold the state of output buffer
+ * at marked points prior to flushing.
+ *
+ *****************************/
+
+class ElemStrmBufferState
+{
+protected:
+    int64_t bytecnt;            // Bytes flushed and pending
+    int32_t unflushed;          // Unflushed bytes in buffer
+    int outcnt;                 // Bits unwritten in current output byte
+                                // (buffer[unflushed]).
+public:
+    int serial_id;              // We count flushes so we can detect
+                                // attempts to rewind back to flushed
+                                // buffer states
+};
+
+class ElemStrmWriter : public ElemStrmBufferState
 {
 public:
 	ElemStrmWriter( EncoderParams &encoder );
-    // TODO eventually byte write will be virtual and buffering
-    // TODO will be part of base class...
+    ~ElemStrmWriter();
+    
+    /********************
+     *
+     * Return a buffer state that we can restore back to (provided no flush
+     * has take place since then!)
+     *
+     * N.b. attempts to mark states that are no byte-aligned are illegal
+     * and will abort
+     *
+     *******************/
+
+    ElemStrmBufferState CurrentState();
+
+    /**************
+     *
+     * Flush out buffer (buffer states recorded up to this point can no
+     * longer be restored).
+     * N.b. attempts to flush in non byte-aligned states are illegal
+     * and will abort
+     *
+     *************/
+    void FlushBuffer();
+
+    /**************
+     *
+     * Restore output state (including the output bit count)
+     * back to the specified state.
+     *
+     *************/
+
+    void RestoreState( const ElemStrmBufferState &restore );
 
     /**************
      *
      * Write rightmost n (0<=n<=32) bits of val to outfile 
      *
      *************/
-    virtual void PutBits( uint32_t val, int n) = 0;
-    virtual void FrameBegin() = 0;
-    virtual void FrameFlush() = 0;
-    virtual void FrameDiscard() = 0;
+    void PutBits( uint32_t val, int n);
+
     void AlignBits();
+    inline bool Aligned() { return outcnt == 8; }
     inline int64_t BitCount() { return 8LL*bytecnt + (8-outcnt); }
 
+    
 protected:
-	EncoderParams &encparams;
-    uint32_t outbfr;
-    int64_t bytecnt;
-    int outcnt;
+    virtual void WriteOutBufferUpto( const size_t flush_upto ) = 0;
+private:
+    void ExpandBuffer();
 
+protected:
+    uint8_t *buffer;            // Output buffer - used to hold byte
+                                // aligned output before flushing or
+                                // backing up and re-encoding
+    uint32_t buffer_size;
+private:
+	EncoderParams &encparams;
+    uint32_t pendingbits;
+    int last_flushed_serial_id; // Serial Id of buffer state flushed last
 };
 
 
@@ -59,11 +117,8 @@ class FILE_StrmWriter : public ElemStrmWriter
 public:
     FILE_StrmWriter( EncoderParams &encoder, const char *ofile_ptr ); 
     virtual ~FILE_StrmWriter();       
-    void PutBits( uint32_t val, int n);
-    void FrameBegin();
-    void FrameFlush();
-    void FrameDiscard();
-    
+    virtual void WriteOutBufferUpto( const size_t flush_upto );
+
 private:
     FILE *outfile;
 };

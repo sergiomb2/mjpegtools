@@ -48,6 +48,7 @@
 
 #include <config.h>
 #include <stdio.h>
+#include <cassert>
 #include "mpeg2syntaxcodes.h"
 #include "tables.h"
 #include "simd.h"
@@ -251,7 +252,7 @@ void MacroBlock::SkippedCoding( bool slice_begin_end )
 /* generate picture header (6.2.3, 6.3.10) */
 void Picture::PutHeader()
 {
-	coder.AlignBits();
+	assert( coder.Aligned() );
 	coder.PutBits(PICTURE_START_CODE,32); /* picture_start_code */
 	coder.PutBits(temp_ref,10); /* temporal_reference */
 	coder.PutBits(pict_type,3); /* picture_coding_type */
@@ -274,9 +275,8 @@ void Picture::PutHeader()
 		else
 			coder.PutBits(7,3); /* backward_f_code */
 	}
-
-
 	coder.PutBits(0,1); /* extra_bit_picture */
+    coder.AlignBits();
 	if ( !encparams.mpeg1 )
 	{
 		PutCodingExt();
@@ -290,7 +290,7 @@ void Picture::PutHeader()
  */
 void Picture::PutCodingExt()
 {
-	coder.AlignBits();
+	assert( coder.Aligned() );
 	coder.PutBits(EXT_START_CODE,32); /* extension_start_code */
 	coder.PutBits(CODING_ID,4); /* extension_start_code_identifier */
 	coder.PutBits(forw_hor_f_code,4); /* forward_horizontal_f_code */
@@ -310,6 +310,7 @@ void Picture::PutCodingExt()
 	coder.PutBits(prog_frame,1); /* chroma_420_type */
 	coder.PutBits(prog_frame,1); /* progressive_frame */
 	coder.PutBits(0,1); /* composite_display_flag */
+    coder.AlignBits();
 }
 
 
@@ -357,9 +358,15 @@ void Picture::PutHeadersAndEncoding( RateCtl &ratecontrol )
 		coder.PutSeqEnd();
 		ratecontrol.InitSeq(true);
 	}
-	/* Handle start of GOP stuff... */
+	/* Handle start of GOP stuff:
+       We've reach a new GOP so we emit what we coded for the
+       previous one as (for the moment) and mark the resulting coder
+       state for eventual backup.
+       Currently, we never backup more that to the start of the current GOP.
+     */
 	if( gop_start )
 	{
+        coder.EmitCoded();
 		ratecontrol.InitGOP( np, nb);
 	}
 
@@ -386,6 +393,7 @@ void Picture::PutHeadersAndEncoding( RateCtl &ratecontrol )
 	}
     
     QuantiseAndPutEncoding(ratecontrol);
+    coder.AlignBits();
 }
 
 /* ************************************************
