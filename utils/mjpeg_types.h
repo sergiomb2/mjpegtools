@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_types.h,v 1.10 2003/11/23 04:36:05 sms00 Exp $
+    $Id: mjpeg_types.h,v 1.11 2003/11/26 21:39:45 sms00 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -20,7 +20,6 @@
 
 #ifndef __MJPEG_TYPES_H__
 #define __MJPEG_TYPES_H__
-//#include <config.h>
 
 #include <sys/types.h> /* FreeBSD, others - ssize_t */
 
