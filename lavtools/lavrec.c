@@ -1,136 +1,145 @@
 /*
-    lavrec - Linux Audio Video RECord
-
-    Copyright (C) 2000 Rainer Johanni <Rainer@Johanni.de>
-    Extended by: Gernot Ziegler <gz@lysator.liu.se>
-    Patched '2000 by Wolfgang Scherr <scherr@net4you.net>
-    Works fine with Miro DC10(plus), too.
-
-
-    Capture motion video from the IOMEGA Buz to an AVI or Quicktime
-    file together with capturing audio from the soundcard.
-
-    Usage: lavrec [options] filename [filename ...]
-
-    where options are as follows:
-
-    -f [aAqm]    Format, 'a' for AVI (default), 'A' for AVI with fields
-                 exchanged, 'q' for quicktime, 'm' for movtar
-                 Hint: If your AVI video looks strange, try 'A' instead 'a'
-                 and vice versa.
-		 
-    -i [pPnNsSa]   Input Source:
-                 'p' PAL   Composite Input
-                 'P' PAL   SVHS-Input
-                 'n' NTSC  Composite Input
-                 'N' NTSC  SVHS-Input
-                 's' SECAM Composite Input
-                 'S' SECAM SVHS-Input
-                 't' TV tuner input (if available)
-                 'a' (or every other letter) Autosense (default)
-
-   -d num        decimation, must be either 1, 2 or 4 for identical decimation
-                 in horizontal and vertical direction (mostly used) or a
-                 two digit letter with the first digit specifying horizontal
-                 decimation and the second digit specifying vertical decimation
-                 (more exotic usages).
-
-   -g WxH+X+Y    An X-style geometry string for capturing subareas.
-                 Even if a decimation > 1 is used, these values are always
-                 coordinates in the undecimated frame.  
-				 For DC10: 768x{576 or 480}.
-				 For others: 720x{576 or 480}.
-                 Also, unlike in X-Window, negative values for X and Y
-                 really mean negative offsets (if this feature is enabled
-                 in the driver) which lets you fine tune the position of the
-                 image caught.
-                 The horizontal resolution of the DECIMATED frame must
-                 allways be a multiple of 16, the vertical resolution
-                 of the DECIMATED frame must be a multiple of 16 for decimation 1
-                 and a multiple of 8 for decimations 2 and 4
-
-                 If not offset (X and Y values) is given, the capture area
-                 is centered in the frame.
-
-   -q num        quality, must be beetween 0 and 100, default is 50
-
-   -t num        Time to capture in seconds, default is unlimited
-                 (use ^C to stop capture!)
-
-   -S            Single frame capture mode
-
-   -T num        Time lapse factor: Video will be played back <num> times
-                 faster, audio is switched off.
-                 If num==1 it is silently ignored.
-
-   -w            Wait for user confirmation to start
-
-   *** Audio settings ***
-
-   -a num        Audio size in bits, must be 0 (no audio), 8 or 16 (default)
-
-   -r num        Audio rate, must be a permitted sampling rate for your soundcard
-                 default is 22050.
-
-   -s            enable stereo (disabled by default)
-
-   -l num        Audio level to use for recording, must be beetwen 0 and 100
-                 or -1 (for not touching the mixer settings at all), default is 100
-
-                 Only if mixer is used (l != -1):
-
-   -m            Mute audio output during recording (default is to let it enabled).
-                 This is particularly usefull if you are recording with a
-                 microphone to avoid feedback.
-
-   -R [lmc]      Recording source:
-                 l: line
-                 m: microphone
-                 c: cdrom
-
-   *** Audio/Video synchronization ***
-
-   -c num        Level of corrections for synchronization:
-                 0: Neither try to replicate lost frames nor any sync correction
-                 1: Replicate frames for lost frames, but no sync correction
-                 2. lost frames replication + sync correction
-
-   *** Special capture settings ***
-
-   -n num        Number of MJPEG capture buffers (default 32)
-
-   -b num        Buffersize of MJPEG buffers in KB (default 256)
-
-
-   There may be given multiple filenames to overcome
-   the AVI (and ext2fs) 2 GB limit:
-
-   Either by giving multiple filenames on the command line
-   or by giving one filename which contains a '%' sign.
-   This name is then interpreted as the format argument to sprintf() 
-   to form multiple file names.
-
-   *** Environment variables ***
-
-   LAV_VIDEO_DEV     Name of video device (default: "/dev/video")
-   LAV_AUDIO_DEV     Name of audio device (default: "/dev/dsp")
-   LAV_MIXER_DEV     Name of mixer device (default: "/dev/mixer")
-
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*/
+ * lavrec - Linux Audio Video RECord
+ *
+ * Copyright (C) 2000 Rainer Johanni <Rainer@Johanni.de>
+ * Extended by: Gernot Ziegler <gz@lysator.liu.se>
+ * Patched '2000 by Wolfgang Scherr <scherr@net4you.net>
+ * Works fine with Miro DC10(plus), too.
+ *
+ *
+ * Capture motion video from the IOMEGA Buz to an AVI or Quicktime
+ * file together with capturing audio from the soundcard.
+ *
+ * Usage: lavrec [options] filename [filename ...]
+ * where options are as follows:
+ *
+ *   -f/--format [aAqm] --- Output file format:
+ *       'a': AVI (default)
+ *       'A': AVI with fields exchanged
+ *       'q': quicktime (if compiled with quicktime support)
+ *       'm': movtar (if compiled with movtar support)
+ *       Hint: If your AVI video looks strange, try 'A' instead 'a'
+ *       and vice versa.
+ *		 
+ *   -i/--input [pPnNsStTa] --- Input Source:
+ *      'p': PAL       Composite Input
+ *      'P': PAL       SVHS-Input
+ *      'n': NTSC      Composite Input
+ *      'N': NTSC      SVHS-Input
+ *      's': SECAM     Composite Input
+ *      'S': SECAM     SVHS-Input
+ *      't': PAL/SECAM TV tuner input (if available)
+ *      'T': NTSC      TV tuner input (if available)
+ *      'a': (or every other letter) Autosense (default)
+ *
+ *   -d/--decimation num --- Frame recording decimation:
+ *      must be either 1, 2 or 4 for identical decimation
+ *      in horizontal and vertical direction (mostly used) or a
+ *      two digit letter with the first digit specifying horizontal
+ *      decimation and the second digit specifying vertical decimation
+ *      (more exotic usages).
+ *
+ *   -g/--geometry WxH+X+Y --- An X-style geometry string (capturing area):
+ *      Even if a decimation > 1 is used, these values are always
+ *      coordinates in the undecimated frame.  
+ *                For DC10: 768x{576 or 480}.
+ *                For others: 720x{576 or 480}.
+ *      Also, unlike in X-Window, negative values for X and Y
+ *      really mean negative offsets (if this feature is enabled
+ *      in the driver) which lets you fine tune the position of the
+ *      image caught.
+ *      The horizontal resolution of the DECIMATED frame must
+ *      allways be a multiple of 16, the vertical resolution
+ *      of the DECIMATED frame must be a multiple of 16 for decimation 1
+ *      and a multiple of 8 for decimations 2 and 4
+ *
+ *      If not offset (X and Y values) is given, the capture area
+ *      is centered in the frame.
+ *
+ *   -q/--quality num --- quality:
+ *      must be between 0 and 100, default is 50
+ *
+ *   -t/--time num -- capturing time:
+ *      Time to capture in seconds, default is unlimited
+ *      (use ^C to stop capture!)
+ *
+ *   -S/--single-frame --- enables single-frame capturing mode
+ *
+ *   -T/--time-lapse num --- time-lapse mode:
+ *      Time lapse factor: Video will be played back <num> times
+ *      faster, audio is switched off.
+ *      This means that only every <num>th frame is recorded.
+ *      If num==1 it is silently ignored.
+ *
+ *   -w/--wait --- Wait for user confirmation to start
+ *
+ **** Audio settings ***
+ *
+ *   -a/--audio-bitsize num --- audio bitsize:
+ *      Audio size in bits, must be 0 (no audio), 8 or 16 (default)
+ *
+ *   -r/--audio_bitrate num --- audio-bitrate:
+ *      Audio rate (in Hz), must be a permitted sampling rate for
+ *      your soundcard. Default is 22050.
+ *
+ *   -s/--stereo --- enable stereo (disabled by default)
+ *
+ *   -l/--audio-volume num --- audio recording level/volume:
+ *      Audio level to use for recording, must be between 0 and 100
+ *      or -1 (for not touching the mixer settings at all), default
+ *      is 100.
+ *
+ *   -m/--mute --- mute output during recording:
+ *      Mute audio output during recording (default is to let it enabled).
+ *      This is particularly usefull if you are recording with a
+ *      microphone to avoid feedback.
+ *
+ *   -R/--audio-source [lmc] --- Audio recording source:
+ *      'l': line-in
+ *      'm': microphone
+ *      'c': cdrom
+ *
+ **** Audio/Video synchronization ***
+ *
+ *   -c/--synchronization num --- Level of corrections for synchronization:
+ *      0: Neither try to replicate lost frames nor any sync correction
+ *      1: Replicate frames for lost frames, but no sync correction
+ *      2. lost frames replication + sync correction
+ *
+ **** Special capture settings ***
+ *
+ *   -n/--mjpeg-buffers num --- Number of MJPEG capture buffers (default 64)
+ *
+ *   -b/--mjpeg-buffer-size num --- Size of MJPEG buffers in KB (default 256)
+ *
+ **** Environment variables ***
+ *
+ * Recognized environment variables:
+ *    LAV_VIDEO_DEV: Name of video device (default: "/dev/video")
+ *    LAV_AUDIO_DEV: Name of audio device (default: "/dev/dsp")
+ *    LAV_MIXER_DEV: Name of mixer device (default: "/dev/mixer")
+ *
+ * To overcome the AVI (and ext2fs) 2 GB filesize limit, you can:
+ *   - give multiple filenames on the command-line
+ *   - give one filename which contains a '%' sign. This name is then
+ *     interpreted as the format argument to sprintf() to form multiple
+ *     file names
+ *
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 
 #include <config.h>
 #include <stdlib.h>
@@ -146,16 +155,44 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/vfs.h>
-
 #include <signal.h>
 #include <stdlib.h>
-
+#include <getopt.h>
 #include <linux/videodev.h>
 #include <linux/soundcard.h>
 #include <videodev_mjpeg.h>
-
+#include "frequencies.h"
 #include "lav_io.h"
 
+/************************** DEFINES **************************/
+/* On some systems MAP_FAILED seems to be missing */
+#ifndef MAP_FAILED
+#define MAP_FAILED ( (caddr_t) -1 )
+#endif
+
+#define NUM_AUDIO_TRIES 500 /* makes 10 seconds with 20 ms pause beetween tries */
+
+#define LAVREC_INTERNAL 0
+#define LAVREC_DEBUG    1
+#define LAVREC_INFO     2
+#define LAVREC_WARNING  3
+#define LAVREC_ERROR    4
+#define LAVREC_PROGRESS 5
+
+#define MAX_MBYTES_PER_FILE 1600  /* Maximum number of Mbytes per file.
+                                     We make a conservative guess since we
+                                     only count the number of bytes output
+                                     and don't know how big the control
+                                     information will be */
+#define MIN_MBYTES_FREE 10        /* Minimum number of Mbytes that should
+                                     stay free on the file system, this is also
+                                     only a guess */
+#define MIN_MBYTES_FREE_OPEN 20   /* Minimum number of Mbytes that have to be
+                                     free in the filesystem when opening a new file */
+#define CHECK_INTERVAL 50         /* Interval for checking free space on file system */
+
+
+/************************** PROTOTYPES **************************/
 /* These are explicit prototypes for the compiler, to prepare separation of audiolib.c */
 void audio_shutdown();
 int audio_init(int a_read, int a_stereo, int a_size, int a_rate);
@@ -171,67 +208,77 @@ int XParseGeometry(char *string, int *x, int *y, unsigned int *width, unsigned i
 int parse_geometry (char *geom, int *x, int *y, int *width, int *height);
 
 
-/* Set the default options here */
-
-static char video_format = 'a';         /* 'a' or 'A' for AVI, 'q' for Quicktime */
-static char input_source = 'a';         /* 'a' for Auto detect, others see above */
-static int  hordcm       = 4;           /* horizontal decimation */
-static int  verdcm       = 4;           /* vertical decimation */
-static int  geom_x       = 0;
-static int  geom_y       = 0;           /* x geometry string:  "WxH+X+Y" */
-static int  geom_width   = 0;
-static int  geom_height  = 0;
-static int  geom_flags   = 0;           /* flags what has been read */
-static int  quality      = 50;          /* determines target size of JPEG code,
-                                           100=max. quality */
-static int  record_time  = 100000;      /* "unlimited" */
-
-static int  single_frame   = 0;         /* continous capture */
-static int  time_lapse     = 1;         /* no time lapse */
-static int  wait_for_start = 0;         /* Wait for user confirmation to start */
-
-static int audio_size    = 16;          /* size of an audio sample: 8 or 16 bits,
-                                           0 for no audio */
-static int audio_rate    = 44100;       /* sampling rate for audio */
-static int stereo        = 0;           /* 0: capture mono, 1: capture stereo */
-static int audio_lev     = 100;         /* Level of Audio input,
-										   0..100: Recording level
-                                           -1:  don't change mixer settings */
-static int audio_mute    = 0;           /* Flag for muting audio output */
-static int audio_recsrc  = 'l';         /* Audio recording source */
-static int sync_corr     = 2;           /* Level of corrections for synchronization */
-static int MJPG_nbufs    = 64;          /* Number of MJPEG buffers */
-static int MJPG_bufsize  = 256;         /* Size   of MJPEG buffers */
-
-static int interlaced;
-
-static int verbose	= 2;
-/* On some systems MAP_FAILED seems to be missing */
-
-#ifndef MAP_FAILED
-#define MAP_FAILED ( (caddr_t) -1 )
-#endif
+/************************** VARIABLES **************************/
+/* defaults */
+static char video_format   = 'a';    /* 'a' or 'A' for AVI, 'q' for Quicktime */
+static char input_source   = 'a';    /* 'a' for Auto detect, others see above */
+static int  hordcm         = 4;      /* horizontal decimation */
+static int  verdcm         = 4;      /* vertical decimation */
+static int  geom_x         = 0;
+static int  geom_y         = 0;      /* x geometry string:  "WxH+X+Y" */
+static int  geom_width     = 0;
+static int  geom_height    = 0;
+static int  geom_flags     = 0;      /* flags what has been read */
+static int  quality        = 50;     /* determines target size of JPEG code,
+                                        100=max. quality */
+static int  record_time    = 100000; /* "unlimited" */
+static int  single_frame   = 0;      /* continous capture */
+static int  time_lapse     = 1;      /* no time lapse */
+static int  wait_for_start = 0;      /* Wait for user confirmation to start */
+static int  audio_size     = 16;     /* Audio sample size: 8/16 bits, 0 = no audio */
+static int  audio_rate     = 44100;  /* sampling rate for audio */
+static int  stereo         = 0;      /* 0: capture mono, 1: capture stereo */
+static int  audio_lev      = 100;    /* Level of Audio input, 0..100: Recording level
+                                        -1:  don't change mixer settings */
+static int  audio_mute     = 0;      /* Flag for muting audio output */
+static int  audio_recsrc   = 'l';    /* Audio recording source */
+static int  sync_corr      = 2;      /* Level of corrections for synchronization */
+static int  MJPG_nbufs     = 64;     /* Number of MJPEG buffers */
+static int  MJPG_bufsize   = 256;    /* Size   of MJPEG buffers */
+static int  interlaced;
+static int  verbose        = 1;
 
 static lav_file_t *video_file, *video_file_old;
-
-#define NUM_AUDIO_TRIES 500 /* makes 10 seconds with 20 ms pause beetween tries */
-
 static int width, height;
 static int input, norm;
 static int audio_bps; /* audio bytes per sample */
-
+static long audio_buffer_size = 0;
+struct video_audio vau; /* For setting audio properties when using a tuner */
 static char *norm_name[] = {"PAL", "NTSC", "SECAM"};
-
+static int mixer_set = 0;
+static int tuner_freq = 0;
+static int mixer_volume_saved = 0;
+static int mixer_recsrc_saved = 0;
+static int mixer_inplev_saved = 0;
+static int need_newline = 0;
 static char infostring[4096];
 
-#define LAVREC_INTERNAL 0
-#define LAVREC_DEBUG    1
-#define LAVREC_INFO     2
-#define LAVREC_WARNING  3
-#define LAVREC_ERROR    4
-#define LAVREC_PROGRESS 5
+static int output_status;       /* 0: no output file opened yet
+                                   1: audio and video to the same file
+                                      (or no audio present)
+                                   2: video to new file, audio fills up old file
+                                   3: audio fills up last file, video output disabled */
+static int cur_out_file;        /* Number of current output file (for video) */
+static int num_out_files;       /* Total number of files to write,
+                                   if num_out_files==0 use pattern */
+static char **out_file_list;    /* List of output file names */
+static char out_filename[1024]; /* Name of current output file (for video) */
 
-static int need_newline=0;
+static long bytes_output_cur;   /* Bytes output to the current output file */
+static long bytes_last_checked; /* Number of bytes that were output when the
+                                   free space was last checked */
+static long MBytes_fs_free;     /* MBytes free when free space was last checked */
+
+static unsigned long num_frames; /* Number of frames output so far */
+static unsigned long num_asamps; /* Number of audio samples output so far */
+static unsigned long num_frames_old; /* Number of frames output when we switched
+                                        from old to new file  */
+
+static double spvf;   /* seconds per video frame */
+static double spas;   /* seconds per audio sample */
+
+
+/************************** PROGRAM CODE **************************/
 
 static void lavrec_msg(int type, char *str1, char *str2)
 {
@@ -292,11 +339,6 @@ static void system_error(char *str1,char *str2)
 	lavrec_msg(LAVREC_ERROR,infostring,strerror(errno));
 	exit(1);
 }
-
-static int mixer_set = 0;
-static int mixer_volume_saved = 0;
-static int mixer_recsrc_saved = 0;
-static int mixer_inplev_saved = 0;
 
 /*
    Set the sound mixer:
@@ -363,8 +405,8 @@ void set_mixer(int flag)
 		if (numerr) 
 		{
 			lavrec_msg(LAVREC_WARNING,
-					   "Unable to save sound mixer settings",
-					   "Restore your favorite setting with another tool after capture");
+				"Unable to save sound mixer settings",
+				"Restore your favorite setting with another tool after capture");
 			mixer_set = 0; /* Avoid restoring the wrong values */
 		}
 
@@ -393,8 +435,8 @@ void set_mixer(int flag)
 		if (numerr) 
 		{
 			lavrec_msg(LAVREC_WARNING,
-					   "Unable to set the sound mixer correctly",
-					   "Audio capture might not be successfull (try another mixer tool!)");
+				"Unable to set the sound mixer correctly",
+				"Audio capture might not be successfull (try another mixer tool!)");
 		}
 	}
 	else
@@ -415,8 +457,8 @@ void set_mixer(int flag)
 		if (numerr) 
 		{
 			lavrec_msg(LAVREC_WARNING,
-					   "Unable to restore sound mixer settings",
-					   "Restore your favorite setting with another tool");
+				"Unable to restore sound mixer settings",
+				"Restore your favorite setting with another tool");
 		}
 	}
 
@@ -452,25 +494,26 @@ void Usage(char *progname)
 	fprintf(stderr, "lavtools version " VERSION ": lavrec\n");
 	fprintf(stderr, "Usage: %s [options] <filename> [<filename> ...]\n", progname);
 	fprintf(stderr, "where options are:\n");
-	fprintf(stderr, "   -f [aAqm]     Format AVI/Quicktime/movtar\n");
-	fprintf(stderr, "   -i [pPnNsSat] Input Source\n");
-	fprintf(stderr, "   -d num     Decimation (either 1,2,4 or two digit number)\n");
-	fprintf(stderr, "   -g WxH+X+Y X-style geometry string (part of 768/720x576/480 field)\n");
-	fprintf(stderr, "   -q num     Quality [%%]\n");
-	fprintf(stderr, "   -t num     Capture time\n");
-	fprintf(stderr, "   -S         Single frame capture mode\n");
-	fprintf(stderr, "   -T num     Time lapse, capture only every <num>th frame\n");
-	fprintf(stderr, "   -w         Wait for user confirmation to start\n");
-	fprintf(stderr, "   -a num     Audio size, 0 for no audio, 8 or 16\n");
-	fprintf(stderr, "   -r num     Audio rate [Hz]\n");
-	fprintf(stderr, "   -s         Stereo\n");
-	fprintf(stderr, "   -l num     Recording level [%%], -1 for mixers not touched\n");
-	fprintf(stderr, "   -m         Mute audio output during recording\n");
-	fprintf(stderr, "   -R [lmc]   Set recording source: (l)ine, (m)icro, (c)d\n");
-	fprintf(stderr, "   -c [012]   Level of corrections for synchronization\n");
-	fprintf(stderr, "   -n num     # of MJPEG buffers\n");
-	fprintf(stderr, "   -b num     Size of MJPEG buffers [Kb]\n");
-	fprintf(stderr, "   -v num     verbose level\n");
+	fprintf(stderr, "  -f/--format [aAqm]          Format AVI/Quicktime/movtar\n");
+	fprintf(stderr, "  -i/--input [pPnNsStTa]      Input Source\n");
+	fprintf(stderr, "  -d/--decimation num         Decimation (either 1,2,4 or two digit number)\n");
+	fprintf(stderr, "  -g/--geometry WxH+X+Y       X-style geometry string (part of 768/720x576/480)\n");
+	fprintf(stderr, "  -q/--quality num            Quality [%%]\n");
+	fprintf(stderr, "  -t/--time num               Capture time (default: unlimited - Ctrl-C to stop\n");
+	fprintf(stderr, "  -S/--single-frame           Single frame capture mode\n");
+	fprintf(stderr, "  -T/--time-lapse num         Time lapse, capture only every <num>th frame\n");
+	fprintf(stderr, "  -w/--wait                   Wait for user confirmation to start\n");
+	fprintf(stderr, "  -a/--audio-bitsize num      Audio size, 0 for no audio, 8 or 16\n");
+	fprintf(stderr, "  -r/--audio-bitrate num      Audio rate [Hz]\n");
+	fprintf(stderr, "  -s/--stereo                 Stereo (default: mono)\n");
+	fprintf(stderr, "  -l/--audio-volume num       Recording level [%%], -1 for mixers not touched\n");
+	fprintf(stderr, "  -m/--mute                   Mute audio output during recording\n");
+	fprintf(stderr, "  -R/--audio-source [lmc]     Set recording source: (l)ine, (m)icro, (c)d\n");
+	fprintf(stderr, "  -c/--synchronization [012]  Level of corrections for synchronization\n");
+	fprintf(stderr, "  -n/--mjpeg-buffers num      Number of MJPEG buffers (default: 64)\n");
+	fprintf(stderr, "  -b/--mjpeg-buffer-size num  Size of MJPEG buffers [Kb] (default: 256)\n");
+	fprintf(stderr, "  -C/--channel LIST:CHAN      When using a TV tuner, channel list/number\n");
+	fprintf(stderr, "  -v/--verbose [012]          verbose level (default: 0)\n");
 	fprintf(stderr, "Environment variables recognized:\n");
 	fprintf(stderr, "   LAV_VIDEO_DEV, LAV_AUDIO_DEV, LAV_MIXER_DEV\n");
 	exit(1);
@@ -644,43 +687,6 @@ int parse_geometry (char *geom, int *x, int *y, int *width, int *height)
 	return XParseGeometry (geom, x, y, width, height);
 }
 
-#define MAX_MBYTES_PER_FILE 1600  /* Maximum number of Mbytes per file.
-                                     We make a conservative guess since we
-                                     only count the number of bytes output
-                                     and don't know how big the control
-                                     information will be */
-#define MIN_MBYTES_FREE 10        /* Minimum number of Mbytes that should
-                                     stay free on the file system, this is also
-                                     only a guess */
-#define MIN_MBYTES_FREE_OPEN 20   /* Minimum number of Mbytes that have to be
-                                     free in the filesystem when opening a new file */
-#define CHECK_INTERVAL 50         /* Interval for checking free space on file system */
-
-static int output_status;       /* 0: no output file opened yet
-                                   1: audio and video to the same file
-                                      (or no audio present)
-                                   2: video to new file, audio fills up old file
-                                   3: audio fills up last file, video output disabled */
-static int cur_out_file;        /* Number of current output file (for video) */
-static int num_out_files;       /* Total number of files to write,
-                                   if num_out_files==0 use pattern */
-static char **out_file_list;    /* List of output file names */
-static char out_filename[1024]; /* Name of current output file (for video) */
-
-static long bytes_output_cur;   /* Bytes output to the current output file */
-static long bytes_last_checked; /* Number of bytes that were output when the
-                                   free space was last checked */
-static long MBytes_fs_free;     /* MBytes free when free space was last checked */
-
-static unsigned long num_frames; /* Number of frames output so far */
-static unsigned long num_asamps; /* Number of audio samples output so far */
-static unsigned long num_frames_old; /* Number of frames output when we switched
-                                        from old to new file  */
-
-static double spvf;   /* seconds per video frame */
-static double spas;   /* seconds per audio sample */
-
-
 static void get_free_space()
 {
 	int res;
@@ -715,7 +721,7 @@ static void close_files_on_error()
 	if(output_status > 1) res = lav_close(video_file_old);
 
 	lavrec_msg(LAVREC_WARNING,"Trying to close output file(s) and exiting",
-			   "Output file(s) my not be readable due to error");
+		"Output file(s) my not be readable due to error");
 }
 
 #define OUTPUT_VIDEO_ERROR_RETURN \
@@ -841,15 +847,15 @@ static int output_video_frame(char *buff, long size, long count)
 		/* Open next file */
 
 		video_file = lav_open_output_file(out_filename,video_format,
-										  width,height,interlaced,
-										  (norm==VIDEO_MODE_NTSC? 30000.0/1001.0 : 25.0),
-										  audio_size,(stereo ? 2 : 1),audio_rate);
+			width,height,interlaced,
+			(norm==VIDEO_MODE_NTSC? 30000.0/1001.0 : 25.0),
+			audio_size,(stereo ? 2 : 1),audio_rate);
 		if(!video_file)
 		{
 			sprintf(infostring,"Error opening output file %s",out_filename);
 			lavrec_msg(LAVREC_ERROR,infostring,lav_strerror());
 			OUTPUT_VIDEO_ERROR_RETURN
-				}
+		}
 
 		if(output_status==0) output_status = 1;
 
@@ -864,7 +870,7 @@ static int output_video_frame(char *buff, long size, long count)
 			res = lav_close(video_file);
 			res = remove(out_filename);
 			OUTPUT_VIDEO_ERROR_RETURN
-				}
+		}
 	}
 
 	/* Output the frame count times */
@@ -984,191 +990,244 @@ static int output_audio_samples(char *buff, long samps)
 }
 
 
-int main(int argc, char ** argv)
+/* (Ronald) The following functions are all (almost directly) copied
+   from main(), taken out of there in order to:
+   - Make main() smaller
+   - Make main() smaller
+*/
+static int set_option(char *name, char *value)
 {
-	int video_dev;
-	int res;
-	struct mjpeg_status bstat;
-	struct mjpeg_params bparm;
-	struct mjpeg_requestbuffers breq;
-	struct mjpeg_sync bsync;
-	struct timeval first_time;
-	struct timeval audio_t0;
-	struct timeval audio_tmstmp;
-	struct timeval prev_sync, cur_sync;
-	struct video_capability vc;
-	struct video_channel vch;
-	char * MJPG_buff;
-	char AUDIO_buff[8192];
-	long audio_offset = 0, nb;
-	int write_frame;
-	char input_buffer[256];
-	int i, n, nerr, nfout;
-	unsigned long first_lost = 0, num_lost;
-	unsigned long num_syncs;
-	unsigned long num_ins, num_del;
-	unsigned long num_aerr;
-	int stats_changed;
-	int astat;
-	long audio_buffer_size = 0;
-	double time;
-	double tdiff1, tdiff2;
-	char *video_dev_name;
-	int device_width;
+	/* return 1 means error, return 0 means okay */
+	int nerr = 0;
+
+	if (strcmp(name, "format")==0 || strcmp(name, "f")==0)
+	{
+		video_format = value[0];
+		if(value[0]!='a' && value[0]!='A' && value[0]!='q' && value[0]!='m')
+		{
+			fprintf(stderr,"Format (-f/--format) must be a, A, q or m\n");
+			nerr++;
+		}
+	}
+	else if (strcmp(name, "input")==0 || strcmp(name, "i")==0)
+	{
+		input_source = value[0];
+	}
+	else if (strcmp(name, "decimation")==0 || strcmp(name, "d")==0)
+	{
+		int i = atoi(value);
+		if(i<10)
+		{
+			hordcm = verdcm = i;
+		}
+		else
+		{
+			hordcm = i/10;
+			verdcm = i%10;
+		}
+		if( (hordcm != 1 && hordcm != 2 && hordcm != 4) ||
+			(verdcm != 1 && verdcm != 2 && verdcm != 4) )
+		{
+			fprintf(stderr,"decimation (-d/--decimation) = %d invalid\n",i);
+			fprintf(stderr,"   must be one of 1,2,4,11,12,14,21,22,24,41,42,44\n");
+			nerr++;
+		}
+	}
+	else if (strcmp(name, "verbose")==0 || strcmp(name, "v")==0)
+	{
+		verbose = atoi(value);
+	}
+	else if (strcmp(name, "quality")==0 || strcmp(name, "q")==0)
+	{
+		quality = atoi(value);
+		if(quality<0 || quality>100)
+		{
+			fprintf(stderr,"quality (-q/--quality) = %d invalid (must be 0 ... 100)\n",quality);
+			nerr++;
+		}
+	}
+	else if (strcmp(name, "geometry")==0 || strcmp(name, "g")==0)
+	{
+		geom_flags = parse_geometry (value,
+			&geom_x, &geom_y, &geom_width, &geom_height);
+	}
+	else if (strcmp(name, "time")==0 || strcmp(name, "t")==0)
+	{
+		record_time = atoi(value);
+		if(record_time<=0)
+		{
+			fprintf(stderr,"record_time (-t/--time) = %d invalid\n",record_time);
+			nerr++;
+		}
+	}
+	else if (strcmp(name, "single-frame")==0 || strcmp(name, "S")==0)
+	{
+		single_frame = 1;
+	}
+	else if (strcmp(name, "time-lapse")==0 || strcmp(name, "T")==0)
+	{
+		time_lapse = atoi(value);
+		if(time_lapse<=1) time_lapse = 1;
+	}
+	else if (strcmp(name, "wait")==0 || strcmp(name, "w")==0)
+	{
+		wait_for_start = 1;
+	}
+	else if (strcmp(name, "audio-bitsize")==0 || strcmp(name, "a")==0)
+	{
+		audio_size = atoi(value);
+		if(audio_size != 0 && audio_size != 8 && audio_size != 16)
+		{
+			fprintf(stderr,"audio_size (-a/--audio-bitsize) ="
+				" %d invalid (must be 0, 8 or 16)\n",
+				audio_size);
+			nerr++;
+		}
+	}
+	else if (strcmp(name, "audio-bitrate")==0 || strcmp(name, "r")==0)
+	{
+		audio_rate = atoi(value);
+		if(audio_rate<=0)
+		{
+			fprintf(stderr,"audio_rate (-r/--audio-bitrate) = %d invalid\n",audio_rate);
+			nerr++;
+		}
+	}
+	else if (strcmp(name, "stereo")==0 || strcmp(name, "s")==0)
+	{
+		stereo = 1;
+	}
+	else if (strcmp(name, "audio-volume")==0 || strcmp(name, "l")==0)
+	{
+		audio_lev = atoi(value);
+		if(audio_lev<-1 || audio_lev>100)
+		{
+			fprintf(stderr,"recording level (-l/--audio-volume)"
+				" = %d invalid (must be 0 ... 100 or -1)\n",
+				audio_lev);
+			nerr++;
+		}
+	}
+	else if (strcmp(name, "mute")==0 || strcmp(name, "m")==0)
+	{
+		audio_mute = 1;
+	}
+	else if (strcmp(name, "audio-source")==0 || strcmp(name, "R")==0)
+	{
+		audio_recsrc = value[0];
+		if(audio_recsrc!='l' && audio_recsrc!='m' && audio_recsrc!='c')
+		{
+			fprintf(stderr,"Recording source (-R/--audio-source)"
+				" must be l,m or c\n");
+			nerr++;
+		}
+	}
+	else if (strcmp(name, "synchronization")==0 || strcmp(name, "c")==0)
+	{
+		sync_corr = atoi(value);
+		if(sync_corr<0 || sync_corr>2)
+		{
+			fprintf(stderr,"Synchronization (-c/--synchronization) ="
+				" %d invalid (must be 0, 1 or 2)\n",sync_corr);
+			nerr++;
+		}
+	}
+	else if (strcmp(name, "mjpeg-buffers")==0 || strcmp(name, "n")==0)
+	{
+		MJPG_nbufs = atoi(value);
+	}
+	else if (strcmp(name, "mjpeg-buffer-size")==0 || strcmp(name, "b")==0)
+	{
+		MJPG_bufsize = atoi(value);
+	}
+	else if (strcmp(name, "channel")==0 || strcmp(name,"C")==0)
+	{
+		int colin=0; int chlist=0; int chan=0;
+		while ( value[colin] && value[colin]!=':') colin++;
+		if (value[colin]==0) /* didn't find the colin */
+		{
+			fprintf(stderr,"malformed channel parameter (-C/--channel)\n");
+			nerr++;
+		}
+		if (nerr==0) while (strncmp(chanlists[chlist].name,value,colin)!=0)
+		{
+			if (chanlists[chlist++].name==NULL)
+			{
+				fprintf(stderr,"bad frequency map\n");
+				nerr++;
+			}
+		}
+		if (nerr==0) while (strcmp((chanlists[chlist].list)[chan].name,
+			&(value[colin+1]))!=0)
+		{
+			if ((chanlists[chlist].list)[chan++].name==NULL)
+			{
+				fprintf(stderr,"bad channel spec\n");
+				nerr++;
+			}
+		}
+		if (nerr==0) tuner_freq=(chanlists[chlist].list)[chan].freq;
+	}
+	else nerr++; /* unknown option - error */
+
+	return nerr;
+}
+
+static void check_command_line_options(int argc, char *argv[])
+{
+	int n, nerr, option_index = 0;
+	char option[2];
+
+	/* getopt_long options */
+	static struct option long_options[]={
+		{"format"           ,1,0,0},   /* -f/--format            */
+		{"input"            ,1,0,0},   /* -i/--input             */
+		{"decimation"       ,1,0,0},   /* -d/--decimation        */
+		{"verbose"          ,1,0,0},   /* -v/--verbose           */
+		{"quality"          ,1,0,0},   /* -q/--quality           */
+		{"geometry"         ,1,0,0},   /* -g/--geometry          */
+		{"time"             ,1,0,0},   /* -t/--time              */
+		{"single-frame"     ,1,0,0},   /* -S/--single-frame      */
+		{"time-lapse"       ,1,0,0},   /* -T/--time-lapse        */
+		{"wait"             ,0,0,0},   /* -w/--wait              */
+		{"audio-bitsize"    ,1,0,0},   /* -a/--audio-size        */
+		{"audio-bitrate"    ,1,0,0},   /* -r/--audio-rate        */
+		{"stereo"           ,0,0,0},   /* -s/--stereo            */
+		{"audio-volume"     ,1,0,0},   /* -l/--audio-volume      */
+		{"mute"             ,0,0,0},   /* -m/--mute              */
+		{"audio-source"     ,1,0,0},   /* -R/--audio-source      */
+		{"synchronization"  ,1,0,0},   /* -c/--synchronization   */
+		{"mjpeg-buffers"    ,1,0,0},   /* -n/--mjpeg_buffers     */
+		{"mjpeg-buffer-size",1,0,0},   /* -b/--mjpeg-buffer-size */
+		{"channel"          ,1,0,0},   /* -C/--channel           */
+		{0,0,0,0}
+	};
+
 	/* check usage */
 	if (argc < 2)  Usage(argv[0]);
 
 	/* Get options */
 
 	nerr = 0;
-	while( (n=getopt(argc,argv,"v:f:i:d:g:q:t:ST:wa:r:sl:mR:c:n:b:")) != EOF)
+	while( (n=getopt_long(argc,argv,"v:f:i:d:g:q:t:ST:wa:r:sl:mR:c:n:b:C:",
+		long_options, &option_index)) != EOF)
 	{
-		switch(n) {
-		case 'f':
-            video_format = optarg[0];
-            if(optarg[0]!='a' && optarg[0]!='A' && optarg[0]!='q' && optarg[0]!='m')
-            {
-				fprintf(stderr,"Format (-f option) must be a, A, q or m\n");
-				nerr++;
-            }
-            break;
+		switch(n)
+		{
+			/* getopt_long values */
+			case 0:
+				nerr += set_option(long_options[option_index].name,
+					optarg);
+				break;
 
-		case 'i':
-            input_source = optarg[0];
-            break;
-
-		case 'd':
-            i = atoi(optarg);
-            if(i<10)
-            {
-				hordcm = verdcm = i;
-            }
-            else
-            {
-				hordcm = i/10;
-				verdcm = i%10;
-            }
-            if( (hordcm != 1 && hordcm != 2 && hordcm != 4) ||
-                (verdcm != 1 && verdcm != 2 && verdcm != 4) )
-            {
-				fprintf(stderr,"decimation = %d invalid\n",i);
-				fprintf(stderr,"   must be one of 1,2,4,11,12,14,21,22,24,41,42,44\n");
-				nerr++;
-            }
-            break;
-
-		case 'g':
-            geom_flags = parse_geometry (optarg, &geom_x, &geom_y, &geom_width, &geom_height);
-            /* RJ: We check for errors later since the allowed range of params
-               dependes on other settings not yet known */
-            break;
-
-		case 'q':
-            quality = atoi(optarg);
-            if(quality<0 || quality>100)
-            {
-				fprintf(stderr,"quality = %d invalid (must be 0 ... 100)\n",quality);
-				nerr++;
-            }
-            break;
-
-		case 't':
-            record_time = atoi(optarg);
-            if(record_time<=0)
-            {
-				fprintf(stderr,"record_time = %d invalid\n",record_time);
-				nerr++;
-            }
-            break;
-
-		case 'S':
-            single_frame = 1;
-            break;
-
-		case 'T':
-            time_lapse = atoi(optarg);
-            if(time_lapse<=1) time_lapse = 1;
-            break;
-
-		case 'w':
-            wait_for_start = 1;
-            break;
-
-		case 'a':
-            audio_size = atoi(optarg);
-            if(audio_size != 0 && audio_size != 8 && audio_size != 16)
-            {
-				fprintf(stderr,"audio_size = %d invalid (must be 0, 8 or 16)\n",
-						audio_size);
-				nerr++;
-            }
-            break;
-
-		case 'r':
-            audio_rate = atoi(optarg);
-            if(audio_rate<=0)
-            {
-				fprintf(stderr,"audio_rate = %d invalid\n",audio_rate);
-				nerr++;
-            }
-            break;
-
-		case 's':
-            stereo = 1;
-            break;
-
-		case 'l':
-            audio_lev = atoi(optarg);
-            if(audio_lev<-1 || audio_lev>100)
-            {
-				fprintf(stderr,"recording level = %d invalid (must be 0 ... 100 or -1)\n",
-						audio_lev);
-				nerr++;
-            }
-            break;
-
-		case 'm':
-            audio_mute = 1;
-            break;
-
-		case 'R':
-            audio_recsrc = optarg[0];
-            if(audio_recsrc!='l' && audio_recsrc!='m' && audio_recsrc!='c')
-            {
-				fprintf(stderr,"Recording source (-R param) must be l,m or c\n");
-				nerr++;
-            }
-            break;
-
-		case 'c':
-            sync_corr = atoi(optarg);
-            if(sync_corr<0 || sync_corr>2)
-            {
-				fprintf(stderr,"parameter -c %d invalid (must be 0, 1 or 2)\n",sync_corr);
-				nerr++;
-            }
-            break;
-
-		case 'n':
-            MJPG_nbufs = atoi(optarg);
-            break;
-
-		case 'b':
-            MJPG_bufsize = atoi(optarg);
-            break;
-
-		case 'v':
-			verbose = atoi(optarg);
-			break;
-
-		default:
-            nerr++;
-            break;
+			/* These are the old getopt-values (non-long) */
+			default:
+				sprintf(option, "%c", n);
+				nerr += set_option(option, optarg);
+				break;
 		}
 	}
-
 	if(optind>=argc) nerr++;
-
 	if(nerr) Usage(argv[0]);
 
 	num_out_files = argc - optind;
@@ -1177,11 +1236,9 @@ int main(int argc, char ** argv)
 	output_status = 0;
 
 	/* If the first filename contains a '%', the user wants file patterns */
-
 	if(strstr(argv[optind],"%")) num_out_files = 0;
 
 	/* Special settings for single frame captures */
-
 	if(single_frame)
 	{
 		audio_size = 0;
@@ -1189,75 +1246,93 @@ int main(int argc, char ** argv)
 	}
 
 	/* time lapse also doesn't want audio */
+	if(time_lapse > 1) audio_size = 0;
+}
 
-	if(time_lapse>1) audio_size = 0;
-
-	if (verbose > 1) {
-		printf("\nRecording parameters:\n\n");
-		printf("Output format:      %s\n",video_format=='q'?"Quicktime":"AVI");
-		printf("Input Source:       ");
-		switch(input_source)
-		{
-        case 'p': printf("Composite PAL\n"); break;
-        case 'P': printf("S-VHS PAL\n"); break;
-        case 'n': printf("Composite NTSC\n"); break;
-        case 'N': printf("S-VHS NTSC\n"); break;
-        case 's': printf("Composite SECAM\n"); break;
-        case 'S': printf("S-VHS SECAM\n"); break;
-        case 't': printf("TV tuner\n"); break;
-        default:  printf("Auto detect\n");
-		}
-		if(hordcm==verdcm)
-			printf("Decimation:         %d\n",hordcm);
-		else
-			printf("Decimation:         %d (hor) x %d (ver)\n",hordcm,verdcm);
-		printf("Quality:            %d\n",quality);
-		printf("Recording time:     %d sec\n",record_time);
-		if(time_lapse>1)
-			printf("Time lapse factor:  %d\n",time_lapse);
-
-		printf("\n");
-		printf("MJPEG buffer size:  %d KB\n",MJPG_bufsize);
-		printf("# of MJPEG buffers: %d\n",MJPG_nbufs);
-		if(audio_size)
-		{
-			printf("\nAudio parameters:\n\n");
-			printf("Audio sample size:           %d bit\n",audio_size);
-			printf("Audio sampling rate:         %d Hz\n",audio_rate);
-			printf("Audio is %s\n",stereo ? "STEREO" : "MONO");
-			if(audio_lev!=-1)
-			{
-				printf("Audio input recording level: %d %%\n",audio_lev);
-				printf("%s audio output during recording\n",
-					   audio_mute?"Mute":"Don\'t mute");
-				printf("Recording source: %c\n",audio_recsrc);
-			}
-			else
-				printf("Audio input recording level: Use mixer setting\n");
-			printf("Level of correction for Audio/Video synchronization:\n");
-			switch(sync_corr)
-			{
-			case 0: printf("No lost frame compensation, No frame drop/insert\n"); break;
-			case 1: printf("Lost frame compensation, No frame drop/insert\n"); break;
-			case 2: printf("Lost frame compensation and frame drop/insert\n"); break;
-			}
-		}
-		else
-			printf("\nAudio disabled\n\n");
-		printf("\n");
+/* Simply prints recording parameters */
+static void lavrec_print_properties()
+{
+	printf("Recording parameters:\n");
+	printf("Output format:           %s\n",
+		video_format=='q'?"Quicktime":
+		(video_format=='m'?"Movtar":
+		(video_format=='A'?"AVI (frames exchanged)":
+		"AVI")));
+	printf("Input Source:            ");
+	switch(input_source)
+	{
+	        case 'p': printf("Composite PAL\n"); break;
+	        case 'P': printf("S-VHS PAL\n"); break;
+	        case 'n': printf("Composite NTSC\n"); break;
+	        case 'N': printf("S-VHS NTSC\n"); break;
+	        case 's': printf("Composite SECAM\n"); break;
+	        case 'S': printf("S-VHS SECAM\n"); break;
+	        case 't': printf("TV tuner PAL/SECAM\n"); break;
+	        case 'T': printf("TV tuner NTSC\n"); break;
+	        default:  printf("Auto detect\n");
 	}
-	/* Flush the Linux File buffers to disk */
+	if(hordcm==verdcm)
+		printf("Decimation:              %d\n",hordcm);
+	else
+		printf("Decimation:              %d (hor) x %d (ver)\n",hordcm,verdcm);
+	printf("Quality:                 %d\n",quality);
+	printf("Recording time:          %d sec\n",record_time);
+	if(time_lapse>1)
+		printf("Time lapse factor:       %d\n",time_lapse);
+	printf("MJPEG buffer size:       %d KB\n",MJPG_bufsize);
+	printf("Number of MJPEG buffers: %d\n",MJPG_nbufs);
+	if(audio_size)
+	{
+		printf("Audio sample size:       %d bit\n",audio_size);
+		printf("Audio sampling rate:     %d Hz\n",audio_rate);
+		printf("Recording mono/stereo:   %s\n",stereo ? "stereo" : "mono");
+		if(audio_lev!=-1)
+		{
+			printf("Recording volume:        %d %%\n",audio_lev);
+			printf("Mute during recording:   %s\n",
+				   audio_mute? "Yes" : "No");
+			printf("Recording source:        %s\n",
+				audio_recsrc=='l'?"Line-in (l)":
+				(audio_recsrc=='m'?"Microphone (m)":
+				"CD-ROM (c)"));
+		}
+		else
+			printf("Recording volume:        Use mixer setting\n");
+		printf("Level of correction for Audio/Video synchronization:\n");
+		switch(sync_corr)
+		{
+			case 0:
+				printf("No lost frame compensation, No frame drop/insert\n");
+				break;
+			case 1:
+				printf("Lost frame compensation, No frame drop/insert\n");
+				break;
+			case 2:
+				printf("Lost frame compensation and frame drop/insert\n");
+				break;
+		}
+	}
+	else
+		printf("Audio:                   disabled\n");
+	printf("\n");
+}
 
-	sync();
+static void lavrec_setup(int *video_dev, struct mjpeg_requestbuffers *breq,
+	char *MJPG_buff, char *AUDIO_buff, struct timeval *audio_t0, int *astat)
+{
+	struct mjpeg_status bstat;
+	struct video_capability vc;
+	struct video_channel vch;
+	struct mjpeg_params bparm;
+	int device_width,i,n,res;
+	char *video_dev_name;
 
 	/* set the sound mixer */
-
 	if(audio_size && audio_lev>=0) set_mixer(1);
 
 	/* Initialize the audio system if audio is wanted.
 	   This involves a fork of the audio task and is done before
 	   the video device and the output file is opened */
-
 	audio_bps = 0;
 	if (audio_size)
 	{
@@ -1278,132 +1353,157 @@ int main(int argc, char ** argv)
 	   real user id */
 	if( seteuid( getuid() ) < 0 )
 		system_error("Can't set effective user-id: ",
-					 (char *)sys_errlist[errno]);
+			(char *)sys_errlist[errno]);
 
 	/* The audio system needs a exit processing (audio_shutdown()),
 	   the mixers also should be reset at exit. */
-
 	atexit(CleanUpAudio);
 
 	/* open the video device */
-
 	video_dev_name = getenv("LAV_VIDEO_DEV");
 	if(!video_dev_name) video_dev_name = "/dev/video";
-	video_dev = open(video_dev_name, O_RDONLY);
-	if (video_dev < 0) system_error(video_dev_name,"open");
+	*video_dev = open(video_dev_name, O_RDONLY);
+	if (*video_dev < 0) system_error(video_dev_name,"open");
 
 	/* Set input and norm according to input_source,
 	   do an auto detect if neccessary */
-
 	switch(input_source)
 	{
-	case 'p': input = 0; norm = 0; break;
-	case 'P': input = 1; norm = 0; break;
-	case 'n': input = 0; norm = 1; break;
-	case 'N': input = 1; norm = 1; break;
-	case 's': input = 0; norm = 2; break;
-	case 'S': input = 1; norm = 2; break;
-	case 't': input = 2; norm = 0; break;
-	default:
-		n = 0;
-		lavrec_msg(LAVREC_INFO,"Auto detecting input and norm ...","");
-		for(i=0;i<2;i++)
-		{
-            sprintf(infostring,"Trying %s ...",(i==2) ? "TV tuner" : (i==0?"Composite":"S-Video"));
-            lavrec_msg(LAVREC_INFO,infostring,"");
-            bstat.input = i;
-            res = ioctl(video_dev,MJPIOC_G_STATUS,&bstat);
-            if(res<0) system_error("getting input status","ioctl MJPIOC_G_STATUS");
-            if(bstat.signal)
-            {
-                sprintf(infostring,"input present: %s %s",
+		case 'p': input = 0; norm = VIDEO_MODE_PAL; break;
+		case 'P': input = 1; norm = VIDEO_MODE_PAL; break;
+		case 'n': input = 0; norm = VIDEO_MODE_NTSC; break;
+		case 'N': input = 1; norm = VIDEO_MODE_NTSC; break;
+		case 's': input = 0; norm = VIDEO_MODE_SECAM; break;
+		case 'S': input = 1; norm = VIDEO_MODE_SECAM; break;
+		case 't': input = 2; norm = VIDEO_MODE_PAL; break;
+		case 'T': input = 2; norm = VIDEO_MODE_NTSC; break;
+		default:
+			n = 0;
+			lavrec_msg(LAVREC_INFO,"Auto detecting input and norm ...","");
+			for(i=0;i<2;i++)
+			{
+				sprintf(infostring,"Trying %s ...",
+					(i==2) ? "TV tuner" : (i==0?"Composite":"S-Video"));
+				lavrec_msg(LAVREC_INFO,infostring,"");
+				bstat.input = i;
+				res = ioctl(*video_dev,MJPIOC_G_STATUS,&bstat);
+				if(res<0) system_error("getting input status",
+					"ioctl MJPIOC_G_STATUS");
+				if(bstat.signal)
+				{
+					sprintf(infostring,"input present: %s %s",
 						norm_name[bstat.norm],
 						bstat.color?"color":"no color");
-				lavrec_msg(LAVREC_INFO,infostring,"");
-				input = i;
-				norm = bstat.norm;
-				n++;
-            }
-            else
-				lavrec_msg(LAVREC_INFO,"NO signal","");
-		}
-		switch(n)
-		{
-		case 0:
-			lavrec_msg(LAVREC_ERROR,"No input signal ... exiting","");
-			exit(1);
-		case 1:
-			sprintf(infostring,"Detected %s %s",
-					norm_name[norm],
-					input==0?"Composite":"S-Video");
-			lavrec_msg(LAVREC_INFO,infostring,"");
-			break;
-		case 2:
-			lavrec_msg(LAVREC_ERROR,"Input signal on Composite AND S-Video ... exiting","");
-			exit(1);
-		}
+					lavrec_msg(LAVREC_INFO,infostring,"");
+					input = i;
+					norm = bstat.norm;
+					n++;
+				}
+				else
+					lavrec_msg(LAVREC_INFO,"NO signal","");
+			}
+			switch(n)
+			{
+				case 0:
+					lavrec_msg(LAVREC_ERROR,
+						"No input signal ... exiting","");
+					exit(1);
+				case 1:
+					sprintf(infostring,"Detected %s %s",
+						norm_name[norm],
+						input==2 ? "TV tuner" :
+						(input==0 ? "Composite":"S-Video"));
+					lavrec_msg(LAVREC_INFO,infostring,"");
+					break;
+				case 2:
+					lavrec_msg(LAVREC_ERROR,
+						"More than one input signal detected... exiting",
+						"");
+					exit(1);
+			}
 	}
 
 	/* Set input and norm first so we can determine width*/
 	vch.channel = input;
 	vch.norm    = norm;
-	res = ioctl(video_dev, VIDIOCSCHAN,&vch);
-	if(res<0) system_error("setting norm","ioctl VIDIOCSCHAN");
+	res = ioctl(*video_dev, VIDIOCSCHAN,&vch);
+	if(res<0) system_error("setting norm/channel","ioctl VIDIOCSCHAN");
+
+	/* set channel if we're tuning */
+	if (input ==2 && tuner_freq!=0) {
+		unsigned long outfreq;
+		outfreq = tuner_freq*16/1000;
+		res = ioctl(*video_dev, VIDIOCSFREQ,&outfreq);
+		if(res<0) system_error("setting tuner frequency","ioctl VIDIOCSFREQ");
+	}
+
+	/* Set up tuner audio if this is a tuner. I think this should be done
+	 * AFTER the tuner device is selected */
+	if (input == 2) {
+		/* get current */
+		res = ioctl(*video_dev,VIDIOCGAUDIO,&vau);
+		if(res<0) system_error("getting tuner audio params","ioctl VIDIOCGAUDIO");
+		/* unmute so we get sound to record */
+		/* this is done without checking current state because the
+		 * current mga driver doesn't report mute state accurately */
+		lavrec_msg(LAVREC_INFO,"Unmuting tuner audio...\n", "");
+		vau.flags &= (~VIDEO_AUDIO_MUTE);
+		res = ioctl(*video_dev,VIDIOCSAUDIO,&vau);
+		if(res<0) system_error("setting tuner audio params", "ioctl VIDIOCSAUDIO");
+	}
    
 	/* Determine device pixel width (DC10=768, BUZ=720 for PAL/SECAM, DC10=640, BUZ=720) */
-   
-	res = ioctl(video_dev, VIDIOCGCAP,&vc);
+	res = ioctl(*video_dev, VIDIOCGCAP,&vc);
 	if (res < 0) system_error("getting device capabilities","ioctl VIDIOCGCAP");
 	device_width=vc.maxwidth;
 
 	/* Query and set params for capture */
-
-	res = ioctl(video_dev, MJPIOC_G_PARAMS, &bparm);
-
+	res = ioctl(*video_dev, MJPIOC_G_PARAMS, &bparm);
 	if(res<0) system_error("getting video parameters","ioctl MJPIOC_G_PARAMS");
-	/*bparm.input = input;
-	  bparm.norm = norm;*/
+	bparm.input = input;
+	bparm.norm = norm;
 	bparm.decimation = 0;
 	bparm.quality    = quality;
 
 	/* Set decimation and image geometry params */
-
 	bparm.HorDcm         = hordcm;
 	bparm.VerDcm         = (verdcm==4) ? 2 : 1;
 	bparm.TmpDcm         = (verdcm==1) ? 1 : 2;
 	bparm.field_per_buff = (verdcm==1) ? 2 : 1;
 
-	/*
-	 * If device is DC10 then do handle special else do the the
+	/* If device is DC10 then do handle special else do the the
 	 * normal thing
 	 */
 	if (device_width == 768 || device_width == 640)
-		bparm.img_width      = (hordcm==1) ? device_width : (device_width-64);
-	else {
-		bparm.img_width      = (hordcm==1) ? 720 : 704;
+		bparm.img_width = (hordcm==1) ? device_width : (device_width-64);
+	else
+	{
+		bparm.img_width = (hordcm==1) ? 720 : 704;
 		device_width = 720;
 	}
 	
-	
-		
 	bparm.img_height     = (norm==1)   ? 240 : 288;
 
-	if (geom_width>device_width) {
+	if (geom_width>device_width)
+	{
 		lavrec_msg(LAVREC_ERROR,"Image width too big! Exiting.","");
 		exit(1);
 	}
-	if ((geom_width%(bparm.HorDcm*16))!=0) {
+	if ((geom_width%(bparm.HorDcm*16))!=0)
+	{
 		sprintf(infostring,"Image width not multiple of %d! Exiting",bparm.HorDcm*16);
 		lavrec_msg(LAVREC_ERROR,infostring,"");
 		exit(1);
 	}
-	if (geom_height>(norm==1 ? 480 : 576)) {
+	if (geom_height>(norm==1 ? 480 : 576))
+	{
 		lavrec_msg(LAVREC_ERROR,"Image height too big! Exiting.","");
 		exit(1);
 	}
 	/* RJ: Image height must only be a multiple of 8, but geom_height
 	   is double the field height */
-	if ((geom_height%(bparm.VerDcm*16))!=0) {
+	if ((geom_height%(bparm.VerDcm*16))!=0)
+	{
 		sprintf(infostring,"Image height not multiple of %d! Exiting",bparm.VerDcm*16);
 		lavrec_msg(LAVREC_ERROR,infostring,"");
 		exit(1);
@@ -1425,7 +1525,6 @@ int main(int argc, char ** argv)
 
 	/* Care about field polarity and APP Markers which are needed for AVI
 	   and Quicktime and may be for other video formats as well */
-
 	if(verdcm > 1)
 	{
 		/* for vertical decimation > 1 no known video format needs app markers,
@@ -1442,8 +1541,9 @@ int main(int argc, char ** argv)
 		for(n=0; n<bparm.APP_len && n<60; n++) bparm.APP_data[n] = 0;
 	}
 
-	res = ioctl(video_dev, MJPIOC_S_PARAMS, &bparm);
-	if(res<0) system_error("setting video parameters","ioctl MJPIOC_S_PARAMS");
+	res = ioctl(*video_dev, MJPIOC_S_PARAMS, &bparm);
+	if(res<0) system_error("setting video parameters",
+		"ioctl MJPIOC_S_PARAMS");
 
 	width  = bparm.img_width/bparm.HorDcm;
 	height = bparm.img_height/bparm.VerDcm*bparm.field_per_buff;
@@ -1454,26 +1554,26 @@ int main(int argc, char ** argv)
 	lavrec_msg(LAVREC_INFO,infostring,"");
 
 	/* Request buffers */
+	breq->count = MJPG_nbufs;
+	breq->size  = MJPG_bufsize*1024;
+	res = ioctl(*video_dev, MJPIOC_REQBUFS,breq);
+	if(res<0) system_error("requesting video buffers",
+		"ioctl MJPIOC_REQBUFS");
 
-	breq.count = MJPG_nbufs;
-	breq.size  = MJPG_bufsize*1024;
-	res = ioctl(video_dev, MJPIOC_REQBUFS,&breq);
-	if(res<0) system_error("requesting video buffers","ioctl MJPIOC_REQBUFS");
-
-	sprintf(infostring,"Got %ld buffers of size %ld KB",breq.count,breq.size/1024);
+	sprintf(infostring,"Got %ld buffers of size %ld KB",
+		breq->count,breq->size/1024);
 	lavrec_msg(LAVREC_INFO,infostring,"");
 
 	/* Map the buffers */
-
-	MJPG_buff = mmap(0, breq.count*breq.size, PROT_READ, MAP_SHARED, video_dev, 0);
-	if (MJPG_buff == MAP_FAILED) system_error("mapping video buffers","mmap");
+	MJPG_buff = mmap(0, breq->count*breq->size, PROT_READ,
+		MAP_SHARED, *video_dev, 0);
+	if (MJPG_buff == MAP_FAILED) system_error("mapping video buffers",
+		"mmap");
 
 	/* Assure proper exit handling if the user presses ^C during recording */
-
 	signal(SIGINT,SigHandler);
 
 	/* Try to get a reliable timestamp for Audio */
-
 	if (audio_size && sync_corr>1)
 	{
 		lavrec_msg(LAVREC_INFO, "Getting audio ... ", "");
@@ -1485,19 +1585,18 @@ int main(int argc, char ** argv)
 				lavrec_msg(LAVREC_ERROR,"Unable to get audio - exiting ....","");
 				exit(1);
 			}
-			res = audio_read(AUDIO_buff,sizeof(AUDIO_buff),0,&audio_t0,&astat);
+			res = audio_read(AUDIO_buff,sizeof(AUDIO_buff),0,audio_t0,astat);
 			if(res<0)
 			{
 				lavrec_msg(LAVREC_ERROR,"Error reading audio",audio_strerror());
 				exit(1);
 			}
-			if(res && audio_t0.tv_sec ) break;
+			if(res && audio_t0->tv_sec ) break;
 			usleep(20000);
 		}
 	}
-         
-	/* For single frame recording: Make stdin nonblocking */
 
+	/* For single frame recording: Make stdin nonblocking */
 	if(single_frame || wait_for_start)
 	{
 		res = fcntl(0,F_SETFL,O_NONBLOCK);
@@ -1509,37 +1608,119 @@ int main(int argc, char ** argv)
 	   priority which causes sporadic audio buffer over-runs */
 	if( getpriority(PRIO_PROCESS, 0) > -5 )
 		setpriority(PRIO_PROCESS, 0, -5 );
+}
 
-	/* We are set up now - wait for user confirmation if wanted */
+static void wait_for_enter(char *AUDIO_buff, struct timeval *audio_t0, int *astat)
+{
+	int res;
+	char input_buffer[256];
 
-	if(wait_for_start)
+	printf("\nPress enter to start recording>");
+	fflush(stdout);
+	while(1)
 	{
-		printf("\nPress enter to start recording>");
-		fflush(stdout);
-		while(1)
+		usleep(20000);
+		res = read(0,input_buffer,256);
+		if(res>0) break; /* Got Return */
+		if(VideoExitFlag) exit(0); /* caught signal */
+		/* Audio (if on) is allready running, empty buffer to avoid overflow */
+		if (audio_size)
 		{
-			usleep(20000);
-			res = read(0,input_buffer,256);
-			if(res>0) break; /* Got Return */
-			if(VideoExitFlag) exit(0); /* caught signal */
-
-			/* Audio (if on) is allready running, empty buffer to avoid overflow */
-
-			if (audio_size)
+			while( (res=audio_read(AUDIO_buff,sizeof(AUDIO_buff),
+				0,audio_t0,astat)) >0 ) /*noop*/;
+			if(res==0) continue;
+			if(res<0)
 			{
-				while( (res=audio_read(AUDIO_buff,sizeof(AUDIO_buff),0,&audio_t0,&astat)) >0 ) /*noop*/;
-				if(res==0) continue;
-				if(res<0)
-				{
-					lavrec_msg(LAVREC_ERROR,"Error reading audio",audio_strerror());
-					exit(1);
-				}
+				lavrec_msg(LAVREC_ERROR,"Error reading audio",
+					audio_strerror());
+				exit(1);
 			}
 		}
 	}
+}
+
+#ifdef REC_SYNC_DEBUG
+static void output_stats(long int num_ins, long int num_lost,
+	long int num_del, long int num_aerr, double tdiff1, double tdiff2,
+	int stats_changed, struct timeval *prev_sync, struct timeval *cur_sync)
+#else
+static void output_stats(long int num_ins, long int num_lost,
+	long int num_del, long int num_aerr,
+	int stats_changed, struct timeval *prev_sync, struct timeval *cur_sync)
+#endif
+{
+	int nf, ns, nm, nh;
+
+	if(norm!=VIDEO_MODE_NTSC)
+	{
+		nf = num_frames % 25;
+		ns = num_frames / 25;
+	}
+	else
+	{
+		nf = num_frames % 30;
+		ns = num_frames / 30;
+	}
+	nm = ns / 60;
+	ns = ns % 60;
+	nh = nm / 60;
+	nm = nm % 60;
+	if( prev_sync->tv_usec > cur_sync->tv_usec )
+		prev_sync->tv_usec -= 1000000;
+#ifdef REC_SYNC_DEBUG
+	if( prev_syn->.tv_usec > cur_sync->tv_usec )
+		prev_sync->tv_usec -= 1000000;
+	sprintf(infostring,"%2d.%2.2d.%2.2d:%2.2d int: %05ld lst:%4lu ins:%3lu del:%3lu "
+		"ae:%3lu td1=%.3f td2=%.3f\r",
+		nh, nm, ns, nf, 
+		(cur_sync->tv_usec-prev_sync.tv_usec)/1000, num_lost,
+		num_ins, num_del, num_aerr, tdiff1,tdiff2);
+#else
+	sprintf(infostring,"%2d.%2.2d.%2.2d:%2.2d lst:%4lu ins:%3lu del:%3lu ae:%3lu ",
+		nh, nm, ns, nf, 
+		num_lost, num_ins, num_del, num_aerr );
+#endif
+	lavrec_msg(LAVREC_PROGRESS,infostring,"");
+	if( stats_changed )
+		printf("\n");
+}
+
+int main(int argc, char ** argv)
+{
+	int video_dev;
+	struct timeval audio_t0;
+	struct mjpeg_requestbuffers breq;
+	struct mjpeg_sync bsync;
+	struct timeval first_time;
+	struct timeval audio_tmstmp;
+	struct timeval prev_sync, cur_sync;
+	char *MJPG_buff = 0;
+	char AUDIO_buff[8192];
+	long audio_offset = 0, nb;
+	int write_frame;
+	char input_buffer[256];
+	int n, res, nfout;
+	unsigned long first_lost = 0, num_lost, num_syncs, num_ins, num_del, num_aerr;
+	int stats_changed, astat;
+	double time, tdiff1, tdiff2;
+
+	/* command-line options */
+        check_command_line_options(argc, argv);
+
+	/* Care about printing what we're actually doing */
+	if (verbose > 1) lavrec_print_properties();
+
+	/* Flush the Linux File buffers to disk */
+	sync();
+
+	/* setup the properties, device et all */
+	lavrec_setup(&video_dev, &breq, MJPG_buff, AUDIO_buff,
+		&audio_t0, &astat);
+
+	/* We are set up now - wait for user confirmation if wanted */
+	if(wait_for_start) wait_for_enter(AUDIO_buff, &audio_t0, &astat);
 
 	/* Queue all buffers, this also starts streaming capture */
-
 	for(n=0;n<breq.count;n++)
 	{
 		res = ioctl(video_dev, MJPIOC_QBUF_CAPT, &n);
@@ -1547,7 +1728,6 @@ int main(int argc, char ** argv)
 	}
 
 	/* The video capture loop */
-
 	write_frame = 1;
 	stats_changed = 0;
 	num_syncs  = 0; /* Number of MJPIOC_SYNC ioctls            */
@@ -1570,6 +1750,8 @@ int main(int argc, char ** argv)
 	tdiff1 = 0.;
 	tdiff2 = 0.;
 	gettimeofday( &prev_sync, NULL );
+
+	/* This is the get-the-frame-from-the-device-and-safe-to-file-cycle */
 	while (1)
 	{
 		/* sync on a frame */
@@ -1589,7 +1771,7 @@ int main(int argc, char ** argv)
 			{
 				/* Get time difference beetween audio and video in bytes */
 				audio_offset  = ((first_time.tv_usec-audio_t0.tv_usec)*1.e-6 +
-								 first_time.tv_sec-audio_t0.tv_sec - spvf)*audio_rate;
+					first_time.tv_sec-audio_t0.tv_sec - spvf)*audio_rate;
 				audio_offset *= audio_bps;   /* convert to bytes */
 			}
 			else
@@ -1650,7 +1832,6 @@ int main(int argc, char ** argv)
 		}
 
 		/* write it out */
-
 		if(write_frame && nfout>0)
 		{
 			res = output_video_frame(MJPG_buff+bsync.frame*breq.size, bsync.length, nfout);
@@ -1658,7 +1839,6 @@ int main(int argc, char ** argv)
 		}
 
 		/* Re-queue the buffer */
-
 		res = ioctl(video_dev, MJPIOC_QBUF_CAPT, &bsync.frame);
 		if (res < 0)
 		{
@@ -1666,16 +1846,11 @@ int main(int argc, char ** argv)
 			system_error("re-queuing buffer","ioctl MJPIOC_QBUF_CAPT");
 		}
    
-
 		/* Care about audio */
-
 		if (!audio_size) continue;
-
 		res = 0;
-
 		while(1)
 		{
-
 			/* Only try to read a audio sample if video is ahead - else we might
 			   get into difficulties when writing the last samples */
 
@@ -1687,7 +1862,7 @@ int main(int argc, char ** argv)
 
 			if(nb<0)
 			{
-				lavrec_msg(LAVREC_ERROR,"Error reading audio",audio_strerror());
+ 				lavrec_msg(LAVREC_ERROR,"Error reading audio",audio_strerror());
 				close_files_on_error();
 				res = -1;
 				break;
@@ -1700,12 +1875,10 @@ int main(int argc, char ** argv)
 			}
 
 			/* Adjust for difference at start */
-
 			if(audio_offset>=nb) { audio_offset -= nb; continue; }
 			nb -= audio_offset;
 
 			/* Got an audio sample, write it out */
-
 			res = output_audio_samples(AUDIO_buff+audio_offset,nb/audio_bps);
 			if(res) break; /* Done or error occured */
 			audio_offset = 0;
@@ -1714,7 +1887,6 @@ int main(int argc, char ** argv)
 			   tdiff1 is the difference according to the number of frames/samples written
 			   tdiff2 is the difference according to the timestamps
 			   (only if audio timestamp is not zero) */
-
 			if(audio_tmstmp.tv_sec)
 			{
 				tdiff1 = num_frames*spvf - num_asamps*spas;
@@ -1724,50 +1896,30 @@ int main(int argc, char ** argv)
 		}
 
 		/* Output statistics */
-
-		if(!single_frame && output_status<3 && (verbose > 1 || stats_changed))
+		if(!single_frame && output_status<3 && (verbose > 0 || stats_changed))
 		{
-			int nf, ns, nm, nh;
-			if(norm!=VIDEO_MODE_NTSC)
-			{
-				nf = num_frames % 25;
-				ns = num_frames / 25;
-			}
-			else
-			{
-				nf = num_frames % 30;
-				ns = num_frames / 30;
-			}
-			nm = ns / 60;
-			ns = ns % 60;
-			nh = nm / 60;
-			nm = nm % 60;
-			if( prev_sync.tv_usec > cur_sync.tv_usec )
-				prev_sync.tv_usec -= 1000000;
+			output_stats(num_ins, num_lost, num_del, num_aerr,
 #ifdef REC_SYNC_DEBUG
-			if( prev_sync.tv_usec > cur_sync.tv_usec )
-				prev_sync.tv_usec -= 1000000;
-			sprintf(infostring,"%2d.%2.2d.%2.2d:%2.2d int: %05ld lst:%4lu ins:%3lu del:%3lu "
-					"ae:%3lu td1=%.3f td2=%.3f\r",
-					nh, nm, ns, nf, 
-					(cur_sync.tv_usec-prev_sync.tv_usec)/1000, num_lost, num_ins, num_del, num_aerr, tdiff1,tdiff2);
-#else
-			sprintf(infostring,"%2d.%2.2d.%2.2d:%2.2d lst:%4lu ins:%3lu del:%3lu ae:%3lu ",
-					nh, nm, ns, nf, 
-					num_lost, num_ins, num_del, num_aerr );
+				tdiff1, tdiff2,
 #endif
-			lavrec_msg(LAVREC_PROGRESS,infostring,"");
-			if( stats_changed )
-				printf("\n");
+				stats_changed, &prev_sync, &cur_sync);
 			stats_changed = 0;
 		}
-		prev_sync = cur_sync;
 
+		prev_sync = cur_sync;
 
 		if (res) break;
 	}
 
 	/* Audio and mixer exit processing is done with atexit() */
+
+	/* Re-mute tuner audio if this is a tuner */
+	if (input == 2) {
+		lavrec_msg(LAVREC_INFO,"Re-muting tuner audio...\n","");
+		vau.flags |= VIDEO_AUDIO_MUTE;
+		res = ioctl(video_dev,VIDIOCSAUDIO,&vau);
+		if(res<0) system_error("setting tuner audio params","ioctl VIDIOCSAUDIO");
+	}
 
 	if(res>=0) {
 		lavrec_msg(LAVREC_INFO,"Clean exit ...","");
