@@ -34,7 +34,8 @@ transist_flt_LDADD =
 matteblend_flt_SOURCES = matteblend.flt.c yuv4mpeg.c ${lav_headers}
 matteblend_flt_LDADD =
 
-lavplay_SOURCES = lavplay.c avilib.c audiolib.c lav_io.c editlist.c  $(lav_headers)
+lavplay_SOURCES = lavplay.c avilib.c audiolib.c lav_io.c editlist.c  \
+	jpegutils.c $(lav_headers)
 lavplay_LDADD = -L$(top_builddir)/mjpeg -lmjpeg $(PTHREAD_LIBS) \
 	$(QUICKTIME_LIBS) $(MOVTAR_LIBS) $(SDL_LIBS) $(JPEG_LIBS)
 

@@ -136,6 +136,7 @@
 #include <getopt.h>
 #include "lav_io.h"
 #include "editlist.h"
+#include "jpegutils.h"
 
 /************************** DEFINES **************************/
 #define LAVPLAY_VSTR "lavplay" LAVPLAY_VERSION  /* Expected version info */
@@ -164,12 +165,15 @@ void sig_cont(int sig);
 int queue_next_frame(char *vbuff, int skip_video, int skip_audio, int skip_incr);
 void Usage(char *progname);
 void lock_screen(void);
-void unlock_update_screen(void);
+void update_screen(void);
+void unlock_screen(void);
 void x_shutdown(int a);
 void add_new_frames(char *movie, int nc1, int nc2, int dest);
 void cut_copy_frames(int nc1, int nc2, char cut_or_copy);
 void paste_frames(int dest);
 void check_min_max(void);
+void initialize_SDL_window(void);
+int process_edit_input(char *input_buffer, int length);
 
 
 /************************** VARIABLES **************************/
@@ -243,7 +247,10 @@ static int max_frame_num;
 /* SDL parameters (for software-playback) */
 SDL_Surface *screen;
 SDL_Rect jpegdims;
-
+SDL_Overlay *yuv_overlay;
+static unsigned char *yuv[3];
+static unsigned char *jpeg_data;
+int soft_width=0, soft_height=0;
 
 /************************** PROGRAM CODE **************************/
 
@@ -424,6 +431,7 @@ void Usage(char *progname)
    fprintf(stderr, "  -Z/--full-screen           Switch to fullscreen\n");
    fprintf(stderr, "  -p/--playback [SHC]        playback: (S)oftware, (H)ardware (screen) or (C)ard\n");
    fprintf(stderr, "  -a/--audio [01]            Enable audio playback\n");
+   fprintf(stderr, "  --size NxN                 width X height for SDL window (software)\n");
    exit(1);
 }
 
@@ -435,38 +443,156 @@ void lock_screen(void)
 	   if ( SDL_LockSurface(screen) < 0 )
 	     lavplay_msg(LAVPLAY_ERROR,"Error locking output screen", SDL_GetError());
 	 }
+	if (SDL_LockYUVOverlay(yuv_overlay) < 0)
+		lavplay_msg(LAVPLAY_ERROR,"Error locking yuv overlay", SDL_GetError());
 }
 
-void unlock_update_screen(void)
+void unlock_screen(void)
 {
-  /* unlock it again */
-  if ( SDL_MUSTLOCK(screen) ) 
-    {
-      SDL_UnlockSurface(screen);
-    }
+	if ( SDL_MUSTLOCK(screen) ) 
+	{
+		SDL_UnlockSurface(screen);
+	}
+	SDL_UnlockYUVOverlay(yuv_overlay);
+}
 
-  // printf("Updating rectangle with w=%d, h=%d", jpegdims.w, jpegdims.h);
-  SDL_UpdateRect(screen, 0, 0, jpegdims.w, jpegdims.h);
+void update_screen(void)
+{
+	int len;
+
+	/* lock screen */
+	lock_screen();
+
+	/* get frame into jpeg_data (length len) */
+	len = el_get_video_frame(jpeg_data, nframe, &el);
+
+	/* decode frame to yuv[] */
+	decode_jpeg_raw (jpeg_data, len, el.video_inter, CHROMA420,
+		el.video_width, el.video_height, yuv[0], yuv[1], yuv[2]);
+
+	/* set yuv data */
+	yuv_overlay->pixels = yuv;
+
+	/* unlock it again */
+	unlock_screen();
+	// printf("Updating rectangle with w=%d, h=%d", jpegdims.w, jpegdims.h);
+
+	/* Show, baby, show! */
+	SDL_DisplayYUVOverlay(yuv_overlay, &jpegdims);
+	SDL_UpdateRect(screen, 0, 0, jpegdims.w, jpegdims.h);
+}
+
+void initialize_SDL_window()
+{
+	int i;
+	char wintitle[255];
+	char *sbuffer;
+
+	printf("Initialising SDL\n");
+	if (SDL_Init (SDL_INIT_VIDEO) < 0)
+	{
+		fprintf( stderr, "SDL Failed to initialise...\n" );
+		exit(1);
+	}
+
+	/* Now initialize SDL */
+	if (soft_fullscreen)
+		screen = SDL_SetVideoMode(soft_width==0?el.video_width:soft_width, 
+			soft_height==0?el.video_height:soft_height, 0,
+			SDL_HWSURFACE | SDL_FULLSCREEN);
+	else
+		screen = SDL_SetVideoMode(soft_width==0?el.video_width:soft_width, 
+			soft_height==0?el.video_height:soft_height, 0,
+			SDL_SWSURFACE);
+
+	SDL_EventState(SDL_KEYDOWN, SDL_ENABLE);
+	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+
+	/* yuv/jpeg frames - memory allocation */
+	yuv[0] = malloc(el.video_width * el.video_height * sizeof(unsigned char));
+	yuv[1] = malloc(el.video_width * el.video_height * sizeof(unsigned char) / 4);
+	yuv[2] = malloc(el.video_width * el.video_height * sizeof(unsigned char) / 4);
+	jpeg_data = malloc(3 * el.video_height * el.video_width * sizeof(unsigned char)/2);
+
+	if (jpeg_data == NULL || yuv[0] == NULL || yuv[1] == NULL || yuv[2] == NULL)
+		malloc_error();
+
+	yuv_overlay = SDL_CreateYUVOverlay(el.video_width,
+		el.video_height, SDL_IYUV_OVERLAY, screen);
+	if ( yuv_overlay == NULL )
+	{
+		fprintf(stderr,"SDL: Couldn't create SDL_yuv_overlay: %s\n", SDL_GetError());
+		exit(1);
+	}
+	if ( screen == NULL )  
+	{
+		lavplay_msg(LAVPLAY_ERROR,"SDL: Output screen error", SDL_GetError());
+		exit(1);
+	}
+       
+	if (screen->format->BytesPerPixel == 2)
+		mjpeg_calc_rgb16_params(screen->format->Rloss, screen->format->Gloss,
+			screen->format->Bloss, screen->format->Rshift,
+			screen->format->Gshift, screen->format->Bshift);
+
+	jpegdims.x = 0; // This is not going to work with interlaced pics !!
+	jpegdims.y = 0;
+	jpegdims.w = soft_width==0?el.video_width:soft_width;
+	jpegdims.h = soft_height==0?el.video_height:soft_height;
+
+	/* Lock the screen to test, and to be able to access screen->pixels */
+	lock_screen();
+       
+	/* Draw bands of color on the raw surface, as run indicator for debugging */
+	sbuffer = (char *)screen->pixels;
+	for ( i=0; i < screen->h; ++i ) 
+	{
+		memset(sbuffer,(i*255)/screen->h,
+			   screen->w * screen->format->BytesPerPixel);
+		sbuffer += screen->pitch;
+	}
+
+	/* Set up the necessary callbacks for the decompression process */
+	mjpeg->update_screen_callback = update_screen;
+
+	/* Set the windows title (currently simply the first file name) */
+	sprintf(wintitle, "lavplay %s", el.video_file_list[0]);
+	SDL_WM_SetCaption(wintitle, "0000000");  
+
+	/* unlock, update and wait for the fun to begin */
+	unlock_screen();
+	SDL_UpdateRect(screen, 0, 0, jpegdims.w, jpegdims.h);
 }
 
 static int reentry = 0;
 void x_shutdown(int a)
 {
-	if( reentry )				/* Not perfect but good enough... */
+	int n;
+
+	if( reentry )		/* Not perfect but good enough... */
 		return;
 	reentry = 1;
-  printf("Ctrl-C shutdown!\n");
+	printf("Ctrl-C shutdown!\n");
   
-  if (el.has_audio && audio_enable) 
-	  audio_shutdown();
+	if (el.has_audio && audio_enable) 
+		audio_shutdown();
 
-  mjpeg_close(mjpeg);
+	mjpeg_close(mjpeg);
 
-  if (soft_play) 
-	  SDL_Quit();
-  /* Force direct exit - main thread could be in a wait on the now killed
-	 mjpeg thread and suchlike things. */
-  _exit(1);
+	if (soft_play)
+	{
+		for (n=0; n<3; n++)
+		{
+			free(yuv[n]);
+		}
+		free(jpeg_data);
+		SDL_FreeYUVOverlay(yuv_overlay);
+		SDL_Quit();
+	}
+
+	/* Force direct exit - main thread could be in a wait on the now killed
+	   mjpeg thread and suchlike things. */
+	_exit(1);
 }
 
 
@@ -602,12 +728,223 @@ void paste_frames(int dest)
 	inc_frames(dest - nframe);
 }
 
+/* The main editor loop:
+ *  'pN'           - sets play speed to N (...,-1,0,1,...)
+ *  '+'            - goes to next frame (only makes sense when playspeed=0)
+ *  '-'            - goes to previous frame
+ *  'aN'           - N = [01], 0 means disable audio, 1 means enable audio
+ *  'sX'           - X = num   : goto frame 'num'
+ *                   X = +/-num: go 'num' frames back/forward
+ *  'eX [options]' - Editing option X with optional options (see below)
+ *  'om [options]' - Open movie (arg1) frames (arg2-arg3)
+ *  'wa [file]'    - Save current editlist to file [file]
+ *  'ws [file]'    - Save current selection to file [file]
+ *  'q'            - Quit
+ *
+ * Editing options ('eX [options]'):
+ *  'eu N1 N2'           - cut frame N1-N2 to selection
+ *  'eo N1 N2'           - copy frame N1-N2 to selection
+ *  'ep'                 - Paste selection-frames in the movie at the current position
+ *  'em N1 N2 N3'        - Move frames N1-N2 to position N3 (N3 = position before cutting)
+ *  'ed N1 N2'           - Remove frames N1-N2 from the playlist
+ *  'ea [file] N1 N2 N3' - Add movie [file] frames N1-N2 to the current playlist at N3
+ *                         If N1 is -1, the whole movie is added
+ *  'es N1 N2'           - Set playable part of playlist to N1-N2 (for trimming)
+ *                         If N1 is -1, the whole movie will be seen
+ */
 
-/* (Ronald) The following functions are all (almost directly) copied
-   from main(), taken out of there in order to:
-   - Make main() smaller
-   - Make main() smaller
-*/
+int process_edit_input(char *input_buffer, int length)
+{
+	int i;
+
+	input_buffer[length-1] = 0;
+	if(input_buffer[0]=='q') return -1; /* We are done */
+	switch(input_buffer[0])
+	{
+		case 'p': play_speed = atoi(input_buffer+1); break;
+		case '+': inc_frames( 1); break;
+		case '-': inc_frames(-1); break;
+		case 'a': audio_mute = input_buffer[1]=='0'; break;
+		case 's':
+			if(input_buffer[1]=='+')
+			{
+				int nskip;
+				nskip = atoi(input_buffer+2);
+				inc_frames(nskip);
+			}
+			else if(input_buffer[1]=='-')
+			{
+				int nskip;
+				nskip = atoi(input_buffer+2);
+				inc_frames(-nskip);
+			}
+			else
+			{
+				int nskip;
+				nskip = atoi(input_buffer+1)-nframe;
+				inc_frames(nskip);
+			}
+			break;
+
+		case 'e':
+			/* Do some simple editing:
+			   next chars are u (for cUt), o (for cOpy) or p (for Paste) */
+			if(input_buffer[1]=='u'||input_buffer[1]=='o')
+			{
+				/* Cut/Copy scene (nc1->nc2) into memory */
+				int nc1, nc2;
+				sscanf(input_buffer+2,"%d %d",&nc1,&nc2);
+				cut_copy_frames(nc1, nc2, input_buffer[1]);
+			}
+
+			if(input_buffer[1]=='p')
+			{
+				/* Paste current selection in current position */
+				int k,i;
+
+				el.frame_list = realloc(el.frame_list,
+				(el.video_frames+save_list_len)*sizeof(long));
+				if(el.frame_list==0) malloc_error();
+				k = save_list_len;
+				for(i=el.video_frames-1;i>nframe;i--) el.frame_list[i+k] = el.frame_list[i];
+				k = nframe+1;
+				for(i=0;i<save_list_len;i++) el.frame_list[k++] = save_list[i];
+				el.video_frames += save_list_len;
+				printf("Paste done ---- !!!!\n");
+			}
+
+			if(input_buffer[1]=='m')
+			{
+				/* Move scene(nc1->nc2) to position (nc3) */
+				int nc1, nc2, nc3;
+				sscanf(input_buffer+2,"%d %d %d",&nc1,&nc2, &nc3);
+				cut_copy_frames(nc1, nc2, 'u');
+				paste_frames(nc3);
+			}
+
+			if(input_buffer[1]=='d')
+			{
+				/* Delete scene(nc1->nc2) */
+				int k, nc1, nc2;
+				sscanf(input_buffer+2,"%d %d",&nc1,&nc2);
+				k = nc2 - nc1+1;
+				if(nframe>=nc1 && nframe<=nc2) nframe = nc1-1;
+				if(nframe>nc2) nframe -= k;
+				for(i=nc2+1;i<el.video_frames;i++)
+				{
+					el.frame_list[i-k] = el.frame_list[i];
+					if(i-k < min_frame_num) min_frame_num--;
+					if(i-k <= max_frame_num) max_frame_num--;
+				}
+				el.video_frames -= k;
+				check_min_max();
+			}
+
+			if(input_buffer[1]=='a')
+			{
+				/* Add scenes from new movie file...
+				arg1=movie.avi/mov/movtar, arg2/arg3=start/stop frames */
+				int nc1, nc2, dest;
+				char movie[256];
+				sscanf(input_buffer+2,"%s %d %d %d",movie,&nc1,&nc2,&dest);
+				add_new_frames(movie, nc1, nc2, dest);
+			}
+
+			if(input_buffer[1]=='s')
+			{
+				/* Set lowest/highest frame to display, nc1==-1 means whole movie */
+				int nc1, nc2;
+				sscanf(input_buffer+2,"%d %d",&nc1,&nc2);
+				if(nc1<-1||nc1>nc2||nc2>=el.video_frames)
+				{
+					fprintf(stderr,"Wrong parameters for setting frame borders!\n");
+				}
+				else if (nc1==-1)
+				{
+					min_frame_num = 0;
+					max_frame_num = el.video_frames-1;
+				}
+				else
+				{
+					min_frame_num = nc1;
+					max_frame_num = nc2;
+				}
+			}
+			break;
+
+		case 'o':
+			/* Open a new file - caution!!! There is no checking
+			   for sound, equivalent properties or anything!!! */
+			if(input_buffer[1]=='m')
+			{
+				/* Movie, 'om file beginframe endframe',
+				   beginframe=-1 means whole file */
+				char movie[256];
+				char *arguments[1];
+				int nc1, nc2, x, nc3, nc4;
+
+				play_speed = 0;
+				nframe = 0;
+				/* nc1-nc2 = movie, nc3-nc4 is part of movie that should be seen
+				   nc3=-1 means just see nc1-nc2, nc3/nc4 can also be omitted */
+				x = sscanf(input_buffer+2, "%s %d %d %d %d", movie, &nc1, &nc2, &nc3, &nc4);
+				arguments[0] = movie;
+				printf("Opening %s", movie);
+				if (nc1!=-1) printf(" (frames %d-%d)", nc1, nc2);
+				printf("\n");
+				read_video_files(arguments, 1, &el);
+				if (nc2>=el.video_frames || nc1 == -1) nc2=el.video_frames-1;
+				if (nc1<0) nc1=0;
+				if (nc4>nc2) nc4=nc2;
+				if (nc3<nc1 && nc3!=-1) nc3=nc1;
+
+				if (x == 3)
+				{
+					min_frame_num = 0;
+					max_frame_num = nc2 - nc1;
+				}
+				else if (nc3 == -1)
+				{
+					min_frame_num = 0;
+					max_frame_num = nc2 - nc1;
+				}
+				else
+				{
+					min_frame_num = nc3 - nc1;
+					max_frame_num = el.video_frames - 1 + nc4 - nc2;
+				}
+
+				for(i=0;i<nc1;i++) el.frame_list[i] = el.frame_list[i+nc1];
+				el.video_frames = nc2-nc1+1;
+			}
+			break;
+
+		case 'w':
+			/* Write edit list */
+			if(input_buffer[1]=='a')
+			{
+				char filename[256];
+				sscanf(input_buffer+3,"%s",filename);
+				write_edit_list(filename,0,el.video_frames-1,&el);
+			}
+			if(input_buffer[1]=='s')
+			{
+				char filename[256];
+				int ns1, ns2;
+				sscanf(input_buffer+3,"%d %d %s",&ns1,&ns2,filename);
+				write_edit_list(filename,ns1,ns2,&el);
+			}
+			break;
+	}
+	printf("- play speed =%3d, pos =%6ld/%ld >",play_speed,nframe,el.video_frames);
+
+	return 0;
+}
+
+
+/* Functions for command-line options, supporting
+ * getopt() and getopt_long()
+ */
 
 static int set_option(char *name, char *value)
 {
@@ -668,7 +1005,7 @@ static int set_option(char *name, char *value)
 	}
 	else if (strcmp(name, "playback")==0 || strcmp(name, "p")==0)
 	{
-		switch (optarg[0])
+		switch (value[0])
 		{
 			case 'S':
 				printf("Choosing software MJPEG playback\n");
@@ -687,6 +1024,15 @@ static int set_option(char *name, char *value)
 				break;
 		}
 	}
+	else if (strcmp(name, "size")==0)
+	{
+		if (sscanf(value, "%dx%d", &soft_width, &soft_height)!=2)
+		{
+			fprintf(stderr, "--size parameter requires NxN argument\n");
+			nerr++;
+		}
+	}
+
 	else nerr++; /* unknown option - error */
 
 	return nerr;
@@ -712,6 +1058,7 @@ static void check_command_line_options(int argc, char *argv[])
 		{"playback"        ,1,0,0},   /* -p/--playback [SHC]  */
 		{"audio"           ,1,0,0},   /* -a/--audio [01]      */
 		{"gui-mode"        ,1,0,0},   /* -g/--gui-mode        */
+		{"size"            ,1,0,0},   /* --size               */
 		{0,0,0,0}
 	};
 
@@ -757,12 +1104,10 @@ int main(int argc, char ** argv)
 	long nb_out, nb_err;
 	long audio_buffer_size = 0;
 	unsigned char * buff;
-	int nerr, n, i, skipv, skipa, skipi, nskip;
+	int n, skipv, skipa, skipi;
 	double tdiff, tdiff1, tdiff2;
 	char input_buffer[256];
 	long frame_number[256]; /* Must be at least as big as the number of buffers used */
-
-	char *sbuffer;
 	struct mjpeg_params bp;
 	struct mjpeg_sync bs;
 	struct sigaction action, old_action;
@@ -813,69 +1158,10 @@ int main(int argc, char ** argv)
 
 	buff = mjpeg_get_io_buffer(mjpeg);
 
+	/* initialize SDL */
 	if (soft_play)
-	{
-		char wintitle[255];
-		printf("Initialising SDL\n");
-		if (SDL_Init (SDL_INIT_VIDEO) < 0)
-		{
-			fprintf( stderr, "SDL Failed to initialise...\n" );
-			exit(1);
-		}
+		initialize_SDL_window();
 
-		/* Now initialize SDL */
-		/* Set the video mode, and rely on SDL to find a nice mode */
-		if (soft_fullscreen)
-			screen = SDL_SetVideoMode(el.video_width, 
-				  el.video_height, 0, SDL_HWSURFACE | SDL_FULLSCREEN);
-		else
-			screen = SDL_SetVideoMode(el.video_width, 
-				  el.video_height, 0, SDL_SWSURFACE);
-
-		SDL_EventState(SDL_KEYDOWN, SDL_ENABLE);
-		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-
-		if ( screen == NULL )  
-		{
-			lavplay_msg(LAVPLAY_ERROR,"SDL: Output screen error", SDL_GetError());
-			exit(1);
-		}
-       
-		if (screen->format->BytesPerPixel == 2)
-			mjpeg_calc_rgb16_params(screen->format->Rloss, screen->format->Gloss,
-				screen->format->Bloss, screen->format->Rshift,
-				screen->format->Gshift, screen->format->Bshift);
-
-		jpegdims.x = 0; // This is not going to work with interlaced pics !!
-		jpegdims.y = 0;
-		jpegdims.w = el.video_width;
-		jpegdims.h = el.video_height;
-       
-		/* Lock the screen to test, and to be able to access screen->pixels */
-		lock_screen();
-       
-		/* Draw bands of color on the raw surface, as run indicator for debugging */
-		sbuffer = (char *)screen->pixels;
-		for ( i=0; i < screen->h; ++i ) 
-		{
-			memset(sbuffer,(i*255)/screen->h,
-				   screen->w * screen->format->BytesPerPixel);
-			sbuffer += screen->pitch;
-		}
-
-		/* Set up the necessary callbacks for the decompression process */
-		mjpeg->lock_screen_callback = lock_screen;
-		mjpeg->unlock_update_screen_callback = unlock_update_screen;
-
-		/* The output framebuffer parameters (where the JPEG frames are rendered into) */
-		mjpeg_set_framebuf(mjpeg, screen->pixels, screen->w, screen->h, screen->format->BytesPerPixel); 
-
-		/* Set the windows title (currently simply the first file name) */
-		sprintf(wintitle, "lavplay %s", el.video_file_list[0]);
-		SDL_WM_SetCaption(wintitle, "0000000");  
-
-		unlock_update_screen();
-	}
 	if (el.has_audio && audio_enable)
 	{
 		res = audio_init(0,(el.audio_chans>1),el.audio_bits,
@@ -1172,195 +1458,8 @@ int main(int argc, char ** argv)
 
 		res = read(0,input_buffer,256);
 		if(res>0)
-		{
-			input_buffer[res-1] = 0;
-			if(input_buffer[0]=='q') break; /* We are done */
-			switch(input_buffer[0])
-			{
-			case 'p': play_speed = atoi(input_buffer+1); break;
-			case '+': inc_frames( 1); break;
-			case '-': inc_frames(-1); break;
-			case 'a': audio_mute = input_buffer[1]=='0'; break;
-			case 's':
-				if(input_buffer[1]=='+')
-				{
-					nskip = atoi(input_buffer+2);
-					inc_frames(nskip);
-				}
-				else if(input_buffer[1]=='-')
-				{
-					nskip = atoi(input_buffer+2);
-					inc_frames(-nskip);
-				}
-				else
-				{
-					nskip = atoi(input_buffer+1)-nframe;
-					inc_frames(nskip);
-				}
+			if (process_edit_input(input_buffer, res) < 0)
 				break;
-
-			case 'e':
-
-				/* Do some simple editing:
-				   next chars are u (for cUt), o (for cOpy) or p (for Paste) */
-
-				if(input_buffer[1]=='u'||input_buffer[1]=='o')
-				{
-					/* Cut/Copy scene (nc1->nc2) into memory */
-					int nc1, nc2;
-					sscanf(input_buffer+2,"%d %d",&nc1,&nc2);
-					cut_copy_frames(nc1, nc2, input_buffer[1]);
-				}
-
-				if(input_buffer[1]=='p')
-				{
-					/* Paste current selection in current position */
-					int k,i;
-
-					el.frame_list = realloc(el.frame_list,
-						(el.video_frames+save_list_len)*sizeof(long));
-					if(el.frame_list==0) malloc_error();
-					k = save_list_len;
-					for(i=el.video_frames-1;i>nframe;i--) el.frame_list[i+k] = el.frame_list[i];
-					k = nframe+1;
-					for(i=0;i<save_list_len;i++) el.frame_list[k++] = save_list[i];
-					el.video_frames += save_list_len;
-					printf("Paste done ---- !!!!\n");
-				}
-
-				if(input_buffer[1]=='m')
-				{
-					/* Move scene(nc1->nc2) to position (nc3) */
-					int nc1, nc2, nc3;
-					sscanf(input_buffer+2,"%d %d %d",&nc1,&nc2, &nc3);
-					cut_copy_frames(nc1, nc2, 'u');
-					paste_frames(nc3);
-				}
-
-				if(input_buffer[1]=='d')
-				{
-					/* Delete scene(nc1->nc2) */
-					int k, nc1, nc2;
-					sscanf(input_buffer+2,"%d %d",&nc1,&nc2);
-					k = nc2 - nc1+1;
-					if(nframe>=nc1 && nframe<=nc2) nframe = nc1-1;
-					if(nframe>nc2) nframe -= k;
-					for(i=nc2+1;i<el.video_frames;i++)
-					{
-						el.frame_list[i-k] = el.frame_list[i];
-						if(i-k < min_frame_num) min_frame_num--;
-						if(i-k <= max_frame_num) max_frame_num--;
-					}
-					el.video_frames -= k;
-					check_min_max();
-				}
-
-				if(input_buffer[1]=='a')
-				{
-					/* Add scenes from new movie file...
-					arg1=movie.avi/mov/movtar, arg2/arg3=start/stop frames */
-					int nc1, nc2, dest;
-					char movie[256];
-					sscanf(input_buffer+2,"%s %d %d %d",movie,&nc1,&nc2,&dest);
-					add_new_frames(movie, nc1, nc2, dest);
-				}
-
-				if(input_buffer[1]=='s')
-				{
-					/* Set lowest/highest frame to display, nc1==-1 means whole movie */
-					int nc1, nc2;
-					sscanf(input_buffer+2,"%d %d",&nc1,&nc2);
-					if(nc1<-1||nc1>nc2||nc2>=el.video_frames)
-					{
-						fprintf(stderr,"Wrong parameters for setting frame borders!\n");
-					}
-					else if (nc1==-1)
-					{
-						min_frame_num = 0;
-						max_frame_num = el.video_frames-1;
-					}
-					else
-					{
-						min_frame_num = nc1;
-						max_frame_num = nc2;
-					}
-				}
-
-				break;
-
-			case 'o':
-
-				/* Open a new file - caution!!! There is no checking
-				   for sound, equivalent properties or anything!!! */
-
-				if(input_buffer[1]=='m')
-				{
-					/* Movie, 'om file beginframe endframe',
-					   beginframe=-1 means whole file */
-					char movie[256];
-					char *arguments[1];
-					int nc1, nc2, x, nc3, nc4;
-
-					play_speed = 0;
-					nframe = 0;
-					/* nc1-nc2 = movie, nc3-nc4 is part of movie that should be seen
-					   nc3=-1 means just see nc1-nc2, nc3/nc4 can also be omitted */
-					x = sscanf(input_buffer+2, "%s %d %d %d %d", movie, &nc1, &nc2, &nc3, &nc4);
-
-					arguments[0] = movie;
-					printf("Opening %s", movie);
-					if (nc1!=-1) printf(" (frames %d-%d)", nc1, nc2);
-					printf("\n");
-					read_video_files(arguments, 1, &el);
-					if (nc2>=el.video_frames || nc1 == -1) nc2=el.video_frames-1;
-					if (nc1<0) nc1=0;
-					if (nc4>nc2) nc4=nc2;
-					if (nc3<nc1 && nc3!=-1) nc3=nc1;
-
-					if (x == 3)
-					{
-						min_frame_num = 0;
-						max_frame_num = nc2 - nc1;
-					}
-					else if (nc3 == -1)
-					{
-						min_frame_num = 0;
-						max_frame_num = nc2 - nc1;
-					}
-					else
-					{
-						min_frame_num = nc3 - nc1;
-						max_frame_num = el.video_frames - 1 + nc4 - nc2;
-					}
-
-					for(i=0;i<nc1;i++) el.frame_list[i] = el.frame_list[i+nc1];
-					el.video_frames = nc2-nc1+1;
-				}
-
-				break;
-
-			case 'w':
-
-				/* Write edit list */
-
-				if(input_buffer[1]=='a')
-				{
-					char filename[256];
-					sscanf(input_buffer+3,"%s",filename);
-					write_edit_list(filename,0,el.video_frames-1,&el);
-				}
-				if(input_buffer[1]=='s')
-				{
-					char filename[256];
-					int ns1, ns2;
-					sscanf(input_buffer+3,"%d %d %s",&ns1,&ns2,filename);
-					write_edit_list(filename,ns1,ns2,&el);
-				}
-
-				break;
-			}
-			printf("- play speed =%3d, pos =%6ld/%ld >",play_speed,nframe,el.video_frames);
-		}
 		fflush(stdout);
 		fflush(stderr);
 	}
@@ -1377,7 +1476,16 @@ int main(int argc, char ** argv)
 
 	/* Stop streaming playback */
 	mjpeg_close(mjpeg);
-	if (soft_play) SDL_Quit();
+	if (soft_play)
+	{
+		for (n=0; n<3; n++)
+		{
+			free(yuv[n]);
+		}
+		free(jpeg_data);
+		SDL_FreeYUVOverlay(yuv_overlay);
+		SDL_Quit();
+	}
 
 	if(sync_corr)
 	{
