@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_types.h,v 1.11 2003/11/26 21:39:45 sms00 Exp $
+    $Id: mjpeg_types.h,v 1.12 2004/08/08 22:39:56 sms00 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -47,12 +47,8 @@ You can do this by either defining their presence before including \
 mjpegtools' header files (e.g. "#define HAVE_STDINT_H"), or you can check \
 for their presence in a configure script. mjpegtools' configure \
 script is a good example of how to do this. You need to check for \
-PRId64, stdbool.h, inttypes.h, stdint.h and sys/types.h
+stdbool.h, inttypes.h, stdint.h and sys/types.h
 #endif /* HAVE_STDINT_H */
-
-#ifndef PRId64
-#define PRId64 PRID64_STRING_FORMAT
-#endif
 
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
 #define GNUC_PRINTF( format_idx, arg_idx )    \
