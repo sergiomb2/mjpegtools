@@ -14,12 +14,12 @@
  * where options are as follows:
  *
  *   -f/--format [aAqm] --- Output file format:
- *       'a': AVI (default)
- *       'A': AVI with fields exchanged
- *       'q': quicktime (if compiled with quicktime support)
- *       'm': movtar (if compiled with movtar support)
- *       Hint: If your AVI video looks strange, try 'A' instead 'a'
- *       and vice versa.
+ *      'a': AVI (default)
+ *      'A': AVI with fields exchanged
+ *      'q': quicktime (if compiled with quicktime support)
+ *      'm': movtar (if compiled with movtar support)
+ *      Hint: If your AVI video looks strange, try 'A' instead 'a'
+ *      and vice versa.
  *		 
  *   -i/--input [pPnNsStTa] --- Input Source:
  *      'p': PAL       Composite Input
@@ -1207,7 +1207,6 @@ static void check_command_line_options(int argc, char *argv[])
 	if (argc < 2)  Usage(argv[0]);
 
 	/* Get options */
-
 	nerr = 0;
 	while( (n=getopt_long(argc,argv,"v:f:i:d:g:q:t:ST:wa:r:sl:mR:c:n:b:C:",
 		long_options, &option_index)) != EOF)
@@ -1642,11 +1641,10 @@ static void wait_for_enter(char *AUDIO_buff, struct timeval *audio_t0, int *asta
 #ifdef REC_SYNC_DEBUG
 static void output_stats(long int num_ins, long int num_lost,
 	long int num_del, long int num_aerr, double tdiff1, double tdiff2,
-	int stats_changed, struct timeval *prev_sync, struct timeval *cur_sync)
+	struct timeval *prev_sync, struct timeval *cur_sync)
 #else
 static void output_stats(long int num_ins, long int num_lost,
-	long int num_del, long int num_aerr,
-	int stats_changed, struct timeval *prev_sync, struct timeval *cur_sync)
+	long int num_del, long int num_aerr)
 #endif
 {
 	int nf, ns, nm, nh;
@@ -1665,10 +1663,8 @@ static void output_stats(long int num_ins, long int num_lost,
 	ns = ns % 60;
 	nh = nm / 60;
 	nm = nm % 60;
-	if( prev_sync->tv_usec > cur_sync->tv_usec )
-		prev_sync->tv_usec -= 1000000;
 #ifdef REC_SYNC_DEBUG
-	if( prev_syn->.tv_usec > cur_sync->tv_usec )
+	if( prev_sync->tv_usec > cur_sync->tv_usec )
 		prev_sync->tv_usec -= 1000000;
 	sprintf(infostring,"%2d.%2.2d.%2.2d:%2.2d int: %05ld lst:%4lu ins:%3lu del:%3lu "
 		"ae:%3lu td1=%.3f td2=%.3f\r",
@@ -1681,8 +1677,6 @@ static void output_stats(long int num_ins, long int num_lost,
 		num_lost, num_ins, num_del, num_aerr );
 #endif
 	lavrec_msg(LAVREC_PROGRESS,infostring,"");
-	if( stats_changed )
-		printf("\n");
 }
 
 int main(int argc, char ** argv)
@@ -1898,11 +1892,14 @@ int main(int argc, char ** argv)
 		/* Output statistics */
 		if(!single_frame && output_status<3 && (verbose > 0 || stats_changed))
 		{
-			output_stats(num_ins, num_lost, num_del, num_aerr,
 #ifdef REC_SYNC_DEBUG
-				tdiff1, tdiff2,
+			output_stats(num_ins, num_lost, num_del, num_aerr,
+				tdiff1, tdiff2, &prev_sync, &cur_sync);
+#else
+			output_stats(num_ins, num_lost, num_del, num_aerr);
 #endif
-				stats_changed, &prev_sync, &cur_sync);
+
+			if( stats_changed ) printf("\n");
 			stats_changed = 0;
 		}
 
