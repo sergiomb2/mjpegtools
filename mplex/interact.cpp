@@ -21,8 +21,9 @@
 
 
 #include <config.h>
-#include <string>
 #include <stdlib.h>
+#include <ctype.h>
+#include <string>
 #ifdef _WIN32
 #include <win32defs.h>
 #else
