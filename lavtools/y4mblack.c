@@ -1,5 +1,5 @@
 /*
- * $Id: y4mblack.c,v 1.3 2003/12/21 07:57:25 sms00 Exp $
+ * $Id: y4mblack.c,v 1.4 2004/03/31 05:46:57 sms00 Exp $
  *
  * Used to generate YUV4MPEG2 frames with the specific interlace, 
  * dimensions, pixel aspect  and Y/U/V values.  By default the frames 
@@ -144,7 +144,9 @@ main(int argc, char **argv)
 	y4m_si_set_framerate(&ostream, rate_ratio);
 	y4m_si_set_sampleaspect(&ostream, aspect_ratio);
 	if	(xcss411)
-		y4m_xtag_add(&(ostream.x_tags), "XYSCSS=411");
+		y4m_si_set_chroma(&ostream, Y4M_CHROMA_411);
+	else
+		y4m_si_set_chroma(&ostream, Y4M_CHROMA_420MPEG2);
 
 /*
  * For 4:1:1 and 4:2:0 the sizes of the U and V arrays are different but the
