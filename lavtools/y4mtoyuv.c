@@ -1,5 +1,5 @@
 /*
- * $Id: y4mtoyuv.c,v 1.4 2004/01/01 23:46:42 sms00 Exp $
+ * $Id: y4mtoyuv.c,v 1.5 2004/01/05 05:42:27 sms00 Exp $
  *
  * Simple program to convert the YUV4MPEG2 format used by the 
  * mjpeg.sourceforge.net suite of programs into pure EYUV format used
@@ -20,19 +20,18 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
-#include <mjpegtools/yuv4mpeg.h>
-#include <mjpegtools/mjpeg_logging.h>
-
-extern	char	*__progname;
+#include "yuv4mpeg.h"
+#include "mjpeg_logging.h"
 
 static	void	usage();
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 	{
 	int	c, n, width, height, frames, err, uvlen;
 	int	fd_in = fileno(stdin), fd_out = fileno(stdout);
-	int	ss_v, ss_h;
+	int	ss_v = 0, ss_h = 0;
 	const	char *tag;
 	u_char	*yuv[3];
 	y4m_xtag_list_t *xtags;
