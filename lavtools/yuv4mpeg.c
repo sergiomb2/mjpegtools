@@ -1,5 +1,5 @@
 /*
- * $Id: yuv4mpeg.c,v 1.10 2004/05/12 03:53:25 sms00 Exp $
+ * $Id: yuv4mpeg.c,v 1.11 2004/07/17 16:19:17 sms00 Exp $
  *
  * A simple progam that's quite useful when dealing with raw/headerless data 
  * from programs such as ffmpeg or fxtv.
@@ -57,6 +57,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "yuv4mpeg.h"
 
@@ -212,7 +213,7 @@ static void usage()
 void chroma_usage(void)
 	{
 	int mode = 0;
-	char *keyword;
+	const char *keyword;
 
 	fprintf(stderr, "%s -x usage: Only the 3 plane formats are actually supported\n",
 		__progname);

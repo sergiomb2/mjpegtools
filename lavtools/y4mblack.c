@@ -1,5 +1,5 @@
 /*
- * $Id: y4mblack.c,v 1.5 2004/04/06 16:33:38 sms00 Exp $
+ * $Id: y4mblack.c,v 1.6 2004/07/17 16:19:17 sms00 Exp $
  *
  * Used to generate YUV4MPEG2 frames with the specific interlace, 
  * dimensions, pixel aspect  and Y/U/V values.  By default the frames 
@@ -194,7 +194,7 @@ void usage(void)
 void chroma_usage(void)
 	{
 	int mode = 0;
-	char *keyword;
+	const char *keyword;
 
 	fprintf(stderr, "%s -x usage: Only the 3 plane formats are actually supported\n",
 		__progname);
