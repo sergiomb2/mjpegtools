@@ -1,6 +1,6 @@
 
 /*
- * $Id: y4mshift.c,v 1.4 2003/05/14 22:13:55 sms00 Exp $
+ * $Id: y4mshift.c,v 1.5 2003/05/22 15:37:16 sms00 Exp $
  *
  * written by Steven M. Schultz <sms@2BSD.COM>
  *
@@ -40,7 +40,7 @@ static  void    usage();
 int main(int argc, char **argv)
         {
         int     i, c, width, height, frames, err, uvlen;
-        int     shiftnum = 0, rightshift, vshift = 0;
+        int     shiftnum = 0, rightshift, vshift = 0, monochrome = 0;
         int     verbose = 0, fdin;
         u_char  *yuv[3], *line;
 	char	*borderarg = NULL;
@@ -50,10 +50,13 @@ int main(int argc, char **argv)
         fdin = fileno(stdin);
 
         opterr = 0;
-        while   ((c = getopt(argc, argv, "hvn:N:b:")) != EOF)
+        while   ((c = getopt(argc, argv, "hvn:N:b:M")) != EOF)
                 {
                 switch  (c)
                         {
+			case	'M':
+				monochrome = 1;
+				break;
 			case	'b':
 				borderarg = strdup(optarg);
 				break;
@@ -198,6 +201,11 @@ outputframe:
 			vertical_shift(yuv, vshift, width, height);
 		if	(borderarg)
 			black_border(yuv, borderarg, width, height);
+		if	(monochrome)
+			{
+			memset(&yuv[1][0], 128, (width / 2) * (height / 2));
+			memset(&yuv[2][0], 128, (width / 2) * (height / 2));
+			}
                 y4m_write_frame(fileno(stdout), &ostream, &iframe, yuv);
                 }
         y4m_fini_frame_info(&iframe);
