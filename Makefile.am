@@ -1,6 +1,6 @@
 # Process with automake to produce Makefile.in
 
-SUBDIRS    = utils lavtools aenc mplex mpeg2enc	scripts docs yuvdenoise yuvfilters
+SUBDIRS    = utils lavtools aenc mplex mpeg2enc	scripts docs yuvdenoise mjpegtools yuvfilters
 
 bin_SCRIPTS = mjpegtools-config
 
@@ -19,11 +19,15 @@ EXTRA_DIST = \
  BUGS\
  CHANGES\
  PLANS\
- mjpeg_howto.txt\
- mjpegtools.spec\
+ mjpeg_howto.txt \
+ mjpegtools.spec \
+ mjpegtools.pc.in \
  autogen.sh\
  depcomp\
  .cvsignore
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = mjpegtools.pc
 
 DISTCLEANFILES = \
  confdefs.h \
