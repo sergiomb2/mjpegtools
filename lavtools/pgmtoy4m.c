@@ -1,5 +1,5 @@
 /*
- * $Id: pgmtoy4m.c,v 1.1 2003/05/26 17:05:40 sms00 Exp $
+ * $Id: pgmtoy4m.c,v 1.2 2003/05/26 18:03:16 sms00 Exp $
  *
  * pgmtoy4m converts the PGM output of "mpeg2dec -o pgmpipe" to YUV4MPEG2 on
  * stdout.
@@ -55,7 +55,7 @@ getmagicnumber(int fd)
 	}
 
 static int
-pread(int fd, void *buf, int len)
+piperead(int fd, void *buf, int len)
 	{
 	int n = 0;
 	int r = 0;
@@ -191,11 +191,11 @@ main(int argc, char **argv)
 	frameno = 0;
 	while	(1)	
 		{
-		pread(fdin, yuv[0], width * height);
+		piperead(fdin, yuv[0], width * height);
 		for	(i = 0; i < height / 2; i++)
 			{
-			pread(fdin, yuv[1] + (i * w2), w2);
-			pread(fdin, yuv[2] + (i * w2), w2);
+			piperead(fdin, yuv[1] + (i * w2), w2);
+			piperead(fdin, yuv[2] + (i * w2), w2);
 			}
 		y4m_write_frame(fdout, &ostream, &oframe, yuv);
 
