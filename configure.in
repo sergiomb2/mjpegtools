@@ -410,7 +410,8 @@ mjpeg/Makefile
 mpeg2enc/Makefile
 aenc/Makefile
 mplex/Makefile
-scripts/Makefile])
+scripts/Makefile
+utils/Makefile])
 
 AC_DEFINE(VERSION, ${VERSION})
 
