@@ -1,6 +1,6 @@
 
 /*
- * $Id: y4mblackfix.c,v 1.5 2003/03/13 05:31:47 sms00 Exp $
+ * $Id: y4mblackfix.c,v 1.6 2003/03/13 05:35:28 sms00 Exp $
  *
  * written by Steven M. Schultz <sms@2BSD.COM>
  * Simple filter to reduce the wandering grey blocks that can be seen in
@@ -168,13 +168,6 @@ int main(int argc, char **argv)
 			}
 
 gotenough:
-/*
- * Log the stats at INFO level - print the frame number and an 'X' if the 
- * frame is going to undergo the actual substitution process.
-*/
-		mjpeg_info("frame %d %s", frames,
-			num_dark < pixel_thresh ? "" : "X");
-
 		if	(num_dark < pixel_thresh || nomodify)
 			goto outputframe;
 
