@@ -40,6 +40,7 @@ int intro_and_options( int, char **, char**);
 void check_files (int argc, char* argv[],
                   vector<IBitStream *> &mpa_file,
                   vector<IBitStream *> &ac3_file,                  
+                  vector<IBitStream *> &lpcm_file,                  
                   vector<IBitStream *> &video_file
 	);
 bool open_file(const char *name);
@@ -81,7 +82,7 @@ extern off_t opt_max_segment_size;
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.1"
-#define MPLEX_DATE   "$Date: 2002/02/04 19:06:14 $"
+#define MPLEX_DATE   "$Date: 2002/09/05 20:37:57 $"
 
 
 #endif // __INTERACT_H__
