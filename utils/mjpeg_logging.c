@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.c,v 1.12 2003/02/12 21:36:32 wackston2 Exp $
+    $Id: mjpeg_logging.c,v 1.13 2004/12/24 23:12:03 sms00 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -35,8 +35,6 @@
 
 extern int fred;
 #include "mjpeg_logging.h"
-
-static const char _rcsid[] = "$Id: ";
 
 #define MAX_DEFAULT_ID_SIZE 16
 #define DEFAULT_DEFAULT_ID "???"
