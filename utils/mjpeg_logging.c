@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.c,v 1.4 2001/04/28 20:49:05 wackston Exp $
+    $Id: mjpeg_logging.c,v 1.5 2001/05/01 22:21:33 rbultje Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -63,15 +63,19 @@ default_mjpeg_log_handler(log_level_t level, const char message[])
   switch(level) {
   case LOG_ERROR:
     fprintf(stderr, "**ERROR: %s", message);
+    fflush(stdout);
     break;
   case LOG_DEBUG:
     fprintf(stderr, "--DEBUG: %s", message);
+    fflush(stdout);
     break;
   case LOG_WARN:
     fprintf(stderr, "++ WARN: %s", message);
+    fflush(stdout);
     break;
   case LOG_INFO:
     fprintf(stderr, "   INFO: %s", message);
+    fflush(stdout);
     break;
   default:
     assert(0);
