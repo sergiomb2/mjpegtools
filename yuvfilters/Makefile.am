@@ -1,4 +1,4 @@
-EXTRA_DIST = install_symlink.sh README.yuvkineco README.2-3pulldown .cvsignore
+EXTRA_DIST = install_symlink.sh README.2-3pulldown .cvsignore
 MAINTAINERCLEANFILES = Makefile.in
 
 YUVFILTER =\
