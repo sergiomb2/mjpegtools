@@ -1,5 +1,5 @@
 /* 
- * $Id: y4munsharp.c,v 1.4 2004/11/17 05:07:57 sms00 Exp $
+ * $Id: y4munsharp.c,v 1.5 2004/12/24 23:31:24 sms00 Exp $
  *
  * Constructed using:
  * unsharp.c 0.10 -- This is a plug-in for the GIMP 1.0
@@ -73,6 +73,7 @@ static int gen_convolve_matrix(double, double **);
 
 	int	lowy = 16, highy = 235, lowuv = 16, highuv = 240;
 
+int
 main(int argc, char **argv)
 	{
 	int	fdin, fdout, err, c, i, verbose = 1;
