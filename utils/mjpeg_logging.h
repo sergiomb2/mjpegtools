@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.h,v 1.5 2001/06/17 13:39:08 wackston Exp $
+    $Id: mjpeg_logging.h,v 1.6 2002/02/27 01:17:57 mdoggydog Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -42,6 +42,9 @@ typedef void(*mjpeg_log_handler_t)(log_level_t level, const char message[]);
 
 mjpeg_log_handler_t
 mjpeg_log_set_handler(mjpeg_log_handler_t new_handler);
+
+int
+mjpeg_default_handler_identifier(const char *new_id);
 
 int
 mjpeg_default_handler_verbosity(int verbosity);
