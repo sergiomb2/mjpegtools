@@ -612,7 +612,7 @@ void SeqEncoder::EncodePicture(Picture *picture)
 
 	picture->MotionSubSampledLum();
 
-    if( encparams.max_encoding_frames  )
+    if( encparams.encoding_parallelism > 0 )
     {
         despatcher.Despatch( picture, &MacroBlock::Encode );
         despatcher.WaitForCompletion();
@@ -634,7 +634,7 @@ void SeqEncoder::EncodePicture(Picture *picture)
 				   picture->pict_struct
 			);
 
-        if( encparams.max_encoding_frames  )
+        if( encparams.encoding_parallelism > 0 )
         {
             despatcher.Despatch( picture, &MacroBlock::Encode );
             despatcher.WaitForCompletion();
@@ -694,7 +694,7 @@ void SeqEncoder::Encode()
     //
     despatcher.Init( encparams.mb_width, 
                      encparams.mb_height, 
-                     encparams.num_cpus );
+                     encparams.encoding_parallelism );
     int i;
 	Picture *b_pictures[encparams.max_active_b_frames];
 	Picture *ref_pictures[encparams.max_active_ref_frames];

@@ -260,10 +260,8 @@ public:
 									 * quantisation boost cuts in */
 
 
-    int max_encoding_frames; /* Maximum number of concurrent
-                                    frames to be concurrently encoded 
-                                    Used to control multi_threading.
-                                 */
+    int encoding_parallelism; /* Maximum number of concurrent worker threads
+                                 to be used for encoding  */
 
     int max_active_ref_frames;
     int max_active_b_frames;

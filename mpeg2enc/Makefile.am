@@ -30,7 +30,7 @@ if HAVE_ASM_NASM
 noinst_LIBRARIES = libmmxsseasm.a
 libmmxsseasm_a_SOURCES = $(mpeg2encpp_MMXSSE_ASM)
 SIMD_INLINE = $(mpeg2encpp_MMXSSE_INLINE)
-LIBSIMDASM_LIB = libmmxsseasm.a
+LIBSIMDASM_LIB = libmmxsseasm.a $(top_builddir)/utils/mmxsse/libmmxsse.a
 
 else
 LIBSIMDASM_LIB = 
@@ -68,10 +68,10 @@ libmpeg2encpp_a_SOURCES = mpeg2encparams.h \
 	mpeg2enc.h \
 	simd.h synchrolib.h $(mpeg2enc_REF) $(SIMD_INLINE)
 
-libmpeg2encpp_a_LDFLAGS = \
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
-	-release $(LT_RELEASE) \
-	-export-dynamic 
+#libmpeg2encpp_a_LDFLAGS = \
+##	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
+#	-release $(LT_RELEASE) \
+#	-export-dynamic 
 
 #libmpeg2encpp_a_DEPENDENCIES = $(top_builddir)/utils/libmotion.a \
 #				$(top_builddir)/utils/libmjpegutils.a \
@@ -83,11 +83,13 @@ libmpeg2encpp_a_LDFLAGS = \
 
 mpeg2enc_DEPENDENCIES = $(top_builddir)/utils/libmotion.a \
 			  $(top_builddir)/utils/libmjpegutils.a \
+			  $(top_builddir)/utils/libcpuaccel.a \
 			  libmpeg2encpp.a  $(LIBSIMDASM_LIB)
 
 mpeg2enc_LDADD= libmpeg2encpp.a \
 			  $(top_builddir)/utils/libmotion.a \
 			  $(top_builddir)/utils/libmjpegutils.a \
+			  $(top_builddir)/utils/libcpuaccel.a \
 				 $(LIBSIMDASM_LIB) \
 		        @PTHREAD_LIBS@ @LIBGETOPT_LIB@ $(LIBM_LIBS)
 

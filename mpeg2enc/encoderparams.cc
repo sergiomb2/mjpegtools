@@ -84,34 +84,34 @@ void EncoderParams::InitEncodingControls( const MPEG2EncOptions &options)
 	{
 
 	case 0 : /* Special case for debugging... turns of multi-threading */
-		max_encoding_frames = 1;
+		encoding_parallelism = 0;
 		refine_from_rec = true;
 		parallel_read = false;
 		break;
 
 	case 1 :
-		max_encoding_frames = 1;
+		encoding_parallelism = 1;
 		refine_from_rec = true;
-		parallel_read = true;
+		parallel_read = options.allow_parallel_read;
 		break;
 	case 2:
-		max_encoding_frames = 2;
+		encoding_parallelism = 2;
 		refine_from_rec = true;
-		parallel_read = true;
+		parallel_read = options.allow_parallel_read ;
 		break;
 	default :
-		max_encoding_frames = options.num_cpus > MAX_WORKER_THREADS-1 ?
+		encoding_parallelism = options.num_cpus > MAX_WORKER_THREADS-1 ?
 			                  MAX_WORKER_THREADS-1 :
 			                  options.num_cpus;
 		refine_from_rec = false;
-		parallel_read = true;
+		parallel_read =  options.allow_parallel_read;
 		break;
 	}
 
     max_active_ref_frames = 
-        M == 0 ? max_encoding_frames : (max_encoding_frames+2);
+        M == 0 ? encoding_parallelism : (encoding_parallelism+2);
     max_active_b_frames = 
-        M <= 1 ? 0 : max_encoding_frames+1;
+        M <= 1 ? 0 : encoding_parallelism+1;
 
 	me44_red		= options.me44_red;
 	me22_red		= options.me22_red;

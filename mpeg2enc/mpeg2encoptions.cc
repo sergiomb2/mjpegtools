@@ -70,6 +70,7 @@ MPEG2EncOptions::MPEG2EncOptions()
     ignore_constraints = 0;
     unit_coeff_elim = 0;
 	verbose = 1;
+    allow_parallel_read = 1;
 };
 
 

@@ -74,7 +74,11 @@ struct MPEG2EncParams
     int ignore_constraints;
     int unit_coeff_elim;
     int verbose;
-
+    int allow_parallel_read;    /* This should be set false when lib is
+                                 * used as a component in Multimedia
+                                 * frameworks that do their own thread
+                                 * scheduling / co-routining
+                                 */
 };
 
 #endif
