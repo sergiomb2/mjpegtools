@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.c,v 1.7 2001/06/09 12:48:32 wackston Exp $
+    $Id: mjpeg_logging.c,v 1.8 2001/08/28 18:43:38 wackston2 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -36,7 +36,7 @@ static const char _rcsid[] = "$Id: ";
 static log_level_t mjpeg_log_verbosity = 0;
 
 
-int default_mjpeg_log_filter( log_level_t level )
+static int default_mjpeg_log_filter( log_level_t level )
 {
   int verb_from_env;
   if( mjpeg_log_verbosity == 0 )

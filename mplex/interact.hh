@@ -79,10 +79,10 @@ extern off_t opt_max_segment_size;
 *************************************************************************/
  
 #define MPLEX_VER    "2.0.2"
-#define MPLEX_DATE   "$Date: 2001/08/26 14:17:54 $"
+#define MPLEX_DATE   "$Date: 2001/08/28 18:43:38 $"
 
 
-#endif  __INTERACT_H__
+#endif // __INTERACT_H__
 
 
 /* 
