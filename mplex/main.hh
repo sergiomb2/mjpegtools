@@ -37,7 +37,7 @@
 *************************************************************************/
  
 #define MPLEX_VER    "1.5.1"
-#define MPLEX_DATE   "$Date: 2001/07/10 20:38:53 $"
+#define MPLEX_DATE   "$Date: 2001/07/13 06:51:37 $"
 
 
 
@@ -165,10 +165,5 @@ extern int verbose;
 extern unsigned int audio_buffer_size;
 extern unsigned int video_buffer_size;
 
-extern int packet_overhead;
-//extern int sector_size;
-//extern int mux_rate;
-//extern int dmux_rate;
-//extern int zero_stuffing;
 
-extern off_t max_system_segment_size;
+extern off_t opt_max_segment_size;
