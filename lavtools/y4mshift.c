@@ -1,6 +1,6 @@
 
 /*
- * $Id: y4mshift.c,v 1.10 2003/11/01 10:18:23 sms00 Exp $
+ * $Id: y4mshift.c,v 1.11 2004/01/01 19:18:48 sms00 Exp $
  *
  * written by Steven M. Schultz <sms@2BSD.COM>
  *
@@ -125,7 +125,10 @@ int main(int argc, char **argv)
 				SS_H = 4;
 				SS_V = 1;
 				} 
-			else if (!strcmp("420", tag))
+			else if (!strcmp(tag, "420") || 
+				 !strcmp(tag, "420MPEG2") || 
+                         	 !strcmp(tag, "420PALDV") || 
+				 !strcmp(tag,"420JPEG"))
 				{
 				SS_H = 2;
 				SS_V = 2;
