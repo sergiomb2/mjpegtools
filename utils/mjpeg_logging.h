@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.h,v 1.2.2.1 2001/04/23 16:34:32 rbultje Exp $
+    $Id: mjpeg_logging.h,v 1.2.2.2 2001/05/21 07:58:16 rbultje Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -32,11 +32,16 @@ typedef enum {
 
 void
 mjpeg_log(log_level_t level, const char format[], ...) GNUC_PRINTF(2, 3);
+
+typedef int(*mjpeg_log_filter_t)(log_level_t level);
     
 typedef void(*mjpeg_log_handler_t)(log_level_t level, const char message[]);
 
 mjpeg_log_handler_t
 mjpeg_log_set_handler(mjpeg_log_handler_t new_handler);
+
+int
+mjpeg_default_handler_verbosity(int verbosity);
 
 void
 mjpeg_debug(const char format[], ...) GNUC_PRINTF(1,2);

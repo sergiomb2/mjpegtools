@@ -1,8 +1,11 @@
 int average_coeff(unsigned int,unsigned int,unsigned int *);
 void print_usage(char *argv[]);
 void handle_args_global (int argc, char *argv[]);
-int average_along_width(unsigned char *,unsigned int *,unsigned char *,int);
-int average_along_height(unsigned char *,unsigned int *,unsigned char *,int);
-int average_Y(unsigned char *,unsigned char *, unsigned int *, unsigned int *);
-int average_UV(unsigned char *,unsigned char *, unsigned int *, unsigned int *);
-unsigned int pgcd(unsigned int,unsigned int);
+void handle_args_dependent (int argc, char *argv[]);
+int main (int argc, char *argv[]);
+int average_coeff (unsigned int input_length, unsigned int output_length,unsigned int *coeff);
+int average_Y (uint8_t * input, uint8_t * output, unsigned int *height_coeff,unsigned int *width_coeff);
+int average_Y_specific (uint8_t * input, uint8_t * output, unsigned int *height_coeff,unsigned int *width_coeff);
+int average_UV (uint8_t * input, uint8_t * output, unsigned int *height_coeff,unsigned int *width_coeff);
+int average_UV_specific (uint8_t * input, uint8_t * output, unsigned int *height_coeff,unsigned int *width_coeff);
+unsigned int pgcd (unsigned int num1, unsigned int num2);

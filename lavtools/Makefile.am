@@ -3,7 +3,7 @@
 INCLUDES =  -I$(top_srcdir) -I$(top_srcdir)/mjpeg -I$(includedir) \
 	-DG_LOG_DOMAIN=\"lavtools\" -DLAVPLAY_VERSION=\"$(VERSION)\" \
 	$(MOVTAR_CFLAGS) $(QUICKTIME_CFLAGS) -I /usr/X11R6/include/X11 \
-        $(DV_CFLAGS) -I /usr/X11R6/include -I../utils
+        $(DV_CFLAGS) -I /usr/X11R6/include -I$(top_srcdir)/utils
 # *********************************************************************
 # Support lib
 
@@ -19,7 +19,7 @@ bin_PROGRAMS = \
 	transist.flt matteblend.flt lavpipe yuvscaler yuvplay
 
 lav_headers = lav_io.h editlist.h xlav.h avilib.h yuv4mpeg.h jpegutils.h \
-	yuvscaler.h
+	yuvscaler.h frquencies.h
 
 ypipe_SOURCES = ypipe.c yuv4mpeg.c $(lav_headers)
 ypipe_LDADD =
@@ -38,7 +38,8 @@ lavplay_SOURCES = lavplay.c avilib.c audiolib.c lav_io.c editlist.c  $(lav_heade
 lavplay_LDADD = -L$(top_builddir)/mjpeg -lmjpeg $(PTHREAD_LIBS) \
 	$(QUICKTIME_LIBS) $(MOVTAR_LIBS) $(SDL_LIBS) $(JPEG_LIBS)
 
-lavrec_SOURCES = lavrec.c avilib.c audiolib.c lav_io.c $(lav_headers)
+lavrec_SOURCES = lavrec.c avilib.c audiolib.c lav_io.c frequencies.c \
+	$(lav_headers)
 lavrec_LDADD = -L$(top_builddir)/mjpeg -lmjpeg $(PTHREAD_LIBS) \
 	$(QUICKTIME_LIBS) $(MOVTAR_LIBS) $(JPEG_LIBS)
 
@@ -78,7 +79,7 @@ v4l_conf_LDADD = $(X_LIBS) -lX11 $(V4LCONF_LIBS) $(X_EXTRA_LIBS)
 
 yuvscaler_SOURCES = yuvscaler.c editlist.c lav_io.c $(lav_headers)
 yuvscaler_LDADD = -L$(top_builddir)/lavtools -lavio $(MOVTAR_LIBS) \
-	$(QUICKTIME_LIBS) $(JPEG_LIBS)
+	$(QUICKTIME_LIBS) $(JPEG_LIBS) -L$(top_builddir)/utils -lutils
 
 yuvplay_SOURCES = yuvplay.c yuv4mpeg.h yuv4mpeg.c
 yuvplay_LDADD = $(SDL_LIBS) $(PTHREAD_LIBS) -L$(top_srcdir)/utils -lutils
