@@ -1,5 +1,5 @@
 /*
- * $Id: y4mstabilizer.c,v 1.1 2004/05/01 02:26:33 sms00 Exp $
+ * $Id: y4mstabilizer.c,v 1.2 2004/05/01 03:44:16 sms00 Exp $
  *
  * written by J. Macropol <jm@wx.gd-ais.com>
  *	Framework and shifting code adapted from y4mshift by Steve Schultz.
@@ -458,12 +458,14 @@ static void
 motion0 (u_char *y0, u_char *y1, int w, int ri, int rj, vec *dij)
 {
 uint32_t SAD, best_SAD = INT_MAX;
+int adjw;
 int i = dij->x, j = dij->y;
 int ii, jj;
 u_char *y1r = y1 + j*w + i;
+
 y0 += rj*w + ri;
 y1 += (j-1)*w + i - 1;
-int adjw = w - 3;
+adjw = w - 3;
 for (jj = -1; jj <= 1; jj++, y1 += adjw)
 for (ii = -1; ii <= 1; ii++, y1++)
 {
