@@ -597,7 +597,7 @@ static unsigned int checksum( uint8_t *buf, unsigned int len )
 
 void SeqEncoder::EncodePicture(Picture *picture)
 {
-	mjpeg_debug("Frame start %d %c %d %d",
+	mjpeg_debug("Start %d %c %d %d",
 			   picture->decode, 
 			   pict_type_char[picture->pict_type],
 			   picture->temp_ref,
@@ -649,7 +649,7 @@ void SeqEncoder::EncodePicture(Picture *picture)
 	}
 
 
-	mjpeg_info("Frame end %d %c quant=%3.2f total act=%8.5f %s", 
+	mjpeg_info("Frame %d %c quant=%3.2f total act=%8.5f %s", 
                picture->decode, 
 			   pict_type_char[picture->pict_type],
                picture->AQ,
@@ -665,29 +665,23 @@ void SeqEncoder::EncodePicture(Picture *picture)
 
 /*********************
  *
- *  Multi-threading capable putseq 
- *
- *  N.b. It is *critical* that the reference and b picture buffers are
- *  at least two larger than the number of encoding worker threads.
- *  The despatcher thread *must* have to halt to wait for free
- *  worker threads *before* it re-uses the record for the
- *  Picture record for the oldest frame that could still be needed
- *  by active worker threads.
+ * Init - Setup worker threads an set internal encoding state for
+ * beginning of stream = beginning of first sequence.  Do no actual
+ * encoding or I/O.... 
+ *  N.b. It is *critical* that the reference and b
+ * picture buffers are at least two larger than the number of encoding
+ * worker threads.  The despatcher thread *must* have to halt to wait
+ * for free worker threads *before* it re-uses the record for the
+ * Picture record for the oldest frame that could still be needed by
+ * active worker threads.
  * 
  *  Buffers sizes are given by encparams.max_active_ref_frames and
  *  encparams.max_active_b_frames
  *
  ********************/
  
-void SeqEncoder::Encode()
+void SeqEncoder::Init()
 {
-    /* DEBUG */
-	uint64_t bits_after_mux;
-	double frame_periods;
-    /* END DEBUG */
-	StreamState ss;
-	int cur_ref_idx = 0;
-	int cur_b_idx = 0;
 
     //
     // Setup the parallel job despatcher...
@@ -695,13 +689,15 @@ void SeqEncoder::Encode()
     despatcher.Init( encparams.mb_width, 
                      encparams.mb_height, 
                      encparams.encoding_parallelism );
+
+    // Allocate the Buffers for pictures active when encoding...
     int i;
-	Picture *b_pictures[encparams.max_active_b_frames];
-	Picture *ref_pictures[encparams.max_active_ref_frames];
+    b_pictures = new (Picture *)[encparams.max_active_b_frames];
     for( i = 0; i < encparams.max_active_b_frames; ++i )
     {
         b_pictures[i] = new Picture(encparams, coder, quantizer);
     }
+    ref_pictures = new (Picture *)[encparams.max_active_ref_frames];
     for( i = 0; i < encparams.max_active_ref_frames; ++i )
     {
         ref_pictures[i] = new Picture(encparams, coder, quantizer);
@@ -713,9 +709,8 @@ void SeqEncoder::Encode()
 	   first frame encoded has no predecessor whose completion it
 	   must wait on.
 	*/
-	Picture *cur_picture, *old_picture;
-	Picture *new_ref_picture, *old_ref_picture;
-
+	cur_ref_idx = 0;
+	cur_b_idx = 0;
 	old_ref_picture = ref_pictures[encparams.max_active_ref_frames-1];
 	new_ref_picture = ref_pictures[cur_ref_idx];
 	cur_picture = new_ref_picture;
@@ -734,85 +729,83 @@ void SeqEncoder::Encode()
 	ss.next_split_point = BITCOUNT_OFFSET + ss.seq_split_length;
 	mjpeg_debug( "Split len = %" PRId64 "", ss.seq_split_length );
 
-	int frame_num = 0;              /* Encoding number */
-
+    frame_num = 0;
 	GopStart( &ss);
+}
+
+bool SeqEncoder::EncodeFrame()
+{
+
+	if( frame_num >= reader.NumberOfFrames() )
+        return false;
 
 	/* loop through all frames in encoding/decoding order */
-	while( frame_num< reader.NumberOfFrames() )
-	{
-		old_picture = cur_picture;
 
-		/* Each bigroup starts once all the B frames of its predecessor
-		   have finished.
-		*/
-        int index;
-        char type;
-		if ( ss.b == 0)
-		{
-            type = 'R';
-			cur_ref_idx = (cur_ref_idx + 1) % encparams.max_active_ref_frames;
-            index = cur_ref_idx;
-			old_ref_picture = new_ref_picture;
-			new_ref_picture = ref_pictures[cur_ref_idx];
-			new_ref_picture->ref_frame = old_ref_picture;
-			new_ref_picture->prev_frame = cur_picture;
-			new_ref_picture->Set_IP_Frame(&ss, reader.NumberOfFrames());
-			cur_picture = new_ref_picture;
-		}
-		else
-		{
-            type = 'B';
+    old_picture = cur_picture;
 
-			Picture *new_b_picture;
-			/* B frame: no need to change the reference frames.
-			   The current frame data pointers are a 3rd set
-			   seperate from the reference data pointers.
-			*/
-			cur_b_idx = ( cur_b_idx + 1) % encparams.max_active_b_frames;
-            index = cur_b_idx;
-			new_b_picture = b_pictures[cur_b_idx];
-			new_b_picture->oldorg = new_ref_picture->oldorg;
-			new_b_picture->oldref = new_ref_picture->oldref;
-			new_b_picture->neworg = new_ref_picture->neworg;
-			new_b_picture->newref = new_ref_picture->newref;
-			new_b_picture->ref_frame = new_ref_picture;
-			new_b_picture->prev_frame = cur_picture;
-			new_b_picture->Set_B_Frame( &ss );
-			cur_picture = new_b_picture;
-		}
+    /* Each bigroup starts once all the B frames of its predecessor
+       have finished.
+    */
+    int index;
+    char type;
+    if ( ss.b == 0)
+    {
+        type = 'R';
+        cur_ref_idx = (cur_ref_idx + 1) % encparams.max_active_ref_frames;
+        index = cur_ref_idx;
+        old_ref_picture = new_ref_picture;
+        new_ref_picture = ref_pictures[cur_ref_idx];
+        new_ref_picture->ref_frame = old_ref_picture;
+        new_ref_picture->prev_frame = cur_picture;
+        new_ref_picture->Set_IP_Frame(&ss, reader.NumberOfFrames());
+        cur_picture = new_ref_picture;
+    }
+    else
+    {
+        type = 'B';
 
-#ifdef SEQ_DEBUG
-        printf( "Mark incomplete: %d %08x prev = %08x ref = %08x\n", index, cur_picture, cur_picture->ref_frame, cur_picture->prev_frame );
-#endif
-		//sync_guard_update( &cur_picture->completion, 0 );
-		reader.ReadFrame( cur_picture->temp_ref+ss.gop_start_frame,
-                          cur_picture->curorg );
+        Picture *new_b_picture;
+        /* B frame: no need to change the reference frames.
+           The current frame data pointers are a 3rd set
+           seperate from the reference data pointers.
+        */
+        cur_b_idx = ( cur_b_idx + 1) % encparams.max_active_b_frames;
+        index = cur_b_idx;
+        new_b_picture = b_pictures[cur_b_idx];
+        new_b_picture->oldorg = new_ref_picture->oldorg;
+        new_b_picture->oldref = new_ref_picture->oldref;
+        new_b_picture->neworg = new_ref_picture->neworg;
+        new_b_picture->newref = new_ref_picture->newref;
+        new_b_picture->ref_frame = new_ref_picture;
+        new_b_picture->prev_frame = cur_picture;
+        new_b_picture->Set_B_Frame( &ss );
+        cur_picture = new_b_picture;
+    }
 
-		cur_picture->SetSeqPos( ss.i, ss.b );
-        EncodePicture( cur_picture );
+    reader.ReadFrame( cur_picture->temp_ref+ss.gop_start_frame,
+                      cur_picture->curorg );
+
+    cur_picture->SetSeqPos( ss.i, ss.b );
+    EncodePicture( cur_picture );
 
 #ifdef DEBUG
-		writeframe(cur_picture->temp_ref+ss.gop_start_frame,cur_picture->curref);
+    writeframe(cur_picture->temp_ref+ss.gop_start_frame,cur_picture->curref);
 #endif
 
-		NextSeqState( &ss );
-		++frame_num;
-	}
+    NextSeqState( &ss );
+    ++frame_num;
+
+	if( frame_num < reader.NumberOfFrames() )
+        return true;
 	
-	/* Wait for final frame's encoding to complete */
-	//if( encparams.max_encoding_frames > 1 )
-    //sync_guard_test( &cur_picture->completion );
 	coder.PutSeqEnd();
     coder.EmitCoded();
 
+    // DEBUG
 	if( encparams.pulldown_32 )
 		frame_periods = (double)(ss.seq_start_frame + ss.i)*(5.0/4.0);
 	else
 		frame_periods = (double)(ss.seq_start_frame + ss.i);
-    
-    
-    // TODO Belongs in BitRateCtl
     if( encparams.quant_floor > 0.0 )
         bits_after_mux = writer.BitCount() + 
             (uint64_t)((frame_periods / encparams.frame_rate) * encparams.nonvid_bit_rate);
@@ -822,10 +815,9 @@ void SeqEncoder::Encode()
 
     mjpeg_info( "Guesstimated final muxed size = %lld\n", bits_after_mux/8 );
     
-    //
-    // TODO: Really this ought to be a job for smart ptrs, but auto_ptr
-    // gets messed with the copy constructor implicit in push_back...
-    //
+    // END DEBUG
+
+    int i;
     for( i = 0; i < encparams.max_active_b_frames; ++i )
     {
         delete b_pictures[i];
@@ -834,7 +826,9 @@ void SeqEncoder::Encode()
     {
         delete ref_pictures[i];
     }
-    
+    delete [] b_pictures;
+    delete [] ref_pictures;
+    return false;
 }
 
 

@@ -178,59 +178,6 @@ void pred_comp(
 }
 
 
-/* calculate derived motion vectors (DMV) for dual prime prediction
- * dmvector[2]: differential motion vectors (-1,0,+1)
- * mvx,mvy: motion vector (for same parity)
- *
- * DMV[2][2]: derived motion vectors (for opposite parity)
- *
- * uses global variables pict_struct and topfirst
- *
- * Notes:
- *  - all vectors are in field coordinates (even for frame pictures)
- *
- */
-
-void calc_DMV( int pict_struct,  int topfirst,
-			   int DMV[2][2], int dmvector[2], int mvx, int mvy
-)
-{
-  if (pict_struct==FRAME_PICTURE)
-  {
-    if (topfirst)
-    {
-      /* vector for prediction of top field from bottom field */
-      DMV[0][0] = ((mvx  +(mvx>0))>>1) + dmvector[0];
-      DMV[0][1] = ((mvy  +(mvy>0))>>1) + dmvector[1] - 1;
-
-      /* vector for prediction of bottom field from top field */
-      DMV[1][0] = ((3*mvx+(mvx>0))>>1) + dmvector[0];
-      DMV[1][1] = ((3*mvy+(mvy>0))>>1) + dmvector[1] + 1;
-    }
-    else
-    {
-      /* vector for prediction of top field from bottom field */
-      DMV[0][0] = ((3*mvx+(mvx>0))>>1) + dmvector[0];
-      DMV[0][1] = ((3*mvy+(mvy>0))>>1) + dmvector[1] - 1;
-
-      /* vector for prediction of bottom field from top field */
-      DMV[1][0] = ((mvx  +(mvx>0))>>1) + dmvector[0];
-      DMV[1][1] = ((mvy  +(mvy>0))>>1) + dmvector[1] + 1;
-    }
-  }
-  else
-  {
-    /* vector for prediction from field of opposite 'parity' */
-    DMV[0][0] = ((mvx+(mvx>0))>>1) + dmvector[0];
-    DMV[0][1] = ((mvy+(mvy>0))>>1) + dmvector[1];
-
-    /* correct for vertical field shift */
-    if (pict_struct==TOP_FIELD)
-      DMV[0][1]--;
-    else
-      DMV[0][1]++;
-  }
-}
 
 void clearblock( uint8_t *cur[], int i0, int j0,
                  int field_off,

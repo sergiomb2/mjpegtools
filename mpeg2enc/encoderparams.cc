@@ -1,4 +1,4 @@
-/* encoderparams - class holding all the various control parameters for 
+/* encoderparams - class holding all the various control parameters for
    and individual encoder instance.  For speed a lot of address offsets/sizes
    are computed once-and-for-all and held in this object.
 */
@@ -285,7 +285,7 @@ void EncoderParams::Init( const MPEG2EncOptions &options )
 	seq_length_limit = options.seq_length_limit;
 	nonvid_bit_rate = options.nonvid_bitrate * 1000;
 	low_delay       = 0;
-	constrparms     = (options.mpeg == 1 && 
+	constrparms     = (options.mpeg == 1 &&
 						   !MPEG_STILLS_FORMAT(options.format));
 	profile         = 4; /* Main profile resp. */
 	level           = 8; /* Main Level      CCIR 601 rates */
@@ -364,8 +364,8 @@ void EncoderParams::Init( const MPEG2EncOptions &options )
 		else
 			fieldorder = options.input_interlacing;
 
-		topfirst = (fieldorder == Y4M_ILACE_TOP_FIRST || 
-                              fieldorder ==Y4M_ILACE_NONE );
+		topfirst = 
+            (fieldorder == Y4M_ILACE_TOP_FIRST || fieldorder ==Y4M_ILACE_NONE );
 	}
 	else
 		topfirst = 0;
@@ -594,7 +594,7 @@ void EncoderParams::Init( const MPEG2EncOptions &options )
 	}
 
 
-	if (prog_seq && topfirst)
+	if (prog_seq && topfirst )
 	{
 		mjpeg_info("prog sequence setting top_field_first = 0");
 		topfirst = 0;

@@ -41,12 +41,12 @@ MPEG2EncOptions::MPEG2EncOptions()
                         in picture 2 = field pictures
                      */
     norm       = 0;  /* 'n': NTSC, 'p': PAL, 's': SECAM, else unspecified */
+    rate_control = 0;
     me44_red	= 2;
     me22_red	= 3;	
     hf_quant = 0;
     hf_q_boost = 0.0;
     act_boost = 0.0;
-    rate_control = 0;
     boost_var_ceil = 10*10;
     video_buffer_size = 0;
     seq_length_limit = 0;
@@ -72,7 +72,7 @@ MPEG2EncOptions::MPEG2EncOptions()
     pad_stills_to_vbv_buffer_size = 0;
     vbv_buffer_still_size = 0;
     force_interlacing = Y4M_UNKNOWN;
-    input_interlacing = 0;
+    input_interlacing = Y4M_UNKNOWN;
     hack_svcd_hds_bug = 1;
     hack_altscan_bug = 0;
     hack_nodualprime = 0;
@@ -80,7 +80,6 @@ MPEG2EncOptions::MPEG2EncOptions()
     ignore_constraints = 0;
     unit_coeff_elim = 0;
 	verbose = 1;
-    allow_parallel_read = 1;
 };
 
 
@@ -147,8 +146,7 @@ int MPEG2EncOptions::InferStreamDataParams( const MPEG2EncInVidParams &strm)
 	if( frame_rate != 0 )
 	{
 		if( strm.frame_rate_code != frame_rate && 
-			strm.frame_rate_code > 0 && 
-			strm.frame_rate_code < mpeg_num_framerates )
+            mpeg_valid_framerate_code(strm.frame_rate_code) )
 		{
 			mjpeg_warn( "Specified display frame-rate %3.2f will over-ride", 
 						Y4M_RATIO_DBL(mpeg_framerate(frame_rate)));
@@ -175,6 +173,53 @@ int MPEG2EncOptions::InferStreamDataParams( const MPEG2EncInVidParams &strm)
 	}
 
     input_interlacing = strm.interlacing_code;
+    if (input_interlacing == Y4M_UNKNOWN) {
+        mjpeg_warn("Unknown input interlacing; assuming progressive.");
+        input_interlacing = Y4M_ILACE_NONE;
+    }
+
+    /* 'fieldenc' is dependent on input stream interlacing:
+         a) Interlaced streams are subsampled _per_field_;
+             progressive streams are subsampled over whole frame.
+         b) 'fieldenc' sets/clears the MPEG2 'progressive-frame' flag,
+            which tells decoder how subsampling was performed.
+    */
+    if (fieldenc == -1) {
+        /* not set yet... so set fieldenc from input interlacing */
+        switch (input_interlacing) {
+        case Y4M_ILACE_TOP_FIRST:
+        case Y4M_ILACE_BOTTOM_FIRST:
+            fieldenc = 1; /* interlaced frames */
+            mjpeg_info("Interlaced input - selecting interlaced encoding.");
+            break;
+        case Y4M_ILACE_NONE:
+            fieldenc = 0; /* progressive frames */
+            mjpeg_info("Progressive input - selecting progressive encoding.");
+            break;
+        default:
+            mjpeg_warn("Unknown input interlacing; assuming progressive.");
+            fieldenc = 0;
+            break;
+        }
+    } else {
+        /* fieldenc has been set already... so double-check for user */
+        switch (input_interlacing) {
+        case Y4M_ILACE_TOP_FIRST:
+        case Y4M_ILACE_BOTTOM_FIRST:
+            if (fieldenc == 0) {
+                mjpeg_warn("Progressive encoding selected with interlaced input!");
+                mjpeg_warn("  (This will damage the chroma channels.)");
+            }
+            break;
+        case Y4M_ILACE_NONE:
+            if (fieldenc != 0) {
+                mjpeg_warn("Interlaced encoding selected with progressive input!");
+                mjpeg_warn("  (This will damage the chroma channels.)");
+            }
+            break;
+        }
+    }
+
 	return nerr;
 }
 
@@ -217,11 +262,10 @@ int MPEG2EncOptions::CheckBasicConstraints()
     }
 
 
-	if(  aspect_ratio > mpeg_num_aspect_ratios[mpeg-1] ) 
+	if(  !mpeg_valid_aspect_code(mpeg, aspect_ratio) )
 	{
-		mjpeg_error("For MPEG-%d aspect ratio code  %d > %d illegal", 
-					mpeg, aspect_ratio, 
-					mpeg_num_aspect_ratios[mpeg-1]);
+		mjpeg_error("For MPEG-%d, aspect ratio code  %d is illegal", 
+					mpeg, aspect_ratio);
 		++nerr;
 	}
 		
@@ -454,9 +498,6 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 		seq_hdr_every_gop = 1;
 		break;
 	}
-
-    if( fieldenc == -1 )
-        fieldenc = 0;
 
     switch( mpeg )
     {

@@ -56,7 +56,7 @@ public:
      * Return a buffer state that we can restore back to (provided no flush
      * has take place since then!)
      *
-     * N.b. attempts to mark states that are no byte-aligned are illegal
+     * N.b. attempts to mark states that are not byte-aligned are illegal
      * and will abort
      *
      *******************/

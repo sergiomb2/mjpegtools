@@ -22,19 +22,7 @@
  */
 
 
-
-/* 
- * 3DNow version of
- * Quantisation for non-intra blocks using Test Model 5 quantization
- *
- * this quantizer has a bias of 1/8 stepsize towards zero
- * (except for the DC coefficient)
- *
- *	PRECONDITION: src dst point to *disinct* memory buffers...
- *	              of block_count *adjacent* int16_t[64] arrays...
- *
- * RETURN: 1 If non-zero coefficients left after quantisaion 0 otherwise
- */
+
 
 #include <config.h>
 #include <stdio.h>
@@ -52,7 +40,8 @@
 #include "quantize_precomp.h"
 #include "quantize_ref.h"
 
-
+void enable_x86_quantization( struct QuantizerCalls *qcalls,
+							  int mpeg1);
 /* Implemented in pure (NASM) assembler routines 	*/
 
 int quantize_non_intra_mb_mmx( int16_t *dst, int16_t *src, 
@@ -96,8 +85,7 @@ void iquantize_non_intra_m2_mmx(int16_t *src, int16_t *dst, uint16_t *qmat)
 	
 
 /*
- * 3D-Now version: simply truncates to zero, however, the tables have a 2% bias
- * upwards which partly compensates.
+ * 3D-Now version: simply truncates to zero...
  */
  
 static int quant_non_intra_3dnow(	struct QuantizerWorkSpace *wsp,
@@ -514,7 +502,7 @@ static int quant_weight_coeff_x86_inter( struct QuantizerWorkSpace *wsp,
 
 
 void enable_x86_quantization( struct QuantizerCalls *qcalls,
-int mpeg1)
+							  int mpeg1)
 {
 	int flags = cpu_accel();
 	const char *opt_type1, *opt_type2;

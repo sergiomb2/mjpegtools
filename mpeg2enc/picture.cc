@@ -96,10 +96,6 @@ Picture::Picture( EncoderParams &_encparams,
 		pred[i]   = static_cast<uint8_t *>(bufalloc(size));
 	}
 
-	/* The (non-existent) previous encoding using an as-yet un-used
-	   picture encoding data buffers is "completed"
-	*/
-	sync_guard_init( &completion, 1 );
 }
 
 Picture::~Picture()

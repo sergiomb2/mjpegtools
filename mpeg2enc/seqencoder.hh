@@ -66,8 +66,32 @@ public:
         );
 	~SeqEncoder();
 
-	void Encode();
+
+    /**********************************
+     *
+     * Setup ready to start encoding once parameter objects have
+     * (where relevant) been Init-ed.
+     * Spawns worker threads for parallel prociessing.
+     *
+     *********************************/
+
+    void Init();
+   
+    /**********************************
+     *
+     * EncodeFrmae - encode and output exactly one MPEG frame.
+     * Between zero and many frames may be read (lots of internal
+     * look-ahead and buffering).  Internal parallelism via
+     * POSIXworker threads.
+     *
+     * RETURN: true if more frames remain to be encoded.
+     *
+     *********************************/
+	bool EncodeFrame();
+    
+    
 private:
+
 	int FindGopLength( int gop_start_frame, 
 					   int I_frame_temp_ref,
 					   int gop_min_len, int gop_max_len,
@@ -86,12 +110,28 @@ private:
     
     Despatcher &despatcher;
 	
-	/*
-	  Ohh, lovely C type syntax... more or less have to introduce a named
-	  typed here to bind the "volatile" correctly - to the pointer not the
-	  data it points to. K&R: hang your heads in shame...
-	*/
-	
+	// Internal state of encoding...
+
+	StreamState ss;
+	int cur_ref_idx;
+	int cur_b_idx;
+
+
+    /* DEBUG */
+	uint64_t bits_after_mux;
+	double frame_periods;
+    /* END DEBUG */
+
+	Picture **b_pictures;
+	Picture **ref_pictures;
+
+	Picture *cur_picture, *old_picture;
+	Picture *new_ref_picture, *old_ref_picture;
+
+	int frame_num;              // Encoding number - not
+                                // necessarily the one that gets
+                                // output!!
+
 };
 
 
