@@ -122,7 +122,7 @@ static void init_YCbCr_to_RGB_tables(void)
 
   /* clip Y values under 16 */
   for (i = 0; i < 16; i++) {
-    RGB_Y[i] = myround((1.0 * (double)(16) 
+    RGB_Y[i] = myround((1.0 * (double)(16 - 16) 
 		     * 255.0 / 219.0 * (double)(1<<FP_BITS))
 		    + (double)(1<<(FP_BITS-1)));
   }
@@ -133,7 +133,7 @@ static void init_YCbCr_to_RGB_tables(void)
   }
   /* clip Y values above 235 */
   for (i = 236; i < 256; i++) {
-    RGB_Y[i] = myround((1.0 * (double)(235) 
+    RGB_Y[i] = myround((1.0 * (double)(235 - 16) 
 		     * 255.0 / 219.0 * (double)(1<<FP_BITS))
 		    + (double)(1<<(FP_BITS-1)));
   }
