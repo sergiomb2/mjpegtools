@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.c,v 1.1 2001/04/18 07:50:49 rbultje Exp $
+    $Id: mjpeg_logging.c,v 1.2 2001/04/23 16:28:09 rbultje Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -128,6 +128,15 @@ mjpeg_error(const char format[], ...)
   va_end (args);
 }
 
+void
+mjpeg_error_exit1(const char format[], ...)
+{
+  va_list args;
+  va_start( args, format );
+  mjpeg_logv( LOG_ERROR, format, args);
+  va_end(args);           
+  exit(1);
+}
 
 
 /* 

@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.h,v 1.1 2001/04/18 07:50:49 rbultje Exp $
+    $Id: mjpeg_logging.h,v 1.2 2001/04/23 16:28:09 rbultje Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -50,6 +50,8 @@ mjpeg_warn(const char format[], ...) GNUC_PRINTF(1,2);
 void
 mjpeg_error(const char format[], ...) GNUC_PRINTF(1,2);
 
+void
+mjpeg_error_exit1(const char format[], ...) GNUC_PRINTF(1,2);
 #endif /* __MJPEG_LOGGING_H__ */
 
 
