@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.c,v 1.10 2002/02/27 19:13:00 mdoggydog Exp $
+    $Id: mjpeg_logging.c,v 1.11 2002/04/16 16:10:14 mdoggydog Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -80,16 +80,16 @@ default_mjpeg_log_handler(log_level_t level, const char message[])
   }
   switch(level) {
   case LOG_ERROR:
-    fprintf(stderr, "**ERROR: [%s] %s", ids, message);
+    fprintf(stderr, "**ERROR: [%s] %s\n", ids, message);
     break;
   case LOG_DEBUG:
-    fprintf(stderr, "--DEBUG: [%s] %s", ids, message);
+    fprintf(stderr, "--DEBUG: [%s] %s\n", ids, message);
     break;
   case LOG_WARN:
-    fprintf(stderr, "++ WARN: [%s] %s", ids, message);
+    fprintf(stderr, "++ WARN: [%s] %s\n", ids, message);
     break;
   case LOG_INFO:
-    fprintf(stderr, "   INFO: [%s] %s", ids, message);
+    fprintf(stderr, "   INFO: [%s] %s\n", ids, message);
     break;
   default:
     assert(0);
