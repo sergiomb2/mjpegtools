@@ -61,7 +61,7 @@ public:
   int verbose;
   int max_timeouts;
   char *outfile_pattern;
-  off_t max_segment_size;
+  int max_segment_size;
 };
 
 /***********************************************************************
@@ -140,7 +140,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.2"
-#define MPLEX_DATE   "$Date: 2003/03/27 23:59:42 $"
+#define MPLEX_DATE   "$Date: 2003/05/13 20:27:15 $"
 
 
 #endif // __INTERACT_H__
