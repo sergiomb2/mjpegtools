@@ -1,5 +1,5 @@
 /*
- * $Id: yuv4mpeg.c,v 1.7 2004/01/01 08:07:56 sms00 Exp $
+ * $Id: yuv4mpeg.c,v 1.8 2004/03/31 05:50:37 sms00 Exp $
  *
  * A simple progam that's quite useful when dealing with raw/headerless data 
  * from programs such as ffmpeg or fxtv.
@@ -137,7 +137,7 @@ main(int argc, char **argv)
 	y4m_si_set_framerate(&ostream, rate_ratio);
 	y4m_si_set_sampleaspect(&ostream, aspect_ratio);
 	if	(xcss411)
-		y4m_xtag_add(&(ostream.x_tags), "XYSCSS=411");
+		y4m_si_set_chroma(&ostream, Y4M_CHROMA_411);
 
 /*
  *                    Y                    U                      V
