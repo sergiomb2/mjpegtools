@@ -1,5 +1,5 @@
 /* 
- * $Id: y4munsharp.c,v 1.3 2004/11/17 05:00:49 sms00 Exp $
+ * $Id: y4munsharp.c,v 1.4 2004/11/17 05:07:57 sms00 Exp $
  *
  * Constructed using:
  * unsharp.c 0.10 -- This is a plug-in for the GIMP 1.0
@@ -380,7 +380,7 @@ merging:
 				diff = 0;
 			value = *i_ptr + (uv_amount * diff);
 /*
- * For video the limits are 16 and 235 for the chroma rather than 0 and 255!
+ * For video the limits are 16 and 240 for the chroma rather than 0 and 255!
 */
 			if	(value < lowuv)
 				value = lowuv;
@@ -398,12 +398,12 @@ merging:
 				diff = 0;
 			value = *i_ptr + (uv_amount * diff);
 /*
- * For video the limits are 16 and 235 for the chroma rather than 0 and 255!
+ * For video the limits are 16 and 240 for the chroma rather than 0 and 255!
 */
 			if	(value < 16)
 				value = 16;
-			else if	(value > 235)
-				value = 235;
+			else if	(value > highuv)
+				value = highuv;
 			*o_ptr = value;
 			}
 		}
