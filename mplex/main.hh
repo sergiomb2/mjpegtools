@@ -43,7 +43,7 @@
 *************************************************************************/
  
 #define MPLEX_VER    "1.5.1"
-#define MPLEX_DATE   "$Date: 2001/06/26 06:55:02 $"
+#define MPLEX_DATE   "$Date: 2001/06/28 18:44:22 $"
 
 /* Buffer size parameters */
 
@@ -492,4 +492,4 @@ extern int mux_rate;
 extern int dmux_rate;
 extern int zero_stuffing;
 
-extern intmax_t max_system_segment_size;
+extern off_t max_system_segment_size;
