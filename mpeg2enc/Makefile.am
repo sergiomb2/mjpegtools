@@ -64,6 +64,7 @@ libmpeg2encpp_a_SOURCES = mpeg2encparams.h \
 	transfrm.hh transfrm.cc \
 	quantize.hh quantize.cc \
 	ratectl.hh ratectl.cc stats.cc writepic.cc  synchrolib.cc \
+	pass1ratectl.cc \
 	picturereader.cc \
 	mpeg2enc.h \
 	simd.h synchrolib.h $(mpeg2enc_REF) $(SIMD_INLINE)

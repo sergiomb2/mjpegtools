@@ -64,7 +64,7 @@
 
 
 
-static double scale_quantf( int q_scale_type, double quant )
+double RateCtl::ScaleQuantf( int q_scale_type, double quant )
 {
 	double quantf;
 
@@ -194,6 +194,7 @@ OnTheFlyRateCtl::OnTheFlyRateCtl(EncoderParams &encparams ) :
  * Initialise rate control parameters
  * params:  reinit - Rate control is being re-initialised during the middle
  *                   of a run.  Don't reset adaptive parameters.
+ *
  ********************/
 
 void OnTheFlyRateCtl::InitSeq(bool reinit)
@@ -208,7 +209,6 @@ void OnTheFlyRateCtl::InitSeq(bool reinit)
 	if( encparams.still_size > 0 )
 	{
 		per_pict_bits = encparams.still_size * 8;
-		R = encparams.still_size * 8;
 	}
 	else
 	{
@@ -217,7 +217,6 @@ void OnTheFlyRateCtl::InitSeq(bool reinit)
 								 ? encparams.bit_rate / field_rate
 								 : encparams.bit_rate / encparams.decode_frame_rate
 				);
-		R = static_cast<int32_t>(encparams.bit_rate);
 	}
 
 	/* Everything else already set or adaptive */
@@ -225,20 +224,20 @@ void OnTheFlyRateCtl::InitSeq(bool reinit)
 		return;
 
 	first_gop = true;
-	K_AVG_WINDOW_I = 2.0;
+	K_AVG_WINDOW[I_TYPE] = 2.0;
     switch( encparams.M )
     {
     case 1 : // P
-        K_AVG_WINDOW_P = 8.0;
-        K_AVG_WINDOW_B = 1.0; // dummy
+        K_AVG_WINDOW[P_TYPE] = 8.0;
+        K_AVG_WINDOW[B_TYPE] = 1.0; // dummy
         break;
     case 2 : // BP
-        K_AVG_WINDOW_P = 4.0;
-        K_AVG_WINDOW_B = 4.0;
+        K_AVG_WINDOW[P_TYPE] = 4.0;
+        K_AVG_WINDOW[B_TYPE] = 4.0;
         break;
     default: // BBP
-        K_AVG_WINDOW_P = 3.0;
-        K_AVG_WINDOW_B = 7.0;
+        K_AVG_WINDOW[P_TYPE] = 3.0;
+        K_AVG_WINDOW[B_TYPE] = 7.0;
         break;
     }        
 
@@ -280,9 +279,9 @@ void OnTheFlyRateCtl::InitSeq(bool reinit)
 	  more rapidly *within* a single frame.
 	*/
 	if( encparams.still_size > 0 )
-		r = (int)floor(2.0*encparams.bit_rate/encparams.decode_frame_rate);
+		fb_gain = (int)floor(2.0*encparams.bit_rate/encparams.decode_frame_rate);
 	else
-		r = (int)floor(4.0*encparams.bit_rate/encparams.decode_frame_rate);
+		fb_gain = (int)floor(4.0*encparams.bit_rate/encparams.decode_frame_rate);
 
 
 	/* Set the virtual buffers for per-frame rate control feedback to
@@ -291,22 +290,14 @@ void OnTheFlyRateCtl::InitSeq(bool reinit)
 	*/
 
 	init_quant = (encparams.quant_floor > 0.0 ? encparams.quant_floor : 6.0);
-	d0p = d0b = d0i = static_cast<int>(init_quant * r / 62.0);
+    int i;
+    for( i = FIRST_PICT_TYPE; i <= LAST_PICT_TYPE; ++i )
+        ratectl_vbuf[i] = static_cast<int>(init_quant * fb_gain / 62.0);
 
 	next_ip_delay = 0.0;
 	decoding_time = 0.0;
 
 
-#ifdef OUTPUTr_STAT
-	fprintf(statfile,"\nrate control: sequence initialization\n");
-	fprintf(statfile,
-			" initial global complexity measures (I,P,B): Xi=%.0f, Xp=%.0f, Xb=%.0f\n",
-			Xi, Xp, Xb);
-	fprintf(statfile," reaction parameter: r=%d\n", r);
-	fprintf(statfile,
-			" initial virtual buffer fullness (I,P,B): d0i=%d, d0pb=%d",
-			d0i, d0pb);
-#endif
 
 
 }
@@ -314,10 +305,10 @@ void OnTheFlyRateCtl::InitSeq(bool reinit)
 
 void OnTheFlyRateCtl::InitGOP( int np, int nb)
 {
-	Np = encparams.fieldpic ? 2*np+1 : 2*np;
-	Nb = encparams.fieldpic ? 2*nb : 2*nb;
-	Ni = encparams.fieldpic ? 1 : 2;
-	fields_in_gop = Ni + Nb + Np;
+	N[P_TYPE] = encparams.fieldpic ? 2*np+1 : 2*np;
+	N[B_TYPE] = encparams.fieldpic ? 2*nb : 2*nb;
+	N[I_TYPE] = encparams.fieldpic ? 1 : 2;
+	fields_in_gop = N[I_TYPE] + N[P_TYPE] + N[B_TYPE];
 
 	/*
 	  At the start of a GOP before any frames have gone the
@@ -332,15 +323,17 @@ void OnTheFlyRateCtl::InitGOP( int np, int nb)
 	   for each one.  They're all I-frames so each stills is a GOP too.
 	*/
 
+    int i;
 	if( first_gop || encparams.still_size > 0)
 	{
 		mjpeg_debug( "FIRST GOP INIT");
 		fast_tune = true;
-		first_I = first_B = first_P = true;
 		first_gop = false;
-		I_pict_base_bits = per_pict_bits;
-		B_pict_base_bits = per_pict_bits;
-		P_pict_base_bits = per_pict_bits;
+        for( i = FIRST_PICT_TYPE; i <= LAST_PICT_TYPE; ++i )
+        {
+            first_encountered[i] = true;
+            pict_base_bits[i] = per_pict_bits;
+        }
 	}
 	else
 	{
@@ -351,20 +344,16 @@ void OnTheFlyRateCtl::InitGOP( int np, int nb)
 		int available_bits = 
 			static_cast<int>( (encparams.bit_rate+buffer_variation*recovery_gain)
 							  * fields_in_gop/field_rate);
-		double Xsum = Ni*Xi+Np*Xp+Nb*Xb;
-		I_pict_base_bits = (int32_t)(fields_per_pict*available_bits*Xi/Xsum);
-		P_pict_base_bits = (int32_t)(fields_per_pict*available_bits*Xp/Xsum);
-		B_pict_base_bits = (int32_t)(fields_per_pict*available_bits*Xb/Xsum);
-		fast_tune = 0;
+        double Xsum = 0.0;
+        for( i = FIRST_PICT_TYPE; i <= LAST_PICT_TYPE; ++i )
+            Xsum += N[i]*Xhi[i];
+        for( i = FIRST_PICT_TYPE; i <= LAST_PICT_TYPE; ++i )
+            pict_base_bits[i] =  
+                static_cast<int32_t>(fields_per_pict*available_bits*Xhi[i]/Xsum);
+		fast_tune = false;
 
 	}
 
-#ifdef OUTPUT_STAT
-	fprintf(statfile,"\nrate control: new group of pictures (GOP)\n");
-	fprintf(statfile," target number of bits for GOP: R=%.0f\n",R);
-	fprintf(statfile," number of P pictures in GOP: Np=%d\n",Np);
-	fprintf(statfile," number of B pictures in GOP: Nb=%d\n",Nb);
-#endif
 }
 
 
@@ -443,53 +432,28 @@ void OnTheFlyRateCtl::InitPict(Picture &picture, int64_t bitcount_SOP)
 
 	min_q = min_d = INT_MAX;
 	max_q = max_d = INT_MIN;
-    Xsum = Ni*Xi+Np*Xp+Nb*Xb;
-	switch (picture.pict_type)
-	{
-	case I_TYPE:
-		
-		/* There is little reason to rely on the *last* I-frame as
-		   they're not closely related.  The slow correction of K
-		   should be enough to fine-tune.  
-		*/
+    Xsum = 0.0;
+    int i;
+    for( i = FIRST_PICT_TYPE; i <= LAST_PICT_TYPE; ++i )
+        Xsum += N[i]*Xhi[i];
+    vbuf_fullness = ratectl_vbuf[picture.pict_type];
+    double first_weight[NUM_PICT_TYPES];
+    first_weight[I_TYPE] = 1.0;
+    first_weight[P_TYPE] = 1.7;
+    first_weight[B_TYPE] = 1.7*2.0;
 
-		d = d0i;
-		if( first_I )
-		{
-			T = (int32_t)(fields_per_pict*available_bits/(Ni+(Np/1.7)+Nb/(2.0*1.7)));
-		}
-		else
-		{
-			T = (int32_t)(fields_per_pict*available_bits*Xi/Xsum);
-		}
-		pict_base_bits = I_pict_base_bits;
-		break;
-	case P_TYPE:
-		d = d0p;
-		if( first_P )
-		{
-			T = (int32_t)(fields_per_pict*available_bits/(Np+Nb/2.0));
-		}
-		else
-		{
-			T = (int32_t)(fields_per_pict*available_bits*Xp/Xsum);
-		}
-		pict_base_bits = P_pict_base_bits;
-		break;
-	case B_TYPE:
-		d = d0b;
-		if( first_B )
-		{
-			T =  (int32_t)(fields_per_pict*available_bits/(Nb+Np*2.0));
-		}
-		else
-		{
-			T =  (int32_t)(fields_per_pict*available_bits*Xb/Xsum);
-		}
-		pict_base_bits = B_pict_base_bits;
-
-		break;
-	}
+    double gop_frac = 0.0;
+    if( first_encountered[picture.pict_type] )
+    {
+        for( i = FIRST_PICT_TYPE; i <= LAST_PICT_TYPE; ++i )
+            gop_frac += N[i]/first_weight[i];
+        target_bits = 
+            static_cast<int32_t>(fields_per_pict*available_bits /
+                                 (gop_frac * first_weight[picture.pict_type]));
+    }
+    else
+        target_bits =
+            static_cast<int32_t>(fields_per_pict*available_bits*Xhi[picture.pict_type]/Xsum);
 
 	/* 
 	   If we're fed a sequences of identical or near-identical images
@@ -498,19 +462,19 @@ void OnTheFlyRateCtl::InitPict(Picture &picture, int64_t bitcount_SOP)
 	   limit any individual frame to 3/4's of the buffer.
 	*/
 
-	T = intmin( T, encparams.video_buffer_size*3/4 );
+	target_bits = min( target_bits, encparams.video_buffer_size*3/4 );
 
 	mjpeg_debug( "Frame %c T=%05d A=%06d  Xi=%.2f Xp=%.2f Xb=%.2f", 
                  pict_type_char[picture.pict_type],
-                 (int)T/8, (int)available_bits/8, 
-                 Xi, Xp,Xb );
+                 (int)target_bits/8, (int)available_bits/8, 
+                 Xhi[I_TYPE], Xhi[P_TYPE],Xhi[B_TYPE] );
 
 
 	/* 
 	   To account for the wildly different sizes of frames
 	   we compute a correction to the current instantaneous
 	   buffer state that accounts for the fact that all other
-	   thing being equal buffer to go down a lot after the I-frame
+	   thing being equal buffer will go down a lot after the I-frame
 	   decode but fill up again through the B and P frames.
 
 	   For this we use the base bit allocations of the picture's
@@ -519,42 +483,36 @@ void OnTheFlyRateCtl::InitPict(Picture &picture, int64_t bitcount_SOP)
 	   bit-allocation (which *won't* add up very well).
 	*/
 
-	//mjpeg_debug( "PBB=%d PPB=%d", pict_base_bits, per_pict_bits );
-	gop_buffer_correction += (pict_base_bits-per_pict_bits);
+	gop_buffer_correction += (pict_base_bits[picture.pict_type]-per_pict_bits);
 
 
 	/* Undershot bits have been "returned" via R */
-	if( d < 0 )
-		d = 0;
+    vbuf_fullness = max( vbuf_fullness, 0 );
 
 	/* We don't let the target volume get absurdly low as it makes some
 	   of the prediction maths ill-condtioned.  At these levels quantisation
 	   is always minimum anyway
 	*/
-	T = intmax( T, 4000 );
+	target_bits = max( target_bits, 4000 );
 
 	if( encparams.still_size > 0 && encparams.vbv_buffer_still_size )
 	{
 		/* If stills size must match then target low to ensure no
 		   overshoot.
 		*/
-		mjpeg_info( "Setting VCD HR still overshoot margin to %d bytes", T/(16*8) );
-		frame_overshoot_margin = T/16;
-		T -= frame_overshoot_margin;
+		mjpeg_info( "Setting VCD HR still overshoot margin to %d bytes", target_bits/(16*8) );
+		frame_overshoot_margin = target_bits/16;
+		target_bits -= frame_overshoot_margin;
 	}
 
 
-	current_Q = ScaleQuant(picture.q_scale_type,62.0*d / r);
+	current_Q = ScaleQuant(picture.q_scale_type,62.0*vbuf_fullness / fb_gain);
 
 	picture.avg_act = avg_act;
 	picture.sum_avg_act = sum_avg_act;
 
 	S = bitcount_SOP;
 
-#ifdef OUTPUT_STAT
-	fprintf(statfile,"\nrate control: start of picture\n");
-	fprintf(statfile," target number of bits: T=%.0f\n",T/8);
-#endif
 }
 
 
@@ -571,20 +529,20 @@ int OnTheFlyRateCtl::UpdatePict(Picture &picture, int64_t _bitcount_EOP)
 	double X;
 	double K;
 	double AQ;
-	int32_t AP;		/* Actual (including padding) picture bit counts */
+	int32_t actual_bits;		/* Actual (inc. padding) picture bit counts */
 	int    i;
 	int    Qsum;
 	int frame_overshoot;
     int64_t bitcount_EOP = _bitcount_EOP; 
-	AP = bitcount_EOP - S;
-	frame_overshoot = (int)AP-(int)T;
+	actual_bits = bitcount_EOP - S;
+	frame_overshoot = (int)actual_bits-(int)target_bits;
 
 	/* For the virtual buffers for quantisation feedback it is the
 	   actual under/overshoot *including* padding.  Otherwise the
 	   buffers go zero.
        BUGBUGBUG  should'nt this go after the padding calculation?
 	*/
-	d += frame_overshoot;
+	vbuf_fullness += frame_overshoot;
 
 	/* Warn if it looks like we've busted the safety margins in stills
 	   size specification.  Adjust padding to account for safety
@@ -598,7 +556,7 @@ int OnTheFlyRateCtl::UpdatePict(Picture &picture, int64_t _bitcount_EOP)
 		if( frame_overshoot > frame_overshoot_margin )
 		{
 			mjpeg_warn( "Rate overshoot: VCD hi-res still %d bytes too large! ", 
-						((int)AP)/8-encparams.still_size);
+						((int)actual_bits)/8-encparams.still_size);
 		}
 		
 		//
@@ -616,22 +574,11 @@ int OnTheFlyRateCtl::UpdatePict(Picture &picture, int64_t _bitcount_EOP)
             padding_bits = (((bitcount_EOP-frame_overshoot)>>3)<<3)-bitcount_EOP;
             picture.pad = 1;
         }
-#ifdef JUNK_DONE_ELSEWHERE_NOW
-		if( padding_bytes > 0 )
-		{
-			mjpeg_debug( "Padding still to size: %d extra bytes", padding_bytes );
-			picture.pad = 1;
-			for( i = 0; i < padding_bytes/2; ++i )
-			{
-				writer.PutBits(0, 16);
-			}
-		}
-#endif
 	}
 
     /* Adjust the various bit counting  parameters for the padding bytes that
      * will be added */
-    AP += padding_bits ;
+    actual_bits += padding_bits ;
     frame_overshoot += padding_bits;
     bitcount_EOP += padding_bits;
 
@@ -696,7 +643,7 @@ int OnTheFlyRateCtl::UpdatePict(Picture &picture, int64_t _bitcount_EOP)
 	prediction of quantisation needed to hit a bit-allocation.
 	*/
 
-	X = AP  * AQ;
+	X = actual_bits  * AQ;
 
     /* To handle longer sequences with little picture content
        where I, B and P frames are of unusually similar size we
@@ -704,7 +651,7 @@ int OnTheFlyRateCtl::UpdatePict(Picture &picture, int64_t _bitcount_EOP)
        as complex as typical P frames
     */
     if( picture.pict_type == I_TYPE )
-        X = fmax(X, 1.5*Xp);
+        X = fmax(X, 1.5*Xhi[P_TYPE]);
 
 	K = X / actsum;
 	picture.AQ = AQ;
@@ -721,87 +668,35 @@ int OnTheFlyRateCtl::UpdatePict(Picture &picture, int64_t _bitcount_EOP)
 	   similar real-time decay periods based on an assumption of
 	   20-30Hz frame rates.
 	*/
-	switch (picture.pict_type)
-	{
-	case I_TYPE:
-		d0i = d;
-        sum_I_size += AP/8.0;
-        ++I_count;
-		if( first_I )
-		{
-			Xi = X;
-			first_I = 0;
-		}
-		else
-		{
-			Xi = (X + K_AVG_WINDOW_I*Xi)/(K_AVG_WINDOW_I+1.0);
-		}
-		break;
-	case P_TYPE:
-        sum_P_size += AP/8.0;
-        ++P_count;
-		d0p = d;
-		if( first_P )
-		{
-			Xp = X;
-			first_P = 0;
-		}
-		else
-		{
-			if( fast_tune )
-				Xp = (X+Xp*2.0)/3.0;
-			else
-				Xp = (X + Xp*K_AVG_WINDOW_P)/(K_AVG_WINDOW_P+1.0);
-		}
-		break;
-	case B_TYPE:
-        sum_B_size += AP/8.0;
-        ++B_count;
-		d0b = d;
-		if( first_B )
-		{
-			Xb = X;
-			first_B = 0;
-		}
-		else 
-		{
-			if( fast_tune )
-			{
-				Xb = (X + Xb * 3.0) / 4.0;
-			}
-			else
-				Xb = (X + Xb*K_AVG_WINDOW_B)/(K_AVG_WINDOW_B+1.0);
-		}
-		break;
-	}
+    ratectl_vbuf[picture.pict_type] = vbuf_fullness;
+    sum_size[picture.pict_type] += actual_bits/8.0;
+    pict_count[picture.pict_type] += 1;
+
+    if( first_encountered[picture.pict_type] )
+    {
+        Xhi[picture.pict_type] = X;
+        first_encountered[picture.pict_type] = false;
+    }
+    else
+    {
+        double win = fast_tune 
+            ? K_AVG_WINDOW[picture.pict_type] / 1.7
+            : K_AVG_WINDOW[picture.pict_type];
+        Xhi[picture.pict_type] = (X + win*Xhi[picture.pict_type])/(win+1.0);
+    }
 
     mjpeg_debug( "Frame %c A=%6.0f %.2f: I = %6.0f P = %5.0f B = %5.0f",
-                pict_type_char[picture.pict_type],
-                AP/8.0,
-                X,
-                sum_I_size/I_count,
-                sum_P_size/P_count,
-                sum_B_size/B_count );
-
+                 pict_type_char[picture.pict_type],
+                 actual_bits/8.0,
+                 X,
+                 sum_size[I_TYPE]/pict_count[I_TYPE],
+                 sum_size[P_TYPE]/pict_count[P_TYPE],
+                 sum_size[B_TYPE]/pict_count[B_TYPE]
+        );
+    
                 
 	VbvEndOfPict(picture, bitcount_EOP);
 
-#ifdef OUTPUT_STAT
-	fprintf(statfile,"\nrate control: end of picture\n");
-	fprintf(statfile," actual number of bits: S=%lld\n",S);
-	fprintf(statfile," average quantization parameter AQ=%.1f\n",
-			(double)AQ);
-	fprintf(statfile," remaining number of bits in GOP: R=%.0f\n",R);
-	fprintf(statfile,
-			" global complexity measures (I,P,B): Xi=%.0f, Xp=%.0f, Xb=%.0f\n",
-			Xi, Xp, Xb);
-	fprintf(statfile,
-			" virtual buffer fullness (I,PB): d0i=%d, d0b=%d\n",
-			d0i, d0b);
-	fprintf(statfile," remaining number of P pictures in GOP: Np=%d\n",Np);
-	fprintf(statfile," remaining number of B pictures in GOP: Nb=%d\n",Nb);
-	fprintf(statfile," average activity: avg_act=%.1f \n", avg_act );
-#endif
     return padding_bits/8;
 }
 
@@ -814,12 +709,7 @@ int OnTheFlyRateCtl::UpdatePict(Picture &picture, int64_t _bitcount_EOP)
 int OnTheFlyRateCtl::InitialMacroBlockQuant(Picture &picture)
 {
 	
-	int mquant = ScaleQuant( picture.q_scale_type, d*62.0/r );
-	
-/*
-  fprintf(statfile,"rc_start_mb:\n");
-  fprintf(statfile,"mquant=%d\n",mquant);
-*/
+	int mquant = ScaleQuant( picture.q_scale_type, vbuf_fullness*62.0/fb_gain );
 	return intmax(mquant, static_cast<int>(encparams.quant_floor));
 }
 
@@ -850,8 +740,9 @@ int OnTheFlyRateCtl::MacroBlockQuant( const MacroBlock &mb, int64_t bitcount )
 	   bits used vs. bits in proportion to activity encoded
 	*/
 
-	double dj = ((double)d) + 
-		((double)(bitcount-S) - actcovered * ((double)T) / actsum);
+	double dj = static_cast<double>(vbuf_fullness) 
+        + static_cast<double>(bitcount-S) 
+        - actcovered * target_bits / actsum;
 
 
 	/* scale against dynamic range of mquant and the bits/picture
@@ -863,8 +754,8 @@ int OnTheFlyRateCtl::MacroBlockQuant( const MacroBlock &mb, int64_t bitcount )
 	   macroblocks. Silly in a VBR context.
 	*/
 
-	double Qj = dj*62.0/r;
-	Qj = (Qj > encparams.quant_floor) ? Qj : encparams.quant_floor;
+	double Qj = dj*62.0/fb_gain;
+	Qj =  fmax(Qj,encparams.quant_floor);
 
 	/*  Heuristic: We decrease quantisation for macroblocks
 		with markedly low luminace variance.  This helps make
@@ -873,12 +764,6 @@ int OnTheFlyRateCtl::MacroBlockQuant( const MacroBlock &mb, int64_t bitcount )
 	*/
 
 	double act_boost;
-#ifdef OLD_QUANTISATION_STEARING
-	double N_act =  ( act < avg_act || picture.pict_type == B_TYPE ) ? 
-		1.0 : 
-		(encparams.act_boost*act +  avg_act)/(act + encparams.act_boost*avg_act);
-	act_boost = 1.0/N_act;
-#else
 	if( lum_variance < encparams.boost_var_ceil )
 	{
 		if( lum_variance < encparams.boost_var_ceil/2)
@@ -894,9 +779,7 @@ int OnTheFlyRateCtl::MacroBlockQuant( const MacroBlock &mb, int64_t bitcount )
 	}
 	else
 		act_boost = 1.0;
-
-#endif	
-	sum_vbuf_Q += scale_quantf(picture.q_scale_type,Qj/act_boost);
+	sum_vbuf_Q += ScaleQuantf(picture.q_scale_type,Qj/act_boost);
 	mquant = ScaleQuant(picture.q_scale_type,Qj/act_boost) ;
 	
 	/* Update activity covered */
@@ -904,14 +787,6 @@ int OnTheFlyRateCtl::MacroBlockQuant( const MacroBlock &mb, int64_t bitcount )
 	actcovered += act;
 	 
 	return mquant;
-#ifdef OUTPUT_STAT
-/*
-  fprintf(statfile,"MQ(%d): ",j);
-  fprintf(statfile,"dj=%.0f, Qj=%1.1f, actj=3.1%f, N_actj=1.1%f, mquant=%03d\n",
-  dj,Qj,actj,N_actj,mquant);
-*/
-	//picture.mbinfo[j].N_act = N_actj;
-#endif
 }
 
 /* VBV calculations
@@ -1088,11 +963,6 @@ void OnTheFlyRateCtl::CalcVbvDelay(Picture &picture)
 	}
 
 
-#ifdef OUTPUT_STAT
-	fprintf(statfile,
-			"\nvbv_delay=%d (coder.BitCount=%lld, decoding_time=%.2f, bitcnt_EOP=%lld)\n",
-			picture.vbv_delay,coder.BitCount(),decoding_time,bitcnt_EOP);
-#endif
 
 	if (picture.vbv_delay<0)
 	{

@@ -592,7 +592,7 @@ void MPEG2EncCmdLineOptions::StartupBanner()
 int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
 {
     static const char	short_options[]=
-        "m:a:f:n:b:z:T:B:q:o:S:I:r:M:4:2:Q:X:D:g:G:v:V:F:N:tpdsZHOcCPK:E:R:";
+        "m:a:f:n:b:z:T:B:q:o:S:I:r:M:4:2:A:Q:X:D:g:G:v:V:F:N:tpdsZHOcCPK:E:R:";
 
 #ifdef HAVE_GETOPT_LONG
     static struct option long_options[]={
@@ -614,6 +614,7 @@ int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
         { "max-gop-size",      1, 0, 'G'},
         { "closed-gop",        1, 0, 'c'},
         { "force-b-b-p", 0, &preserve_B, 1},
+        { "ratecontroller", 1, 0, 'A' },
         { "quantisation-reduction", 1, 0, 'Q' },
         { "quant-reduction-max-var", 1, 0, 'X' },
         { "video-buffer",      1, 0, 'V' },
@@ -878,6 +879,14 @@ int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
 		case 'd' :
 			svcd_scan_data = 0;
 			break;
+		case 'A' :
+			rate_control = atoi(optarg);
+			if( rate_control < 0 || rate_control > 1 )
+			{
+				mjpeg_error( "-A option requires arg [0,1]");
+				++nerr;
+			}
+			break;
 		case 'Q' :
 			act_boost = atof(optarg);
 			if( act_boost <-4.0 || act_boost > 4.0)
@@ -954,7 +963,15 @@ YUV4MPEGEncoder::YUV4MPEGEncoder( MPEG2EncCmdLineOptions &cmd_options ) :
     writer = new FILE_StrmWriter( parms, cmd_options.outfilename );
     quantizer = new Quantizer( parms );
     coder = new MPEG2Coder( parms, *writer );
-    bitrate_controller = new OnTheFlyRateCtl( parms );
+    
+    if( cmd_options.rate_control == 0 )
+        bitrate_controller = new OnTheFlyRateCtl( parms );
+    else 
+    {
+        mjpeg_info( "Using Pass1 rate controller" );
+        bitrate_controller = new Pass1RateCtl( parms );
+    }
+
     seqencoder = new SeqEncoder( parms, *reader, *quantizer,
                                  *writer, *coder, *bitrate_controller);
 

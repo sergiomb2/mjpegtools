@@ -46,6 +46,7 @@ MPEG2EncOptions::MPEG2EncOptions()
     hf_quant = 0;
     hf_q_boost = 0.0;
     act_boost = 0.0;
+    rate_control = 0;
     boost_var_ceil = 10*10;
     video_buffer_size = 0;
     seq_length_limit = 0;

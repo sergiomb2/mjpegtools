@@ -51,6 +51,7 @@ struct MPEG2EncParams
     double hf_q_boost;
     double act_boost;
     double boost_var_ceil;
+    int rate_control;           /* The rate controller to use */
     int video_buffer_size;
     int seq_length_limit;
     int min_GOP_size;
