@@ -73,6 +73,11 @@ void LPCMStream::Init ( const int _stream_num)
 					 muxinto.buffers_in_audio,
 					 muxinto.always_buffers_in_audio
 		);
+    
+    if( muxinto.workarounds.mplayer_pes_headers )
+    {
+        min_pes_header_len = 10;
+    }
     mjpeg_info ("Scanning for header info: LPCM Audio stream %02x (%s)",
                 stream_num,
                 bs.StreamName()
@@ -192,8 +197,8 @@ void LPCMStream::OutputHdrInfo ()
 
     mjpeg_info ("Bit rate       : %8u bytes/sec (%u) bit/sec)",
                 NominalBitRate()/8, NominalBitRate() );
-    mjpeg_info ("Channels       :     %d\n", channels);
-    mjpeg_info ("Bits per sample:     %d\n", bits_per_sample );
+    mjpeg_info ("Channels       :     %d", channels);
+    mjpeg_info ("Bits per sample:     %d", bits_per_sample );
     mjpeg_info ("Frequency      :     %d Hz", samples_per_second );
 
 }

@@ -1,5 +1,9 @@
 TODO
 
+	- Consider adding a flag to ensure LCPM header_data > 9 bytes
+	to work around seek bug in mplayer (if it is not fixed). It would
+	suffice to always mux buffers...
+
 - Replace the current peak rate estimation with one based on
 monitoring SCR and position in original stream every so-and-so many
 muxed out frames...
