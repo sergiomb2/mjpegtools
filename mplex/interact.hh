@@ -24,6 +24,7 @@
 
 #include <config.h>
 #include <unistd.h>
+#include <vector>
 #include "mjpeg_types.h"
 
 #include "aunit.hh"
@@ -35,10 +36,9 @@
     
 int intro_and_options( int, char **, char**);
 
-void check_files (int argc,
-				  char* argv[],
-				  char**audio_file,
-				  char**video_file
+void check_files (int argc, char* argv[],
+                  vector<char *> &audio_file,
+                  vector<char *> &video_file
 	);
 bool open_file(const char *name);
 
@@ -79,7 +79,7 @@ extern off_t opt_max_segment_size;
 *************************************************************************/
  
 #define MPLEX_VER    "2.0.2"
-#define MPLEX_DATE   "$Date: 2001/08/28 18:43:38 $"
+#define MPLEX_DATE   "$Date: 2001/09/30 17:13:23 $"
 
 
 #endif // __INTERACT_H__
