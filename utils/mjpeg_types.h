@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_types.h,v 1.2 2001/06/04 15:01:13 wackston Exp $
+    $Id: mjpeg_types.h,v 1.3 2001/06/09 12:48:32 wackston Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
