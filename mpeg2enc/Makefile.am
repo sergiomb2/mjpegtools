@@ -8,16 +8,11 @@ mpeg2enc_MMXSSE = \
     quant_mmx.s dist2_mmx.s bdist2_mmx.s\
 	bdist1_mmx.s predict_mmx.s \
 	mblockq_sad_mmxe.s mblock_sad_mmxe.s mblock_sad_mmx.s  \
-    mblock_sub44_sads.c \
+    mblock_sub44_sads_x86.c \
 	quantize_x86.c  \
     predcomp_mmxe.s predcomp_mmx.s
 
-EXTRA_DIST = \
-    fdct_mmx.o idct_mmx.o quant_mmx.o dist2_mmx.o bdist2_mmx.o\
-	bdist1_mmx.o predict_mmx.o \
-	mblockq_sad_mmxe.o mblock_sad_mmxe.o mblock_sad_mmx.o \
-    mblock_sub44_sads_x86_h.c \
-	predcomp_mmxe.o predcomp_mmx.o
+EXTRA_DIST = mblock_sub44_sads_x86_h.c
 
 INCLUDES = -I $(top_srcdir) -I $(top_srcdir)/utils
 
@@ -35,7 +30,7 @@ mpeg2enc_SOURCES = mpeg2enc.c conform.c putseq.c putpic.c puthdr.c putmpg.c \
 
 mpeg2enc_DEPENDENCIES = $(top_srcdir)/utils/libutils.a
 
-mpeg2enc_LDADD=-L$(top_srcdir)/utils -lutils -lm -lpthread
+mpeg2enc_LDADD=-L$(top_srcdir)/utils -lutils @PTHREAD_LIBS@ -lm
 
 ASM = nasm
 

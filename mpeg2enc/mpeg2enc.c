@@ -57,7 +57,7 @@
 
 #include "global.h"
 
-int verbose = 2;
+int verbose = 1;
 
 /* private prototypes */
 static void init (void);
@@ -223,27 +223,12 @@ static void Usage(char *str)
 	printf("              stream.  -B specifies the bitrate of non-video data\n");
 	printf("   -s         Generate a sequence header for every GOP rather than just for the first GOP\n");
 	printf("   -p         Generate header flags for 32 pull down of 24fps movie.\n");
-	printf("   -t         Activate dynamic thresholding of motion compensation window size\n" );
 	printf("   -N         Noise filter via quantisation adjustment (experimental)\n" );
 	printf("   -h         Maximise high-frequency resolution (useful for high quality sources at high bit-rates)\n" );
 	printf("   -?         Print this lot out!\n");
 	exit(0);
 }
 
-
-static int log_level = LOG_INFO;
-static mjpeg_log_handler_t default_mjpeg_log_handler;
-
-static void
-mplex_log_handler( log_level_t level, const char message[] )
-{
-	if (level == LOG_DEBUG && log_level > LOG_DEBUG)
-		return;
-	if( level == LOG_INFO && log_level > LOG_INFO )
-		return;
-
-	default_mjpeg_log_handler( level, message );
-}
 
 
 int main(argc,argv)
@@ -257,8 +242,6 @@ int main(argc,argv)
 	/* Set up error logging.  The initial handling level is LOG_INFO
 	 */
 	
-	default_mjpeg_log_handler = mjpeg_log_set_handler(mplex_log_handler );
-
 	while( (n=getopt(argc,argv,"m:a:f:n:b:B:q:o:S:F:r:M:4:2:Q:g:G:v:V:stpNhO?")) != EOF)
 	{
 		switch(n) {
@@ -367,8 +350,8 @@ int main(argc,argv)
 			break;
 
 		case 'v':
-			log_level = LOG_WARN-atoi(optarg);
-			if( verbose < LOG_DEBUG || verbose > LOG_WARN )
+			verbose = atoi(optarg);
+			if( verbose < 0 || verbose > 2 )
 				++nerr;
 			break;
 		case 'V' :
@@ -407,7 +390,7 @@ int main(argc,argv)
 				mjpeg_error("-n option requires arg n or p, or s.\n");
 				++nerr;
 			}
-
+			break;
 		case 'g' :
 			param_min_GOP_size = atoi(optarg);
 			break;
@@ -422,7 +405,7 @@ int main(argc,argv)
 			break;
 		case 'Q' :
 			param_act_boost = atof(optarg);
-			if( param_act_boost <0.1 || param_act_boost > 10.0)
+			if( param_act_boost <0.0 || param_act_boost > 10.0)
 			{
 				mjpeg_error( "-q option requires arg 0.1 .. 10.0\n");
 				++nerr;
@@ -436,6 +419,9 @@ int main(argc,argv)
 
     if( nerr )
 		Usage(argv[0]);
+
+	mjpeg_default_handler_verbosity(verbose);
+
 
 	/* Select input stream */
 	if(optind!=argc)

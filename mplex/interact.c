@@ -15,22 +15,23 @@ static void Usage(char *str)
 	fprintf( stderr, "Usage: %s [params] -o <output file> [<input file1> [<input file2>] \n\n", str);
 	fprintf( stderr, "  where possible params are:\n" );
 	fprintf( stderr, " -v num  Level of verbosity. 0 = quiet, 1 = normal 2 = verbose/debug\n");
-	fprintf( stderr, " -n      Noisy (verbose) mode for debugging streams\n" );
 	fprintf( stderr, " -m      Mpeg version (default: 1) [1..2]\n");
 	fprintf( stderr, " -b num  Specify decoder buffers size in kB. (default: 46) [ 20...1000]\n" );
-    fprintf( stderr, " -r num  Specify data rate of output stream in kbit/sec (default 0=Compute from source streams)\n" );
+    fprintf( stderr, " -r num  Specify data rate of output stream in kbit/sec\n"
+			         "(default 0=Compute from source streams)\n" );
 	fprintf( stderr, " -l num  Multiplex only num frames (default 0=multiplex all)\n");
 	fprintf( stderr, " -O num  Specify offset of timestamps (video-audio) in mSec\n");
 	fprintf( stderr, " -s num  Specify sector size in bytes (default: 2324) [256..16384]\n");
-	fprintf( stderr, " -V      Multiplex variable bit-rate (experimental)\n");
+	fprintf( stderr, " -V      Multiplex variable bit-rate video\n");
 	fprintf( stderr, " -p num  Number of packets per pack (default: 20) [1..100]\n"  );
 	fprintf( stderr, " -h      System header in every pack rather than just in first\n" );
 	fprintf( stderr, " -f fmt  Set pre-defined mux format.\n");
 	fprintf( stderr, "         [0 = Auto MPEG1, 1 = VCD, 2 = user-rate VCD,\n");
-	fprintf( stderr, "          2 = Auto MPEG2, 3 = SVCD, 4 = user-rate SVCD, 5 = DVD]\n");
-	fprintf( stderr, "         (N.b only 0 .. 3 currently implemented!*)\n" ); 
-	fprintf( stderr, " -S size Maximum size of output file in M bytes (default: 680) (0 = no limit)\n" );
-	fprintf( stderr, " -M      Generate a *single* multi-file program per sequence rather a program per file\n");
+	fprintf( stderr, "          3 = Auto MPEG2, 4 = SVCD, 5 = user-rate SVCD, 6 = DVD]\n");
+	fprintf( stderr, "         (N.b only 0 .. 5 currently implemented!*)\n" ); 
+	fprintf( stderr, " -S size Maximum size of output file in M bytes (default: 2000) (0 = no limit)\n" );
+	fprintf( stderr, " -M      Generate a *single* multi-file program per\n"
+			         "sequence rather a program per file\n");
 	fprintf( stderr, "         %%d in the output file name is replaced by a segment counter\n");
 	fprintf( stderr, " -e      Vcdmplex style start-up (debugging tool)\n");
 	fprintf( stderr, " -?      Print this lot out!\n");
@@ -38,7 +39,7 @@ static void Usage(char *str)
 	exit (1);
 }
 
-log_level_t verbose = LOG_INFO;
+int verbose = 1;
 int opt_buffer_size = 46;
 int opt_data_rate = 0;  /* 3486 = 174300B/sec would be right for VCD */
 int opt_video_offset = 0;
@@ -55,13 +56,13 @@ clockticks opt_max_PTS = 0LL;
 int opt_emul_vcdmplex = 0;
 
 /* Should fit nicely on an ordinary CD ... */
-intmax_t max_system_segment_size =  680*1024*1024;
+intmax_t max_system_segment_size =  2000*1024*1024;
 
 int intro_and_options(int argc, char *argv[], char **multplex_outfile)
 {
     int n;
 	char *outfile = NULL;
-	while( (n=getopt(argc,argv,"o:b:r:O:v:m:f:l:s:S:qiVnMeh")) != EOF)
+	while( (n=getopt(argc,argv,"o:b:r:O:v:m:f:l:s:S:q:p:VMeh")) != EOF)
 	{
 		switch(n)
 		{
@@ -75,19 +76,11 @@ int intro_and_options(int argc, char *argv[], char **multplex_outfile)
   	
 			break;
 		case 'v' :
-			verbose = LOG_WARN-atoi(optarg);
-			if( verbose < LOG_DEBUG || verbose > LOG_WARN )
+			verbose = atoi(optarg);
+			if( verbose < 0 || verbose > 2 )
 				Usage(argv[0]);
 			break;
 
-		case 'q' :
-			verbose = LOG_WARN;
-			break;
-	
-		case 'n' :
-			verbose = LOG_DEBUG;
-			break;
-	
 		case 'V' :
 			opt_VBR = 1;
 			break;
@@ -134,7 +127,7 @@ int intro_and_options(int argc, char *argv[], char **multplex_outfile)
 	  
 		case 'f' :
 			opt_mux_format = atoi(optarg);
-			if( opt_mux_format < MPEG_MPEG1 || opt_mux_format > MPEG_SVCD )
+			if( opt_mux_format < MPEG_MPEG1 || opt_mux_format > MPEG_SVCD_NSR )
 				Usage(argv[0]);
 			break;
 		case 's' :
@@ -164,6 +157,7 @@ int intro_and_options(int argc, char *argv[], char **multplex_outfile)
     {	
 		Usage(argv[0]);
     }
+	(void)mjpeg_default_handler_verbosity(verbose);
 	mjpeg_info( "mplex version %s (%s)\n",MPLEX_VER,MPLEX_DATE );
 	*multplex_outfile = outfile;
 	return optind-1;
@@ -209,27 +203,11 @@ void status_info (	unsigned int nsectors_a,
 					log_level_t level
 				 )
 {
-	mjpeg_log( level, "A secs=%6d V secs=%7d P secs=%7d\n" ,nsectors_a,nsectors_v,nsectors_p);
+	mjpeg_log( level, "sectors muxed: audio=%07d video=%08d padding=%07d\n" ,nsectors_a,nsectors_v,nsectors_p);
 	mjpeg_log( LOG_DEBUG,"l=%11lld abuf=%6d vbuf=%6d\n",nbytes,buf_a,buf_v);
 }
 
 
-
-
-void status_message (int what, int decode_number)
-
-{
-  switch (what)
-  {
-  case STATUS_AUDIO_END:
-	  mjpeg_info("Audio stream end at sector %07d\n", decode_number);
-  break;
-  case STATUS_VIDEO_END:
-	  mjpeg_info("Video stream end at sector %07d\n", decode_number);
-  break;
-  }
-
-}
 
 void timeout_error(int what, int decode_number)
 {
@@ -237,10 +215,10 @@ void timeout_error(int what, int decode_number)
 	switch (what)
 		{
 		case STATUS_AUDIO_TIME_OUT:
-			mjpeg_error("Timeout in audio at sector %07d\n",decode_number);
+			mjpeg_error("Likely buffer under-run at  audio sector %d\n",decode_number);
 			break;
 		case STATUS_VIDEO_TIME_OUT:
-			mjpeg_error("Timeout in video at sector %07d\n",decode_number);
+			mjpeg_error("Likely buffer under-run  at video sector %d\n",decode_number);
 			break;
 		}
 	if( ++timeouts > opt_max_timeouts )

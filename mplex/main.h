@@ -162,8 +162,6 @@ typedef uint64_t clockticks;
 #define MARKER_DTS				1		/* Marker DTS		*/
 #define MARKER_NO_TIMESTAMPS	0x0f		/* Marker NO timestamps	*/
 
-#define STATUS_AUDIO_END	0		/* Statusmessage A end	*/
-#define STATUS_VIDEO_END	1		/* Statusmessage V end	*/
 #define STATUS_AUDIO_TIME_OUT	2		/* Statusmessage A out	*/
 #define STATUS_VIDEO_TIME_OUT	3		/* Statusmessage V out	*/
 
@@ -414,7 +412,6 @@ void status_info (	unsigned int nsectors_a,
 
 void status_header (log_level_t level);
 void status_footer (log_level_t level);
-void status_message	  (int what, int decode_number);
 void timeout_error	  (int what, int decode_number);
 
 
@@ -456,7 +453,7 @@ extern int opt_packets_per_pack;
 extern clockticks opt_max_PTS;
 extern int opt_emul_vcdmplex;
 
-extern log_level_t verbose;
+extern int verbose;
 extern unsigned int which_streams;
 
 extern int packet_overhead;
