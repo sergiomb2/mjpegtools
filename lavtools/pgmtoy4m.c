@@ -1,5 +1,5 @@
 /*
- * $Id: pgmtoy4m.c,v 1.13 2003/12/17 00:55:30 sms00 Exp $
+ * $Id: pgmtoy4m.c,v 1.14 2003/12/17 16:54:04 sms00 Exp $
  *
  * pgmtoy4m converts the PGM output of "mpeg2dec -o pgmpipe" to YUV4MPEG2 on
  * stdout.
@@ -7,8 +7,8 @@
  * Note: mpeg2dec uses a perversion of the PGM format - they're really not
  * "Grey Maps" but rather a catenation of the 420P data (commonly called
  * "YUV").    The type is P5 ("raw") and the number of rows is really
- * the total of the Y', Cr and Cb heights.   The Cr and Cb data is "joined"
- * together.  After the Y' rows you have 1 row of Cr and 1 row of Cb per 
+ * the total of the Y', Cb and Cr heights.   The Cb and Cr data is "joined"
+ * together.  After the Y' rows you have 1 row of Cb and 1 row of Cr per 
  * "row" of PGM data.
  *
  * NOTE: You MAY need to know the field order (top or bottom field first),
