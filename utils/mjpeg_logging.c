@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.c,v 1.2.2.1 2001/04/23 16:34:32 rbultje Exp $
+    $Id: mjpeg_logging.c,v 1.2.2.2 2001/04/28 13:20:42 wackston Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -37,7 +37,6 @@ default_mjpeg_log_handler(log_level_t level, const char message[])
   switch(level) {
   case LOG_ERROR:
     fprintf(stderr, "**ERROR: %s", message);
-    exit(EXIT_FAILURE);
     break;
   case LOG_DEBUG:
     fprintf(stdout, "--DEBUG: %s", message);
@@ -135,7 +134,7 @@ mjpeg_error_exit1(const char format[], ...)
   va_start( args, format );
   mjpeg_logv( LOG_ERROR, format, args);
   va_end(args);           
-  exit(1);
+  exit(EXIT_FAILURE);
 }
 
 

@@ -91,15 +91,15 @@ void init_quantizer()
 			opt_type1 = "3DNOW and";
 			pquant_non_intra = quant_non_intra_3dnow;
 		}
-		else if ( (flags & ACCEL_X86_MMXEXT) != 0 )
+		else if ( (flags & ACCEL_X86_SSE) != 0 )
 		{
 			opt_type1 = "SSE and";
 			pquant_non_intra = quant_non_intra_sse;
 		}
 		else 
 		{
-			opt_type1 = "";
-			pquant_non_intra = quant_non_intra;
+			opt_type1 = "MMX and";
+			pquant_non_intra = quant_non_intra_mmx;
 		}
 
 		if ( (flags & ACCEL_X86_MMXEXT) != 0 )

@@ -116,8 +116,15 @@ AC_SUBST(QUICKTIME_CFLAGS)
 if test x$with_quicktime = xyes ; then
   AC_MSG_ERROR([
 *** A directory must be specified for the --with-quicktime option.])
+
 else if test x$with_quicktime = x ; then
-  with_quicktime=/usr/local/src/quicktime
+	if test -d /usr/local/src/quicktime4linux-1.3  ; then
+	  with_quicktime=/usr/local/src/quicktime4linux-1.3
+	else 
+	if test -d /usr/local/src/quicktime  ; then
+	  with_quicktime=/usr/local/src/quicktime	
+	fi
+	fi
 fi
 fi
 have_quicktime=false
@@ -126,7 +133,7 @@ if test "$PNG" = "found" ; then
   if test x$have_pthread = xtrue ; then
     EXTRA_LIBS=" $GLIB_LIBS  $PTHREAD_LIBS  -lpng -ldl"
   else
-    EXTRA_LIBS="-L$with_quicktime$GLIB_LIBS -lpng -ldl"
+    EXTRA_LIBS="-L$with_quicktime $GLIB_LIBS -lpng -ldl"
   fi
   AC_CHECK_LIB(quicktime, quicktime_open,
     [ QUICKTIME_LIBS="-L$with_quicktime -lquicktime $EXTRA_LIBS"
