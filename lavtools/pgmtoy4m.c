@@ -1,5 +1,5 @@
 /*
- * $Id: pgmtoy4m.c,v 1.7 2003/05/28 00:13:04 sms00 Exp $
+ * $Id: pgmtoy4m.c,v 1.8 2003/05/29 06:03:50 sms00 Exp $
  *
  * pgmtoy4m converts the PGM output of "mpeg2dec -o pgmpipe" to YUV4MPEG2 on
  * stdout.
@@ -35,7 +35,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <mjpegtools/yuv4mpeg.h>
+#include <yuv4mpeg.h>
 
 extern	char	*__progname;
 
