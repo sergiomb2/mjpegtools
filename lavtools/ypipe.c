@@ -106,7 +106,7 @@ int main (int argc, char *argv[]) {
    int w0, h0, w1, h1;
    int rate0, rate1;
    int outstream = 1;
-   int n, i,j, x,y;
+   int i,j; //n x,y;
    unsigned char *yuv0[3];
    unsigned char *yuv1[3];
 
@@ -149,4 +149,6 @@ int main (int argc, char *argv[]) {
    fflush (stderr);
    fflush (stdout);
 
+   return 1;
 }
+
