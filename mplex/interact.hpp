@@ -44,7 +44,6 @@ using std::vector;
 struct Workarounds
 {
   Workarounds();
-  bool mplayer_pes_headers;
 };
 
 class MultiplexParams
@@ -140,7 +139,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.3"
-#define MPLEX_DATE   "$Date: 2003/12/20 17:33:38 $"
+#define MPLEX_DATE   "$Date: 2004/01/05 18:17:43 $"
 
 #endif // __INTERACT_H__
 
