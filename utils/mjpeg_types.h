@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_types.h,v 1.12 2004/08/08 22:39:56 sms00 Exp $
+    $Id: mjpeg_types.h,v 1.13 2005/02/18 05:26:27 sms00 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -35,19 +35,11 @@
 #elif  defined(_WIN32)
 #include <win32defs.h>
 #else
-/* warning ISO/IEC 9899:1999 <stdint.h> was missing and even <inttypes.h> */
-/* fixme */
-/* (Ronald) we'll just give an error now...Better solutions might come later */
-#error You don't seem to have sys/types.h, inttypes.h or stdint.h! \
-This might mean two things: \
-Either you really don't have them, in which case you should \
-install the system headers and/or C-library headers. \
-You might also have forgotten to define whether you have them. \
-You can do this by either defining their presence before including \
-mjpegtools' header files (e.g. "#define HAVE_STDINT_H"), or you can check \
-for their presence in a configure script. mjpegtools' configure \
-script is a good example of how to do this. You need to check for \
-stdbool.h, inttypes.h, stdint.h and sys/types.h
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int uint32_t;
+typedef unsigned long long uint64_t;
+typedef long long int int64_t;
 #endif /* HAVE_STDINT_H */
 
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
