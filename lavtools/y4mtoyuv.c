@@ -1,5 +1,5 @@
 /*
- * $Id: y4mtoyuv.c,v 1.1 2004/01/01 19:59:55 sms00 Exp $
+ * $Id: y4mtoyuv.c,v 1.2 2004/01/01 23:30:35 sms00 Exp $
  *
  * Simple program to convert the YUV4MPEG2 format used by the 
  * mjpeg.sourceforge.net suite of programs into pure EYUV format used
@@ -82,6 +82,11 @@ main(int argc, char **argv)
 			{
 			ss_h = 2;
 			ss_v = 2;
+			}
+		else if	(!strcmp(tag, "422"))
+			{
+			ss_h = 2;
+			ss_v = 1;
 			}
 		else if	(!strcmp(tag, "444"))
 			{
