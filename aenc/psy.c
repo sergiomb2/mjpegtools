@@ -66,7 +66,7 @@ double sfreq;        /* to match prototype : float args are always double */
 /* overflow errors that otherwise would have occurred at compile time     */
 /* on the Macintosh computer.                                             */
 
- FLOAT          *grouped_c, *grouped_e, *nb, *cb, *ecb, *bc;
+ static FLOAT          *grouped_c, *grouped_e, *nb, *cb, *ecb, *bc;
  FLOAT          *wsamp_r, *wsamp_i, *phi, *energy;
  FLOAT          *c, *fthr;
  F32            *snrtmp;
@@ -327,9 +327,16 @@ temp2=r[chn][new][j] * sin((double) phi[j]) - r_prime * sin((double) phi_prime);
  *         this whole section can be accomplished by a table lookup          *
  *****************************************************************************/
         for(j=0;j<CBANDS;j++)
-           if(rnorm[j] && numlines[j])
+		{
+			nb[j] = rnorm[j]*numlines[j];
+			if(nb[j] != 0.0)
+				nb[j] = ecb[j]*bc[j]/nb[j];
+		}
+		/* ORIGINAL: Dangerously hacky code as rnorm is a FLOAT*!!!!
+		   if(rnorm[j] && numlines[j])
               nb[j] = ecb[j]*bc[j]/(rnorm[j]*numlines[j]);
            else nb[j] = 0;
+		*/
         for(j=0;j<HBLKSIZE;j++){
 /*temp1 is the preliminary threshold */
            temp1=nb[partition[j]];
