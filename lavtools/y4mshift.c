@@ -1,6 +1,6 @@
 
 /*
- * $Id: y4mshift.c,v 1.5 2003/05/22 15:37:16 sms00 Exp $
+ * $Id: y4mshift.c,v 1.6 2003/05/24 02:50:36 sms00 Exp $
  *
  * written by Steven M. Schultz <sms@2BSD.COM>
  *
@@ -344,7 +344,8 @@ void vertical_shift(u_char **yuv, int vshift, int width, int height)
 static void usage()
         {
 
-        fprintf(stderr, "%s: usage: [-v] [-h] [-b xoff,yoff,xsize,ysize] [-N num] -n N\n", __progname);
+        fprintf(stderr, "%s: usage: [-v] [-h] [-M] [-b xoff,yoff,xsize,ysize] [-N num] -n N\n", __progname);
+	fprintf(stderr, "%s:\t-M = monochrome output\n", __progname);
         fprintf(stderr, "%s:\t-n N = horizontal shift count - must be even!\n",
                 __progname);
         fprintf(stderr, "%s:\t\tpositive count shifts right\n",__progname);
