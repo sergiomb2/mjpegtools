@@ -75,6 +75,7 @@ class MultiplexJob : public MultiplexParams
 {
 public:
   MultiplexJob();
+  virtual ~MultiplexJob() {}
   virtual void SetFromCmdLine( unsigned int argc, char *argv[]);
   virtual PS_Stream *GetOutputStream(
 			   unsigned mpeg,
@@ -106,7 +107,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.2"
-#define MPLEX_DATE   "$Date: 2003/02/16 21:48:56 $"
+#define MPLEX_DATE   "$Date: 2003/02/25 21:30:57 $"
 
 
 #endif // __INTERACT_H__
