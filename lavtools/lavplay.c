@@ -650,10 +650,6 @@ int main(int argc, char ** argv)
             h_offset = atoi(optarg);
             break;
 
-		case 'w':
-            playback_width = atoi(optarg);
-            break;
-
 		case 'v':
             v_offset = atoi(optarg);
             break;
@@ -892,6 +888,13 @@ int main(int argc, char ** argv)
    
 	/* Check dimensions of video, select decimation factors */
 	if (!soft_play && !screen_output)
+	{
+		/* set correct width of device for hardware
+		   DC10(+): 768 (PAL/SECAM) or 640 (NTSC), Buz/LML33: 720*/
+		res = ioctl(mjpeg->dev, VIDIOCGCAP,&vc);
+		if (res < 0) mjpeg_error("getting device capabilities: %s\n",sys_errlist[errno]);
+		playback_width = vc.maxwidth;
+
 		if( el.video_width > playback_width || el.video_height > hn )
 		{
 			/* This is definitely too large */
@@ -901,6 +904,7 @@ int main(int argc, char ** argv)
 			lavplay_msg(LAVPLAY_ERROR,infostring,"");
 			exit(1);
 		};
+	}
        
 	/* if zoom_to_fit is set, HorDcm is independent of interlacing */
        
