@@ -93,10 +93,10 @@ quantize_non_intra_mb_mmx:
 	
 	pxor      mm5, mm5  ; Non-zero flag accumulator 
 	mov eax,  16		; 16 quads to do 
-	jmp .nextquadniq
+	jmp nextquadniq
 
 align 32
-.nextquadniq:
+nextquadniq:
 	movq mm2, [esi]				; mm2 = *psrc
 
 	pxor    mm4, mm4
@@ -118,7 +118,7 @@ align 32
 	por     mm7, mm3
 	movd	edx, mm7
 	cmp		edx, 0
-	jnz		near .out_of_range
+	jnz		near out_of_range
 
 	;;
 	;; Carry on with the arithmetic...
@@ -195,7 +195,7 @@ align 32
 	por		mm7, mm3
 	movd	edx, mm7
 	cmp		edx, 0
-	jnz		.saturated
+	jnz		saturated
 
 	;;
 	;;  Accumulate non-zero flags
@@ -218,7 +218,7 @@ align 32
 	movq [edi-8], mm2
 	test eax, eax
 	
-	jnz near .nextquadniq
+	jnz near nextquadniq
 
 	;; Return saturation in low word and nzflag in high word of result dword 
 		
@@ -233,7 +233,7 @@ align 32
     and   edx, 0xffff0000  ;; hiwgh word ecx is nzflag
 	mov   eax, edx
 	
-.return:
+return:
 	pop edi
 	pop esi
 	pop edx
@@ -245,13 +245,13 @@ align 32
 	emms			; clear mmx registers
 	ret			
 
-.out_of_range:
+out_of_range:
 	mov	eax,	0x00ff
-	jp	.return
-.saturated:
+	jp	return
+saturated:
 
 	mov eax,    0xff00
-	jp .return
+	jp return
 
 
 
@@ -681,36 +681,33 @@ quant_weight_coeff_sum_mmx:
 
 	mov ecx, 16			; 16 coefficient / quantiser quads to process...
 	pxor mm6, mm6		; Accumulator
-.nquantsum:
+	pxor mm7, mm7		; Zero
+nquantsum:
 	movq    mm0, [edi]
-	movq    mm2, [edi+8]
-	pxor    mm1, mm1
-	pxor    mm3, mm3
+	movq    mm1, mm7
+	movq    mm2, [esi]
 	
 	;;
 	;;      Compute absolute value of coefficients...
 	;;
 	pcmpgtw mm1, mm0   ; (mm0 < 0 )
-	pcmpgtw mm3, mm2   ; (mm0 < 0 )
-	pxor	mm0, mm1
-	pxor	mm2, mm3
-	psubw	mm0, mm1
-	psubw	mm2, mm3
+	movq	mm3, mm0
+	psllw   mm3, 1     ; 2*mm0
+	pand    mm3, mm1   ; 2*mm0 * (mm0 < 0)
+	psubw   mm0, mm3   ; mm0 = abs(mm0)
 
 
 	;;
 	;; Compute the low and high words of the result....
 	;;
-	pmaddwd   mm0, [esi]
-	pmaddwd   mm2, [esi+8]
-	add		edi, 16
-	add		esi, 16
+	pmaddwd   mm0, mm2				
+	add		edi, 8
+	add		esi, 8
 	paddd      mm6, mm0
-	paddd      mm6, mm2
 	
 	
-	sub ecx,	2
-	jnz   .nquantsum
+	sub ecx,	1
+	jnz   nquantsum
 
 	movd   eax, mm6
 	psrlq  mm6, 32

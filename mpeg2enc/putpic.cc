@@ -58,6 +58,15 @@
 #include "macroblock.hh"
 #include "picture.hh"
 
+#ifdef DEBUG_DPME
+static int dp_mv = 0;
+void calc_DMV( const Picture &picture, /*int pict_struct,  int topfirst,*/
+                      MotionVector DMV[Parity::dim],
+                      MotionVector &dmvector, 
+                      int mvx, int mvy
+    );
+#endif
+    
 /* output motion vectors (6.2.5.2, 6.3.16.2)
  *
  * this routine also updates the predictions for motion vectors (PMV)
@@ -107,6 +116,20 @@ void Picture::PutMVs( MotionEst &me, bool back )
 		}
 		else
 		{
+#ifdef DEBUG_DPME
+            MotionVector DMV[Parity::dim /*pred*/];
+                        calc_DMV(*this,
+                         DMV,
+                         me.dualprimeMV,
+                         me.MV[0][0][0],
+                         me.MV[0][0][1]>>1);
+                         
+            printf( "PR%06d: %03d %03d %03d %03d %03d %03d\n", dp_mv,
+                me.MV[0][0][0], (me.MV[0][0][1]>>1), DMV[0][0], DMV[0][1], DMV[1][0], DMV[1][1] );
+            ++dp_mv;
+            if( dp_mv == 45000 )
+                exit(0);
+#endif
 			/* dual prime prediction */
 			coder.PutMV(me.MV[0][back][0]-PMV[0][back][0],hor_f_code);
 			coder.PutDMV(me.dualprimeMV[0]);

@@ -110,8 +110,11 @@ void pred (	uint8_t *src[], int sfield,
  *
  */
 
-static void calc_DMV( const Picture &picture, /*int pict_struct,  int topfirst,*/
-					  MotionVector (&DMV)[Parity::dim], 
+#ifndef DEBUG_DPME
+static
+#endif
+void calc_DMV( const Picture &picture, /*int pict_struct,  int topfirst,*/
+					  MotionVector DMV[Parity::dim],
 					  MotionVector &dmvector, 
 					  int mvx, int mvy
 	)
@@ -232,20 +235,19 @@ void MacroBlock::Predict()
 			}
 			else if (final_me.motion_type==MC_DMV)
 			{
-				/* dual prime prediction */
-
-				/* calculate derived motion vectors */
+				/* dual prime prediction calculate derived motion vectors */
 				calc_DMV(picture,
 						 DMV,
 						 final_me.dualprimeMV,
 						 final_me.MV[0][0][0],
 						 final_me.MV[0][0][1]>>1);
-				
+
+
 				/* predict top field from top field */
 				pred(oldref,0,cur,0,
 					 lx<<1,16,8,bx,by>>1,
 					 final_me.MV[0][0][0],final_me.MV[0][0][1]>>1,false);
-
+      
 				/* predict bottom field from bottom field */
 				pred(oldref,1,cur,1,
 					 lx<<1,16,8,bx,by>>1,
