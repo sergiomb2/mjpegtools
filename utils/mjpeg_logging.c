@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.c,v 1.5 2001/05/01 22:21:33 rbultje Exp $
+    $Id: mjpeg_logging.c,v 1.6 2001/05/05 12:43:23 wackston Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -107,7 +107,6 @@ mjpeg_default_handler_verbosity(int verbosity)
 {
   int prev_verb = mjpeg_log_verbosity;
   mjpeg_log_verbosity = LOG_WARN - verbosity;
-  printf("VERB = %d\n", mjpeg_log_verbosity);
   return prev_verb;
 }
 
