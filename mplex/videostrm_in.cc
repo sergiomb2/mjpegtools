@@ -165,9 +165,9 @@ void VideoStream::FillAUbuffer(unsigned int frames_to_buffer)
     // padded still frames may have a loooong gap before
     // a following sequence end marker.
 	while(!bs.eos() && 
-		  bs.seek_sync( SYNCWORD_START, 24, 2*1024*1024) &&
 	      decoding_order < last_buffered_AU  &&
-		  (!opt_max_PTS || access_unit.PTS < opt_max_PTS ) 
+		  (!opt_max_PTS || access_unit.PTS < opt_max_PTS )  &&
+          bs.seek_sync( SYNCWORD_START, 24, 2*1024*1024)
 		)
 	{
 		syncword = (SYNCWORD_START<<8) + bs.getbits( 8);
