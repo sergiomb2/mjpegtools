@@ -54,8 +54,16 @@ MPEG2EncOptions::MPEG2EncOptions()
     max_GOP_size = -1;
     closed_GOPs = 0;
     preserve_B = 0;
-    Bgrp_size = 3;
+    Bgrp_size = 1;
+#ifdef _SC_NPROCESSORS_ONLN
+    num_cpus = sysconf (_SC_NPROCESSORS_ONLN);
+#else
     num_cpus = 1;
+#endif
+    if (num_cpus < 0)
+      num_cpus = 1;
+    if (num_cpus > 32)
+      num_cpus = 32;
     vid32_pulldown = 0;
     svcd_scan_data = -1;
     seq_hdr_every_gop = 0;
@@ -67,6 +75,7 @@ MPEG2EncOptions::MPEG2EncOptions()
     input_interlacing = 0;
     hack_svcd_hds_bug = 1;
     hack_altscan_bug = 0;
+    hack_nodualprime = 0;
     mpeg2_dc_prec = 1;
     ignore_constraints = 0;
     unit_coeff_elim = 0;
@@ -202,6 +211,10 @@ int MPEG2EncOptions::CheckBasicConstraints()
 		}
 	}
 	
+    if ((mpeg == 1) && (fieldenc != 0)) {
+        mjpeg_error("Interlaced encoding (-I != 0) is not supported by MPEG-1.");
+        ++nerr;
+    }
 
 
 	if(  aspect_ratio > mpeg_num_aspect_ratios[mpeg-1] ) 
@@ -270,6 +283,7 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 		bitrate = 1151929;
 		video_buffer_size = 46;
         preserve_B = true;
+        Bgrp_size = 3;
         min_GOP_size = 9;
 		max_GOP_size = norm == 'n' ? 18 : 15;
 		mjpeg_info("VCD default options selected");
@@ -293,10 +307,8 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 		mpeg = 2;
 		mjpeg_info( "Selecting generic MPEG2 output profile");
 		mpeg = 2;
-		if( fieldenc == -1 )
-			fieldenc = 1;
 		if( video_buffer_size == 0 )
-			video_buffer_size = 46 * bitrate / 1151929;
+			video_buffer_size = 230;
 		break;
 
 	case MPEG_FORMAT_SVCD :
@@ -308,8 +320,6 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 	case  MPEG_FORMAT_SVCD_NSR :		/* Non-standard data-rate */
 		mjpeg_info( "Selecting SVCD output profile");
 		mpeg = 2;
-		if( fieldenc == -1 )
-			fieldenc = 1;
 		if( quant == 0 )
 			quant = 8;
 		if( svcd_scan_data == -1 )
@@ -383,8 +393,6 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 	case MPEG_FORMAT_SVCD_STILL :
 		mjpeg_info( "Selecting SVCD Stills output profile");
 		mpeg = 2;
-		if( fieldenc == -1 )
-			fieldenc = 1;
 		/* We choose a generous nominal bit-rate as its VBR anyway
 		   there's only one frame per sequence ;-). It *is* too small
 		   to fill the frame-buffer in less than one PAL/NTSC frame
@@ -438,15 +446,17 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 		
 		if( bitrate == 0 )
 			bitrate = 7500000;
-		if( fieldenc == -1 )
-			fieldenc = 1;
-		video_buffer_size = 230;
+        if( video_buffer_size == 0 )
+            video_buffer_size = 230;
 		mpeg = 2;
 		if( quant == 0 )
 			quant = 8;
 		seq_hdr_every_gop = 1;
 		break;
 	}
+
+    if( fieldenc == -1 )
+        fieldenc = 0;
 
     switch( mpeg )
     {

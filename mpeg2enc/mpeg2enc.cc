@@ -65,10 +65,8 @@
 #include "ratectl.hh"
 #include "seqencoder.hh"
 #include "mpeg2coder.hh"
-
 #include "format_codes.h"
 #include "mpegconsts.h"
-#include "yuv4mpeg.h"
 
 #ifdef HAVE_ALTIVEC
 /* needed for ALTIVEC_BENCHMARK and print_benchmark_statistics() */
@@ -272,8 +270,6 @@ int Y4MPipeReader::PipeRead(uint8_t *buf, int len)
 
 
 
-
-
 /**************************
  *
  * Derived class for options set from command line
@@ -466,8 +462,8 @@ void MPEG2EncCmdLineOptions::Usage()
 "    When quantisation is set variable bit-rate encoding is activated and\n"
 "    the --bitrate value sets an *upper-bound* video data-rate\n"
 "--output|-o pathname\n"
-"    pathname of output file or fifo (REQUIRED!!!)\n"
-"--vcd-still-size|-T size\n"
+"    Pathname of output file or fifo (REQUIRED!!!)\n"
+"--target-still-size|-T size\n"
 "    Size in KB of VCD stills\n"
 "--interlace-mode|-I num\n"
 "    Sets MPEG 2 motion estimation and encoding modes:\n"
@@ -495,6 +491,9 @@ void MPEG2EncCmdLineOptions::Usage()
 "--quantisation-reduction|-Q num\n"
 "    Max. quantisation reduction for highly active blocks\n"
 "    [0.0 .. 5] (default: 0.0)\n"
+"--quant-reduction-max-var|-X num\n"
+"    Luma variance below which quantisation boost (-Q) is used\n"
+"    [0.0 .. 2500.0](default: 0.0)\n"
 "--video-buffer|-V num\n"
 "    Target decoders video buffer size in KB (default 46)\n"
 "--video-norm|-n n|p|s\n"
@@ -537,13 +536,13 @@ void MPEG2EncCmdLineOptions::Usage()
 "--custom-quant-matrices|-K kvcd|tmpgenc|default|hi-res|file=inputfile|help\n"
 "    Request custom or userspecified (from a file) quantization matrices\n"
 "--unit-coeff-elim|-E num\n"
-"    Skip picture blocks satisfying which appear to carry little\n"
+"    Skip picture blocks which appear to carry little information\n"
 "    because they code to only unit coefficients. The number specifies\n"
 "    how aggresively this should be done. A negative value means DC\n"
 "    coefficients are included.  Reasonable values -40 to 40\n"
 "--b-per-refframe| -R 0|1|2\n"
 "    The number of B frames to generate between each I/P frame\n"
-"    --help|-?\n"
+"--help|-?\n"
 "    Print this lot out!\n"
 	);
 	exit(0);
@@ -620,7 +619,7 @@ int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
         { "video-buffer",      1, 0, 'V' },
         { "video-norm",        1, 0, 'n' },
         { "sequence-length",   1, 0, 'S' },
-        { "3-2-pulldown",      1, &vid32_pulldown, 1 },
+        { "3-2-pulldown",      0, &vid32_pulldown, 'p'},
         { "keep-hf",           0, 0, 'H' },
         { "reduce-hf",         1, 0, 'N' },
         { "sequence-header-every-gop", 0, &seq_hdr_every_gop, 1},
@@ -628,6 +627,7 @@ int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
         { "correct-svcd-hds", 0, &hack_svcd_hds_bug, 0},
         { "no-constraints", 0, &ignore_constraints, 1},
         { "no-altscan-mpeg2", 0, &hack_altscan_bug, 1},
+        { "no-dualprime-mpeg2", 0, &hack_nodualprime, 1},
         { "playback-field-order", 1, 0, 'z'},
         { "multi-thread",      1, 0, 'M' },
         { "custom-quant-matrices", 1, 0, 'K'},
