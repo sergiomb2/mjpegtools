@@ -37,3 +37,7 @@
 /* Define for software MJPEG playback */
 #undef BUILD_MJPEG
 
+/* Define for libDV and possibly YV12 support */
+#undef LIBDV_PAL_YV12
+#undef SUPPORT_READ_DV2
+#undef SUPPORT_READ_YUV420

@@ -23,6 +23,10 @@ AC_ARG_WITH(jpeg-mmx,
   [  --with-jpeg-mmx,                  use the mmx accelerated jpeg lib])
 AC_ARG_WITH(quicktime,
   [  --with-quicktime,                 quicktime support for record/playback])
+AC_ARG_WITH(dv,
+  [  --with-dv,                        libDV (digital video) support])
+AC_ARG_WITH(dv-yv12,
+  [  --with-dv-yv12,                   libDV PAL YV12 read-support])
 
 dnl Checks for programs.
 AC_PROG_AWK
@@ -66,13 +70,7 @@ if test x$with_jpeg_mmx = xyes ; then
   AC_MSG_ERROR([
 *** A directory must be specified for --with-jpeg-mmx option.])
 fi
-if test x$with_jpeg_mmx = x ; then
-  with_jpeg_mmx=/usr/local/src/jpeg-mmx
-fi
-dnl
-dnl Look for the installed / specified copy
-dnl
-
+if test x$with_jpeg_mmx != x ; then
   OLD_CFLAGS="$CFLAGS"
   OLD_LIBS="$LIBS"
   LIBS="$LIBS -L$with_jpeg_mmx"
@@ -83,7 +81,15 @@ dnl
        have_jpeg=true ],,)
   LIBS="$OLD_LIBS"
   CFLAGS="$OLD_CFLAGS"
-
+else
+dnl
+dnl Look for the installed copy
+dnl
+  AC_CHECK_LIB(jpeg-mmx, jpeg_start_compress,
+    [ JPEG_LIBS="-ljpeg-mmx"
+      JPEG_CFLAGS=""
+      have_jpeg=true ],,)
+fi
 dnl 
 dnl Look for _a_ jpeg lib that will work.
 dnl
@@ -111,7 +117,7 @@ if test x$with_quicktime = xyes ; then
   AC_MSG_ERROR([
 *** A directory must be specified for the --with-quicktime option.])
 else if test x$with_quicktime = x ; then
-  with_quicktime=/usr/local/src/quicktime4linux-1.3
+  with_quicktime=/usr/local/src/quicktime
 fi
 fi
 have_quicktime=false
@@ -132,6 +138,48 @@ if test "$PNG" = "found" ; then
 else
   AC_MSG_WARN([
 **** Quicktime record/playback disabled.])
+fi
+
+
+dnl *********************************************************************
+dnl Check for the libdv
+AC_SUBST(DV_LIBS)
+AC_SUBST(DV_CFLAGS)
+if test x$with_dv = xyes ; then
+  AC_MSG_ERROR([
+*** A directory must be specified for the --with-dv option.])
+else if test x$with_dv = x ; then
+  with_dv_l=/usr/local/lib
+  with_dv_i=/usr/local/include
+fi
+fi
+have_dv=false
+if test x$have_pthread = xtrue ; then
+  EXTRA_LIBS=" $GLIB_LIBS  $PTHREAD_LIBS -ldl -lm"
+else
+  EXTRA_LIBS="-L$with_dv$with_dv_l $GLIB_LIBS -ldl -lm"
+fi
+AC_CHECK_LIB(dv, dv_init,
+  [ QUICKTIME_LIBS="-L$with_dv$with_dv_l -ldv ${EXTRA_LIBS}"
+    QUICKTIME_CFLAGS="-I$with_dv$with_dv_i"
+    AC_DEFINE(SUPPORT_READ_DV2)
+    AC_DEFINE(SUPPORT_READ_YUV420)
+    have_dv=true],, 
+    -L$with_dv$with_dv_l  ${EXTRA_LIBS})
+
+dnl *********************************************************************
+dnl Check for libDV YV12 read-support
+if test x$with_dv_yv12 = xyes; then
+if test x$have_pthread = xtrue ; then
+  EXTRA_LIBS=" $GLIB_LIBS  $PTHREAD_LIBS -ldl -lm"
+else
+  EXTRA_LIBS="-L$with_dv$with_dv_l $GLIB_LIBS -ldl -lm"
+fi
+AC_CHECK_LIB(dv, dv_init,
+  [ QUICKTIME_LIBS="-L$with_dv$with_dv_l -ldv ${EXTRA_LIBS}"
+    QUICKTIME_CFLAGS="-I$with_dv$with_dv_i"
+    AC_DEFINE(LIBDV_PAL_YV12)],,
+    -L$with_dv$with_dv_l  ${EXTRA_LIBS})
 fi
 
 dnl *********************************************************************
@@ -356,16 +404,13 @@ dnl Output a Makefile or two
 dnl
 AC_OUTPUT([
 Makefile
-utils/Makefile
 docs/Makefile
 lavtools/Makefile
-yuvscaler/Makefile
 mjpeg/Makefile
 mpeg2enc/Makefile
 aenc/Makefile
 mplex/Makefile
-scripts/Makefile
-])
+scripts/Makefile])
 
 AC_DEFINE(VERSION, ${VERSION})
 
@@ -390,5 +435,6 @@ echo "    - software MJPEG playback     : ${have_sdl}"
 echo "    - movtar playback/recording   : ${have_movtar}"
 echo "    - Quicktime playback/recording: ${have_quicktime}"
 echo "    - AVI MJPEG playback/recording: true (always)"
+echo "    - libDV (digital video)       : ${have_dv}"
 echo ""
 
