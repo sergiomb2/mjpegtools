@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.h,v 1.6 2002/02/27 01:17:57 mdoggydog Exp $
+    $Id: mjpeg_logging.h,v 1.7 2003/02/12 21:36:32 wackston2 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -24,7 +24,8 @@
 #include "mjpeg_types.h"
 
 typedef enum {
-  LOG_DEBUG = 1,
+  LOG_NONE = 0,
+  LOG_DEBUG,
   LOG_INFO,
   LOG_WARN,
   LOG_ERROR

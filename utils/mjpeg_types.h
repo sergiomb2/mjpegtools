@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_types.h,v 1.7 2002/09/23 19:46:43 rbultje Exp $
+    $Id: mjpeg_types.h,v 1.8 2003/02/12 21:36:32 wackston2 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -40,6 +40,8 @@ typedef u_int64_t uint64_t;
 # define UINT16_C(c)   c ## U
 # define UINT32_C(c)   c ## U
 # define UINT64_C(c)   c ## ULL
+#elif  defined(_WIN32)
+#include <win32defs.h>
 #else
 /* warning ISO/IEC 9899:1999 <stdint.h> was missing and even <inttypes.h> */
 /* fixme */
