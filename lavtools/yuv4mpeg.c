@@ -1,5 +1,5 @@
 /*
- * $Id: yuv4mpeg.c,v 1.9 2004/04/06 17:36:20 sms00 Exp $
+ * $Id: yuv4mpeg.c,v 1.10 2004/05/12 03:53:25 sms00 Exp $
  *
  * A simple progam that's quite useful when dealing with raw/headerless data 
  * from programs such as ffmpeg or fxtv.
@@ -138,6 +138,8 @@ main(int argc, char **argv)
 		mjpeg_error_exit1("Invalid Width: %d", width);
 	if	(height <= 0)
 		mjpeg_error_exit1("Invalid Height: %d", height);
+
+	y4m_accept_extensions(1);
 
 	y4m_init_stream_info(&ostream);
 	y4m_init_frame_info(&oframe);
