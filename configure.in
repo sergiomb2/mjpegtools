@@ -4,7 +4,7 @@ AC_INIT(lavtools/lav_io.c)
 MJPEG_MAJOR_VERSION=1
 MJPEG_MINOR_VERSION=6
 MJPEG_MICRO_VERSION=0
-MJPEG_VERSION=$MJPEG_MAJOR_VERSION.$MJPEG_MINOR_VERSION.$MJPEG_MICRO_VERSION-beta1
+MJPEG_VERSION=$MJPEG_MAJOR_VERSION.$MJPEG_MINOR_VERSION.$MJPEG_MICRO_VERSION-beta2
 
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(mjpegtools, $MJPEG_VERSION)
@@ -269,12 +269,15 @@ fi
 have_quicktime=false
 have_openquicktime=false
 if test x$with_quicktime != x ; then
-  AC_CHECK_LIB(png, png_read_info, [QUICKTIME_LIBS="-lpng" PNG="found"])
-  if test "$PNG" = "found" ; then
+  OLD_LIBS="$LIBS"
+  LIBS="$LIBS -lz $LIBM_LIBS"
+  AC_CHECK_LIB(png, png_read_info, [QUICKTIME_LIBS="-lpng -lz $LIBM_LIBS" PNG=true])
+  LIBS="$OLD_LIBS"
+  if test x$PNG = xtrue ; then
     if test x$have_pthread = xtrue ; then
-      EXTRA_LIBS=" $LIBM_LIBS $GLIB_LIBS  $PTHREAD_LIBS  -lpng -ldl"
+      EXTRA_LIBS="$GLIB_LIBS $PTHREAD_LIBS -lpng -lz $LIBM_LIBS -L/lib -ldl"
     else
-      EXTRA_LIBS="-L$with_quicktime -L$with_quicktime/$(uname --machine) $LIBM_LIBS $GLIB_LIBS -lpng -ldl"
+      EXTRA_LIBS="-L$with_quicktime -L$with_quicktime/$(uname -m) $GLIB_LIBS -lpng -lz $LIBM_LIBS -L/lib -ldl"
     fi
 dnl Do we have OpenQuicktime instead of Quicktime4Linux?
     if test -f "$with_quicktime/openquicktime.h" ; then
@@ -283,15 +286,15 @@ dnl Do we have OpenQuicktime instead of Quicktime4Linux?
             QUICKTIME_CFLAGS="-I $with_quicktime"
             AC_DEFINE(HAVE_LIBQUICKTIME)
             have_openquicktime=true],, 
-            -L$with_quicktime $EXTRA_LIBS  $JPEG_LIBS )
+            -L$with_quicktime $EXTRA_LIBS $JPEG_LIBS )
         EXTRA_LIBS=""
     else
       AC_CHECK_LIB(quicktime, quicktime_open,
-        [ QUICKTIME_LIBS="-L$with_quicktime -L$with_quicktime/$(uname --machine) -lquicktime $EXTRA_LIBS"
+        [ QUICKTIME_LIBS="-L$with_quicktime -L$with_quicktime/$(uname -m) -lquicktime $EXTRA_LIBS"
           QUICKTIME_CFLAGS="-I $with_quicktime"
           AC_DEFINE(HAVE_LIBQUICKTIME)
           have_quicktime=true],, 
-          -L$with_quicktime -L$with_quicktime/$(uname --machine) $EXTRA_LIBS  $JPEG_LIBS )
+          -L$with_quicktime -L$with_quicktime/$(uname -m) $EXTRA_LIBS $JPEG_LIBS )
       EXTRA_LIBS=""
     fi
   fi
@@ -402,6 +405,19 @@ AC_CHECK_LIB(dv, dv_init,
     AC_DEFINE(SUPPORT_READ_YUV420)
     have_dv=true],, 
     -L$with_dv$with_dv_l  ${EXTRA_LIBS})
+
+dnl ******************
+dnl ...and now if we have libdv, check if version >= 0.9.5
+dnl (by checking if the new function dv_decoder_free() exists)
+have_dv_gte_0_9_5=false
+if test x$have_dv = xtrue; then
+   AC_CHECK_LIB(dv, dv_decoder_free,
+	[ DV_LIBS="-L$with_dv$with_dv_l -ldv ${EXTRA_LIBS}"
+	  DV_CFLAGS="-I$with_dv$with_dv_i"
+	  have_dv_gte_0_9_5=true ],
+	[ AC_DEFINE(LIBDV_PRE_0_9_5) ],
+    -L$with_dv$with_dv_l  ${EXTRA_LIBS})
+fi
 
 dnl *********************************************************************
 dnl Check for libDV YV12 read-support
@@ -775,11 +791,10 @@ echo "    - X86 Optimizations:"
 echo "      - MMX/3DNow!/SSE enabled      : ${have_asm_mmx}"
 echo "      - cmov support enabled        : ${have_cmov}"
 if test "$have_cmov" = "true" ; then
-echo "
-****************************************************************************
-* NOTE:                                                                    *
-*   The resultant binaries will ***NOT*** run on a K6 or Pentium CPU       *
-****************************************************************************"
+echo "   ***********************************************************************
+   * NOTE:                                                               *
+   *   The resultant binaries will ***NOT*** run on a K6 or Pentium CPU  *
+   ***********************************************************************"
 fi
 echo "    - video4linux recording/playback: ${have_video4linux}"
 echo "    - software MJPEG playback       : ${have_sdl}"
@@ -789,8 +804,17 @@ if test "$have_quicktime" = "true" ; then
 echo "      - Quicktime source in         : ${with_quicktime}"
 fi
 echo "    - AVI MJPEG playback/recording  : true (always)"
-echo "    - libDV (digital video) support : ${have_dv}"
+echo -n "    - libDV (digital video) support : ${have_dv} "
+if test "x$have_dv" = "xtrue" ; then
+  if test "x$have_dv_gte_0_9_5" = "xtrue" ; then
+    echo "(>= v0.9.5)"
+  else
+    echo "(< v0.9.5)"
+  fi
+else
+  echo " "
+fi
 echo "    - AVIFILE divx encoding support : ${have_aviplay}"
 echo "    - Gtk+ support for glav         : ${have_gtk}"
-echo "    - Support for large (>2GB) files: ${have_large_file}"
+echo "    - glibc support for >2GB files  : ${have_large_file}"
 echo ""
