@@ -4,6 +4,9 @@
 @TOP@
 #define VERSION   "x.x.x"		/* Mjpeg tools release version */
 
+/* Large file support ? */
+#undef _FILE_OFFSET_BITS
+
 /* Define pthread lib stack size */
 #undef HAVE_PTHREADSTACKSIZE
 

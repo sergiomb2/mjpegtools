@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.h,v 1.2.2.2 2001/05/21 07:58:16 rbultje Exp $
+    $Id: mjpeg_logging.h,v 1.2.2.3 2001/06/09 11:46:03 wackston Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 

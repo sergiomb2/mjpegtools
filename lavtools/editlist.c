@@ -18,10 +18,12 @@
 #include <string.h>
 #include <limits.h>
 #include <stdlib.h>
-#include <math.h>
+#include <errno.h>
 
+#include "mjpeg_logging.h"
 #include "lav_io.h"
 #include "editlist.h"
+#include <math.h>
 
 extern	int	verbose;
 
@@ -29,8 +31,7 @@ extern	int	verbose;
 
 static void malloc_error(void)
 {
-   fprintf(stderr,"Out of memory - malloc failed\n");
-   exit(1);
+	mjpeg_error_exit1("Out of memory - malloc failed\n");
 }
 
 int open_video_file(char *filename, EditList *el)
@@ -42,8 +43,7 @@ int open_video_file(char *filename, EditList *el)
 
    if(realpath(filename,realname)==0)
    {
-      perror("Obtaining real filename");
-      exit(1);
+	   mjpeg_error_exit1( "Cannot deduce real filename: %s\n", sys_errlist[errno]);
    }
 
    /* Check if this filename is allready present */
@@ -51,35 +51,32 @@ int open_video_file(char *filename, EditList *el)
    for(i=0;i<el->num_video_files;i++)
       if(strcmp(realname,el->video_file_list[i])==0)
       {
-         fprintf(stderr,"File %s already open\n",realname);
-         return i;
+		  mjpeg_error("File %s already open\n",realname);
+		  return i;
       }
 
    /* Check if MAX_EDIT_LIST_FILES will be exceeded */
 
    if(el->num_video_files>=MAX_EDIT_LIST_FILES)
    {
-      fprintf(stderr,"Maximum number of video files exceeded\n");
-      exit(1);
+	   mjpeg_error_exit1("Maximum number of video files exceeded\n");
    }
 
    n = el->num_video_files;
    el->num_video_files++;
 
-   if (verbose > 1)
-     fprintf(stderr,"Opening video file %s ...\n",filename);
+   mjpeg_debug("Opening video file %s ...\n",filename);
 
    el->lav_fd[n] = lav_open_input_file(filename);
    if(!el->lav_fd[n])
    {
-      fprintf(stderr,"Error opening %s\n",filename);
-      exit(1);
+      mjpeg_error_exit1("Error opening %s\n",filename);
    }
    if(lav_video_MJPG_chroma(el->lav_fd[n]) != CHROMA422 &&
 	   lav_video_MJPG_chroma(el->lav_fd[n]) != CHROMA420)
    {
-      fprintf(stderr,"Warning: Input file %s is not in  JPEG 4:2:2 or 4:2:0 format\n",
-                     filename);
+      mjpeg_warn("Input file %s is not in  JPEG 4:2:2 or 4:2:0 format\n",
+				 filename);
       el->MJPG_chroma = CHROMAUNKNOWN;
    }
    el->num_frames[n] = lav_video_frames(el->lav_fd[n]);
@@ -89,34 +86,36 @@ int open_video_file(char *filename, EditList *el)
 
    /* Debug Output */
 
-   if (verbose > 1) {
-     fprintf(stderr,"File: %s, absolute name: %s\n",filename,realname);
-     fprintf(stderr,"   frames:      %8ld\n",lav_video_frames(el->lav_fd[n]));
-     fprintf(stderr,"   width:       %8d\n",lav_video_width (el->lav_fd[n]));
-     fprintf(stderr,"   height:      %8d\n",lav_video_height(el->lav_fd[n]));
-     fprintf(stderr,"   interlacing: " );
-	 switch(  lav_video_interlacing(el->lav_fd[n]))
-	 {
-	 case LAV_NOT_INTERLACED :
-		 fprintf( stderr,"not interlaced\n" );
-		 break;
-	 case LAV_INTER_ODD_FIRST :
-		 fprintf( stderr,"odd first\n" );	 
-		 break;
-	 case LAV_INTER_EVEN_FIRST :
-		 fprintf( stderr,"even first\n" );
-		 break;
-	 default:
-		 fprintf( stderr,"Unknown!\n");
-	 }
-     fprintf(stderr,"   frames/sec:  %8.3f\n",lav_frame_rate(el->lav_fd[n]));
-     fprintf(stderr,"   audio samps: %8ld\n",lav_audio_samples(el->lav_fd[n]));
-     fprintf(stderr,"   audio chans: %8d\n",lav_audio_channels(el->lav_fd[n]));
-     fprintf(stderr,"   audio bits:  %8d\n",lav_audio_bits(el->lav_fd[n]));
-     fprintf(stderr,"   audio rate:  %8ld\n",lav_audio_rate(el->lav_fd[n]));
-     fprintf(stderr,"\n");
-     fflush(stderr);
+   mjpeg_debug("File: %s, absolute name: %s\n",filename,realname);
+   mjpeg_debug("   frames:      %8ld\n",lav_video_frames(el->lav_fd[n]));
+   mjpeg_debug("   width:       %8d\n",lav_video_width (el->lav_fd[n]));
+   mjpeg_debug("   height:      %8d\n",lav_video_height(el->lav_fd[n]));
+   {
+	   char *int_msg;
+	   switch(  lav_video_interlacing(el->lav_fd[n]))
+	   {
+	   case LAV_NOT_INTERLACED :
+		   int_msg = "not interlaced";
+		   break;
+	   case LAV_INTER_ODD_FIRST :
+		   int_msg = "odd first";	 
+		   break;
+	   case LAV_INTER_EVEN_FIRST :
+		   int_msg = "even first";
+		   break;
+	   default:
+		   int_msg = "Unknown!";
+		   break;
+	   }
+	   mjpeg_debug("   interlacing: %s\n", int_msg );
    }
+   
+   mjpeg_debug("   frames/sec:  %8.3f\n",lav_frame_rate(el->lav_fd[n]));
+   mjpeg_debug("   audio samps: %8ld\n",lav_audio_samples(el->lav_fd[n]));
+   mjpeg_debug("   audio chans: %8d\n",lav_audio_channels(el->lav_fd[n]));
+   mjpeg_debug("   audio bits:  %8d\n",lav_audio_bits(el->lav_fd[n]));
+   mjpeg_debug("   audio rate:  %8ld\n",lav_audio_rate(el->lav_fd[n]));
+
 
    nerr = 0;
 
@@ -137,17 +136,15 @@ int open_video_file(char *filename, EditList *el)
             el->video_norm = 'n';
          else
          {
-            fprintf(stderr,"File %s has %f frames/sec, choose norm with +[np] param\n",
-					filename,el->video_fps);
-            exit(1);
+			 mjpeg_error_exit1("File %s has %f frames/sec, choose norm with +[np] param\n",
+							   filename,el->video_fps);
          }
       }
       el->audio_chans = lav_audio_channels(el->lav_fd[n]);
       if(el->audio_chans>2)
       {
-         fprintf(stderr,"File %s has %d audio channels - cant play that!\n",
+		  mjpeg_error_exit1("File %s has %d audio channels - cant play that!\n",
                             filename,el->audio_chans);
-         exit(1);
       }
       el->has_audio = (el->audio_chans>0);
       el->audio_bits = lav_audio_bits(el->lav_fd[n]);
@@ -161,24 +158,24 @@ int open_video_file(char *filename, EditList *el)
       if( el->video_height != lav_video_height(el->lav_fd[n]) ||
           el->video_width  != lav_video_width (el->lav_fd[n]) )
       {
-         fprintf(stderr,"File %s: Geometry %dx%d does not match %ldx%ld\n",
-                 filename,lav_video_width (el->lav_fd[n]),
-                 lav_video_height(el->lav_fd[n]),el->video_width,el->video_height);
+		 mjpeg_error("File %s: Geometry %dx%d does not match %ldx%ld\n",
+					 filename,lav_video_width (el->lav_fd[n]),
+					 lav_video_height(el->lav_fd[n]),el->video_width,el->video_height);
          nerr++;
       }
       if( el->video_inter != lav_video_interlacing(el->lav_fd[n]) )
       {
-         fprintf(stderr,"File %s: Interlacing is %d should be %ld\n",
-                 filename,lav_video_interlacing(el->lav_fd[n]),el->video_inter);
-         nerr++;
+		  mjpeg_error("File %s: Interlacing is %d should be %ld\n",
+					  filename,lav_video_interlacing(el->lav_fd[n]),el->video_inter);
+		  nerr++;
       }
       if( fabs(el->video_fps - lav_frame_rate(el->lav_fd[n])) > 0.0000001)
       {
-         fprintf(stderr,"File %s: fps is %4.2f should be %4.2f\n",
-                 filename,
-				 lav_frame_rate(el->lav_fd[n]),
-				 el->video_fps);
-         nerr++;
+		  mjpeg_error("File %s: fps is %3.2f should be %3.2f\n",
+					  filename,
+					  lav_frame_rate(el->lav_fd[n]),
+					  el->video_fps);
+		  nerr++;
       }
       /* If first file has no audio, we don't care about audio */
 
@@ -188,16 +185,17 @@ int open_video_file(char *filename, EditList *el)
             el->audio_bits  != lav_audio_bits(el->lav_fd[n]) ||
             el->audio_rate  != lav_audio_rate(el->lav_fd[n]) )
          {
-            fprintf(stderr,"File %s: Audio is %d chans %d bit %ld Hz,"
-                           " should be %d chans %d bit %ld Hz\n",
-                    filename,lav_audio_channels(el->lav_fd[n]),
-                    lav_audio_bits(el->lav_fd[n]), lav_audio_rate(el->lav_fd[n]),
-                    el->audio_chans, el->audio_bits, el->audio_rate);
+           mjpeg_error("File %s: Audio is %d chans %d bit %ld Hz,"
+					   " should be %d chans %d bit %ld Hz\n",
+					   filename,lav_audio_channels(el->lav_fd[n]),
+					   lav_audio_bits(el->lav_fd[n]), lav_audio_rate(el->lav_fd[n]),
+					   el->audio_chans, el->audio_bits, el->audio_rate);
             nerr++;
          }
       }
 
-      if(nerr) exit(1);
+      if(nerr) 
+		  exit(1);
    }
 
    return n;
@@ -240,7 +238,7 @@ void read_video_files(char **filename, int num_files, EditList *el)
    {
       el->video_norm = filename[0][1];
       nf = 1;
-      fprintf(stderr,"Norm set to %s\n",el->video_norm=='n'?"NTSC":"PAL");
+      mjpeg_info("Norm set to %s\n",el->video_norm=='n'?"NTSC":"PAL");
    }
 
    for(;nf<num_files;nf++)
@@ -251,36 +249,30 @@ void read_video_files(char **filename, int num_files, EditList *el)
 
       if(fd==0)
       {
-         fprintf(stderr,"Error opening %s\n",filename[nf]);
-         perror("Open");
-         exit(1);
+         mjpeg_error_exit1("Error opening %s: %s\n",filename[nf], sys_errlist[errno]);
       }
 
       fgets(line,1024,fd);
       if(strcmp(line,"LAV Edit List\n")==0)
       {
          /* Ok, it is a edit list */
-	 if (verbose > 1)
-           fprintf(stderr,"Edit list %s opened\n",filename[nf]);
+		  mjpeg_debug( "Edit list %s opened\n",filename[nf]);
 
          /* Read second line: Video norm */
 
          fgets(line,1024,fd);
          if(line[0]!='N' && line[0]!='n' && line[0]!='P' && line[0]!='p')
          {
-            fprintf(stderr,"Edit list second line is not NTSC/PAL\n");
-            exit(1);
+            mjpeg_error_exit1("Edit list second line is not NTSC/PAL\n");
          }
 
-	 if (verbose > 1)
-           fprintf(stderr,"Edit list norm is %s\n",line[0]=='N'||line[0]=='n'?"NTSC":"PAL");
+		 mjpeg_debug("Edit list norm is %s\n",line[0]=='N'||line[0]=='n'?"NTSC":"PAL");
 
          if(line[0]=='N'||line[0]=='n')
          {
             if( el->video_norm == 'p')
             {
-               fprintf(stderr,"Norm allready set to PAL\n");
-               exit(1);
+               mjpeg_error_exit1("Norm allready set to PAL\n");
             }
             el->video_norm = 'n';
          }
@@ -288,8 +280,7 @@ void read_video_files(char **filename, int num_files, EditList *el)
          {
             if( el->video_norm == 'n')
             {
-               fprintf(stderr,"Norm allready set to NTSC\n");
-               exit(1);
+               mjpeg_error_exit1("Norm allready set to NTSC\n");
             }
             el->video_norm = 'p';
          }
@@ -298,8 +289,8 @@ void read_video_files(char **filename, int num_files, EditList *el)
 
          fgets(line,1024,fd);
          sscanf(line,"%d",&num_list_files);
-	 if (verbose > 1)
-           fprintf(stderr,"Edit list contains %d files\n",num_list_files);
+
+		 mjpeg_debug("Edit list contains %d files\n",num_list_files);
 
          /* read files */
 
@@ -309,8 +300,7 @@ void read_video_files(char **filename, int num_files, EditList *el)
             n = strlen(line);
             if(line[n-1]!='\n')
             {
-               fprintf(stderr,"Filename in edit list too long\n");
-               exit(1);
+               mjpeg_error_exit1("Filename in edit list too long\n");
             }
             line[n-1] = 0; /* Get rid of \n at end */
 
@@ -326,8 +316,7 @@ void read_video_files(char **filename, int num_files, EditList *el)
                sscanf(line,"%d %d %d",&nl,&n1,&n2);
                if(nl<0 || nl>=num_list_files)
                {
-                  fprintf(stderr,"Wrong file number in edit list entry\n");
-                  exit(1);
+                  mjpeg_error_exit1("Wrong file number in edit list entry\n");
                }
                if(n1<0) n1 = 0;
                if(n2>=el->num_frames[index_list[nl]]) n2 = el->num_frames[index_list[nl]];
@@ -383,13 +372,12 @@ int write_edit_list(char *name, long n1, long n2, EditList *el)
 
    if(n1<0) n1 = 0;
    if(n2>=el->video_frames) n2 = el->video_frames-1;
-   if (verbose > 1)
-     printf("Write edit list: %ld %ld %s\n",n1,n2,name);
+   mjpeg_info("Write edit list: %ld %ld %s\n",n1,n2,name);
 
    fd = fopen(name,"w");
    if(fd==0)
    {
-      fprintf(stderr,"Can not open %s - no edit list written!\n",name);
+      mjpeg_error("Can not open %s - no edit list written!\n",name);
       return -1;
    }
    fprintf(fd,"LAV Edit List\n");
@@ -429,9 +417,8 @@ int write_edit_list(char *name, long n1, long n2, EditList *el)
 
    if(n<=0)
    {
-      fprintf(stderr,"Error writing edit list\n");
-      perror("Write edit list");
-      return -1;
+	   mjpeg_error("Error writing edit list: %s\n", sys_errlist[errno]);
+	   return -1;
    }
 
    fclose(fd);
@@ -450,14 +437,12 @@ int el_get_video_frame(char *vbuff, long nframe, EditList *el)
    res = lav_set_video_position(el->lav_fd[N_EL_FILE(n)],N_EL_FRAME(n));
    if(res<0)
    {
-      fprintf(stderr,"Error setting video position: %s\n",lav_strerror());
-      exit(1);
+      mjpeg_error_exit1("Error setting video position: %s\n",lav_strerror());
    }
    res = lav_read_frame(el->lav_fd[N_EL_FILE(n)],vbuff);
    if(res<0)
    {
-      fprintf(stderr,"Error reading video frame: %s\n",lav_strerror());
-      exit(1);
+      mjpeg_error_exit1("Error reading video frame: %s\n",lav_strerror());
    }
 
    return res;
@@ -494,8 +479,7 @@ int el_get_audio_data(char *abuff, long nframe, EditList *el, int mute)
    res = lav_read_audio(el->lav_fd[N_EL_FILE(n)],abuff,asamps);
    if(res<0)
    {
-      fprintf(stderr,"Error reading audio: %s\n",lav_strerror());
-      exit(1);
+      mjpeg_error_exit1("Error reading audio: %s\n",lav_strerror());
    }
 
    if(res<asamps) memset(abuff+res*el->audio_bps,0,(asamps-res)*el->audio_bps);

@@ -15,68 +15,70 @@ libavio_a_SOURCES = editlist.c lav_io.c avilib.c
 
 bin_PROGRAMS = \
 	lavplay   lavrec   lav2wav  lav2yuv lav2dfilter  lavaddwav \
-	lavvideo  lavtrans xlav  ypipe yuv2lav testrec v4l-conf \
+	lavvideo  lavtrans xlav  ypipe yuv2lav testrec \
 	transist.flt matteblend.flt lavpipe yuvscaler yuvplay
 
 lav_headers = lav_io.h editlist.h xlav.h avilib.h yuv4mpeg.h jpegutils.h \
 	yuvscaler.h frquencies.h
 
 ypipe_SOURCES = ypipe.c yuv4mpeg.c $(lav_headers)
-ypipe_LDADD =
+ypipe_LDADD = -L$(top_srcdir)/utils -lutils
 
 yuv2lav_SOURCES = yuv2lav.c jpegutils.c yuv4mpeg.c $(lav_headers)
 yuv2lav_LDADD = -L$(top_builddir)/lavtools -lavio $(MOVTAR_LIBS) \
-       $(QUICKTIME_LIBS) $(JPEG_LIBS) 
+       -L$(top_srcdir)/utils -lutils $(QUICKTIME_LIBS) $(JPEG_LIBS) 
 
 transist_flt_SOURCES = transist.flt.c yuv4mpeg.c ${lav_headers}
-transist_flt_LDADD =
+transist_flt_LDADD = -L$(top_srcdir)/utils -lutils
 
 matteblend_flt_SOURCES = matteblend.flt.c yuv4mpeg.c ${lav_headers}
-matteblend_flt_LDADD =
+matteblend_flt_LDADD = -L$(top_srcdir)/utils -lutils
 
 lavplay_SOURCES = lavplay.c avilib.c audiolib.c lav_io.c editlist.c  \
 	jpegutils.c $(lav_headers)
-lavplay_LDADD = -L$(top_builddir)/mjpeg -lmjpeg $(PTHREAD_LIBS) \
-	$(QUICKTIME_LIBS) $(MOVTAR_LIBS) $(SDL_LIBS) $(JPEG_LIBS)
+lavplay_LDADD = -L$(top_builddir)/mjpeg -lmjpeg -L$(top_srcdir)/utils -lutils \
+	$(PTHREAD_LIBS) $(QUICKTIME_LIBS) $(MOVTAR_LIBS) $(SDL_LIBS) $(JPEG_LIBS)
 
 lavrec_SOURCES = lavrec.c avilib.c audiolib.c lav_io.c frequencies.c \
 	$(lav_headers)
-lavrec_LDADD = -L$(top_builddir)/mjpeg -lmjpeg $(PTHREAD_LIBS) \
-	$(QUICKTIME_LIBS) $(MOVTAR_LIBS) $(JPEG_LIBS)
+lavrec_LDADD = -L$(top_builddir)/mjpeg -lmjpeg -L$(top_srcdir)/utils -lutils \
+	$(PTHREAD_LIBS) $(QUICKTIME_LIBS) $(MOVTAR_LIBS) $(JPEG_LIBS)
 
 testrec_SOURCES = testrec.c  audiolib.c  $(lav_headers)
-testrec_LDADD = $(PTHREAD_LIBS)
+testrec_LDADD = $(PTHREAD_LIBS) -L$(top_srcdir)/utils -lutils
 
 lav2yuv_SOURCES = lav2yuv.c  jpegutils.c $(lav_headers)
-lav2yuv_LDADD = -L$(top_builddir)/lavtools -lavio $(QUICKTIME_LIBS) \
+lav2yuv_LDADD = -L$(top_srcdir)/utils -lutils \
+	-L$(top_builddir)/lavtools -lavio $(QUICKTIME_LIBS) \
 	$(MOVTAR_LIBS) 	$(JPEG_LIBS) $(DV_LIBS)
 
 lavpipe_SOURCES = lavpipe.c yuv4mpeg.c pipelist.c $(lav_headers)
-lavpipe_LDADD =
+lavpipe_LDADD = -L$(top_srcdir)/utils -lutils 
 
 lav2dfilter_SOURCES = lav2dfilter.c $(lav_headers)
-lav2dfilter_LDFLAGS = -L$(top_builddir)/lavtools 
+lav2dfilter_LDFLAGS = -L$(top_srcdir)/utils -lutils -L$(top_builddir)/lavtools 
 lav2dfilter_LDADD = 
 
 lav2wav_SOURCES = lav2wav.c  $(lav_headers)
-lav2wav_LDADD = -L$(top_builddir)/lavtools -lavio $(MOVTAR_LIBS) \
+lav2wav_LDADD = -L$(top_srcdir)/utils -lutils \
+	-L$(top_builddir)/lavtools -lavio $(MOVTAR_LIBS) \
 	$(QUICKTIME_LIBS) $(JPEG_LIBS)
 
 lavtrans_SOURCES = lavtrans.c $(lav_headers)
-lavtrans_LDADD = -L$(top_builddir)/lavtools -lavio $(MOVTAR_LIBS) \
+lavtrans_LDADD = -L$(top_srcdir)/utils -lutils \
+	-L$(top_builddir)/lavtools -lavio $(MOVTAR_LIBS) \
 	$(QUICKTIME_LIBS) $(JPEG_LIBS)
 
 lavaddwav_SOURCES = lavaddwav.c $(lav_headers)
-lavaddwav_LDADD = -L$(top_builddir)/lavtools -lavio $(MOVTAR_LIBS) \
+lavaddwav_LDADD = -L$(top_srcdir)/utils -lutils \
+	-L$(top_builddir)/lavtools -lavio $(MOVTAR_LIBS) \
 		$(QUICKTIME_LIBS) $(JPEG_LIBS)
 
 xlav_SOURCES = xlav.c xlav_main.c  $(lav_headers)
-xlav_LDADD = $(X_LIBS) -lX11 $(FORMS_LIBS) $(X_EXTRA_LIBS)
+xlav_LDADD = -L$(top_srcdir)/utils -lutils \
+	         $(X_LIBS) -lX11 $(FORMS_LIBS) $(X_EXTRA_LIBS)
 
 lavvideo_SOURCES = lavvideo.c
-
-v4l_conf_SOURCES = v4l-conf.c
-v4l_conf_LDADD = $(X_LIBS) -lX11 $(V4LCONF_LIBS) $(X_EXTRA_LIBS)
 
 yuvscaler_SOURCES = yuvscaler.c editlist.c lav_io.c $(lav_headers)
 yuvscaler_LDADD = -L$(top_builddir)/lavtools -lavio $(MOVTAR_LIBS) \

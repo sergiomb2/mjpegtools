@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT(lavtools/lav_io.c)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(mjpegtools, 1.3b4)
+AM_INIT_AUTOMAKE(mjpegtools, 1.5.0)
 AM_MAINTAINER_MODE
 AC_CANONICAL_HOST
 
@@ -27,6 +27,8 @@ AC_ARG_WITH(dv,
   [  --with-dv,                        libDV (digital video) support])
 AC_ARG_WITH(dv-yv12,
   [  --with-dv-yv12,                   libDV PAL YV12 read-support])
+AC_ARG_WITH(large-file,
+   [ --disable-large-file,               enable large file support n 32 bit systems])
 
 dnl Checks for programs.
 AC_PROG_AWK
@@ -34,7 +36,21 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_RANLIB
+AC_C_BIGENDIAN
+AC_C_CONST
+AC_C_INLINE
+AC_CHECK_HEADERS(fenv.h)
 
+
+dnl Set up the usual compiler infos...
+if test ! x$disable_large_file = xyes
+then
+AC_DEFINE(_FILE_OFFSET_BITS,32)
+else
+AC_DEFINE(_FILE_OFFSET_BITS,64)
+fi
+
+#
 dnl *********************************************************************
 dnl Check for the various libraries we depend on.
 dnl
@@ -70,26 +86,30 @@ if test x$with_jpeg_mmx = xyes ; then
   AC_MSG_ERROR([
 *** A directory must be specified for --with-jpeg-mmx option.])
 fi
-if test x$with_jpeg_mmx != x ; then
-  OLD_CFLAGS="$CFLAGS"
-  OLD_LIBS="$LIBS"
-  LIBS="$LIBS -L$with_jpeg_mmx"
-  CFLAGS="$CFLAGS -I$with_jpeg_mmx"
-  AC_CHECK_LIB(jpeg-mmx, jpeg_start_compress,
-    [ JPEG_LIBS="$LIBS -ljpeg-mmx"
-      JPEG_CFLAGS="-I$with_jpeg_mmx"
+if test x$with_jpeg_mmx = x ; then
+  dnl Special case for building .deb's
+  if test -d ../jpeg-mmx ; then
+    with_jpeg_mmx=`pwd`/../jpeg-mmx
+  else
+    with_jpeg_mmx=/usr/local/src/jpeg-mmx
+  fi
+fi
+
+dnl
+dnl Look for the installed/specified copy
+dnl
+
+OLD_CFLAGS="$CFLAGS"
+OLD_LIBS="$LIBS"
+LIBS="$LIBS -L$with_jpeg_mmx"
+CFLAGS="$CFLAGS -I$with_jpeg_mmx"
+AC_CHECK_LIB(jpeg-mmx, jpeg_start_compress,
+   [ JPEG_LIBS="$LIBS -ljpeg-mmx"
+     JPEG_CFLAGS="-I$with_jpeg_mmx"
        have_jpeg=true ],,)
   LIBS="$OLD_LIBS"
   CFLAGS="$OLD_CFLAGS"
-else
-dnl
-dnl Look for the installed copy
-dnl
-  AC_CHECK_LIB(jpeg-mmx, jpeg_start_compress,
-    [ JPEG_LIBS="-ljpeg-mmx"
-      JPEG_CFLAGS=""
-      have_jpeg=true ],,)
-fi
+
 dnl 
 dnl Look for _a_ jpeg lib that will work.
 dnl

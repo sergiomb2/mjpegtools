@@ -130,13 +130,13 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <sys/time.h>
-//#include <sys/resource.h>
 #include <SDL/SDL.h>
 #include <mjpeg.h>
 #include <getopt.h>
+#include "jpegutils.h" 
 #include "lav_io.h"
 #include "editlist.h"
-#include "jpegutils.h"
+#include "mjpeg_logging.h"
 
 /************************** DEFINES **************************/
 #define LAVPLAY_VSTR "lavplay" LAVPLAY_VERSION  /* Expected version info */
@@ -177,7 +177,7 @@ int process_edit_input(char *input_buffer, int length);
 
 
 /************************** VARIABLES **************************/
-int  verbose = 6;
+int  verbose = 1;
 static EditList el;
 static int    h_offset = 0;
 static int    v_offset = 0;
@@ -204,8 +204,6 @@ static int flicker_reduction = 1;
 static int nvcorr = 0; /* Number of frames added/skipped for sync */
 static int numca = 0; /* Number of corrections because video ahead audio */
 static int numcb = 0; /* Number of corrections because video behind audio */
-
-static char infostring[4096];
 
 static long nframe;
 
@@ -254,39 +252,19 @@ int soft_width=0, soft_height=0;
 
 /************************** PROGRAM CODE **************************/
 
-static void lavplay_msg(int type, char *str1, char *str2)
-{
-   char *ctype;
-
-   switch(type)
-   {
-       case LAVPLAY_INTERNAL: ctype = "Internal Error"; break;
-       case LAVPLAY_DEBUG:    ctype = "Debug";          break;
-       case LAVPLAY_INFO:     ctype = "Info";           break;
-       case LAVPLAY_WARNING:  ctype = "Warning";        break;
-       case LAVPLAY_ERROR:    ctype = "Error";          break;
-       default:               ctype = "Unkown";
-   }
-   printf("%s: %s\n",ctype,str1);
-   if(str2[0]) printf("%s: %s\n",ctype,str2);
-   fflush(stdout);
-}
 
 /* system_error: report an error from a system call */
 
 static void system_error(char *str1,char *str2)
 {
-   sprintf(infostring,"Error %s (in %s)",str1,str2);
-   lavplay_msg(LAVPLAY_ERROR,infostring,strerror(errno));
-   exit(1);
+   mjpeg_error_exit1("Error %s (in %s): %s\n",str1,str2,strerror(errno));
 }
 
 /* Since we use malloc often, here the error handling */
 
 void malloc_error(void)
 {
-   lavplay_msg(LAVPLAY_ERROR,"Out of memory - malloc failed","");
-   exit(1);
+   mjpeg_error_exit1("Out of memory - malloc failed\n");
 }
 
 void sig_cont(int sig)
@@ -301,7 +279,6 @@ void sig_cont(int sig)
 static int inc_frames(long num)
 {
    nframe += num;
-
    if(nframe<min_frame_num)
    {
       nframe = min_frame_num;
@@ -398,7 +375,7 @@ int queue_next_frame(char *vbuff, int skip_video, int skip_audio, int skip_incr)
       res = audio_write(abuff,res,0);
       if(res<0)
       {
-         lavplay_msg(LAVPLAY_ERROR,"Error playing audio",audio_strerror());
+         mjpeg_error("Playing audio: %s\n",audio_strerror());
          return -1;
       }
    }
@@ -441,10 +418,10 @@ void lock_screen(void)
        if ( SDL_MUSTLOCK(screen) ) 
 	 {
 	   if ( SDL_LockSurface(screen) < 0 )
-	     lavplay_msg(LAVPLAY_ERROR,"Error locking output screen", SDL_GetError());
+	     mjpeg_error_exit1("Error locking output screen: %s\n", SDL_GetError());
 	 }
 	if (SDL_LockYUVOverlay(yuv_overlay) < 0)
-		lavplay_msg(LAVPLAY_ERROR,"Error locking yuv overlay", SDL_GetError());
+		mjpeg_error_exit1("Error locking yuv overlay: %s\n", SDL_GetError());
 }
 
 void unlock_screen(void)
@@ -488,11 +465,11 @@ void initialize_SDL_window()
 	char wintitle[255];
 	char *sbuffer;
 
-	printf("Initialising SDL\n");
+	mjpeg_info("Initialising SDL\n");
 	if (SDL_Init (SDL_INIT_VIDEO) < 0)
 	{
-		fprintf( stderr, "SDL Failed to initialise...\n" );
-		exit(1);
+		mjpeg_error_exit1( "SDL Failed to initialise...\n" );
+
 	}
 
 	/* Now initialize SDL */
@@ -521,13 +498,11 @@ void initialize_SDL_window()
 		el.video_height, SDL_IYUV_OVERLAY, screen);
 	if ( yuv_overlay == NULL )
 	{
-		fprintf(stderr,"SDL: Couldn't create SDL_yuv_overlay: %s\n", SDL_GetError());
-		exit(1);
+		mjpeg_error_exit1("SDL: Couldn't create SDL_yuv_overlay: %s\n", SDL_GetError());
 	}
 	if ( screen == NULL )  
 	{
-		lavplay_msg(LAVPLAY_ERROR,"SDL: Output screen error", SDL_GetError());
-		exit(1);
+		mjpeg_error_exit1("SDL: Output screen error: %s\n", SDL_GetError());
 	}
        
 	if (screen->format->BytesPerPixel == 2)
@@ -572,7 +547,7 @@ void x_shutdown(int a)
 	if( reentry )		/* Not perfect but good enough... */
 		return;
 	reentry = 1;
-	printf("Ctrl-C shutdown!\n");
+	mjpeg_debug("Ctrl-C shutdown!\n");
   
 	if (el.has_audio && audio_enable) 
 		audio_shutdown();
@@ -623,7 +598,7 @@ void add_new_frames(char *movie, int nc1, int nc2, int dest)
 
 	if (nc1 < -1 || nc2<nc1 || dest < 0 || dest >= el.video_frames)
 	{
-		printf("Wrong parameters for add movie frames...\n");
+		mjpeg_error("Wrong parameters for add movie frames...\n");
 	}
 	else
 	{
@@ -661,7 +636,7 @@ void add_new_frames(char *movie, int nc1, int nc2, int dest)
 		cut_copy_frames(old_n, old_n+nc2-nc1, 'u');
 		paste_frames(dest);
 
-		printf("--- Added frames %d - %d from movie %s\n", nc1, nc2, movie);
+		mjpeg_debug("--- Added frames %d - %d from movie %s\n", nc1, nc2, movie);
 	}
 }
 
@@ -684,22 +659,40 @@ void cut_copy_frames(int nc1, int nc2, char cut_or_copy)
 
 		if(cut_or_copy=='u')
 		{
+
 			if(nframe>=nc1 && nframe<=nc2) nframe = nc1-1;
-			if(nframe>nc2) nframe -= k;
+			if(nframe>nc2) nframe -= save_list_len;
+
 			for(i=nc2+1;i<el.video_frames;i++)
 			{
-				el.frame_list[i-k] = el.frame_list[i];
-				if(i-k < min_frame_num) min_frame_num--;
-				if(i-k <= max_frame_num) max_frame_num--;
+				el.frame_list[i-save_list_len] = el.frame_list[i];
 			}
-			el.video_frames -= k;
+
+			/* Update min and max frame_num's to reflect the removed section
+			 */
+			if( nc1-1 < min_frame_num )
+			{
+				if( nc2 <= min_frame_num )
+					min_frame_num -= (nc2-nc1)+1;
+				else
+					min_frame_num = nc1-1;
+			}
+			if( nc1-1 < max_frame_num )
+			{
+				if( nc2 <= max_frame_num )
+					max_frame_num -= (nc2-nc1)+1;
+				else
+					max_frame_num = nc1-1;
+			}
+
+			el.video_frames -= save_list_len;
 			check_min_max();
 		}
-		printf("Cut/Copy done ---- !!!!\n");
+		mjpeg_debug("Cut/Copy done ---- !!!!\n");
 	}
 	else
 	{
-		printf("Error: Cut/Copy %d %d params are wrong!\n",nc1,nc2);
+		mjpeg_error("Cut/Copy %d %d params are wrong!\n",nc1,nc2);
 	}
 }
 
@@ -723,8 +716,7 @@ void paste_frames(int dest)
 	}
 	el.video_frames += save_list_len;
 	check_min_max();
-	printf("Paste done ---- !!!!\n");
-
+	mjpeg_debug("Paste done ---- !!!!\n");
 	inc_frames(dest - nframe);
 }
 
@@ -810,7 +802,7 @@ int process_edit_input(char *input_buffer, int length)
 				k = nframe+1;
 				for(i=0;i<save_list_len;i++) el.frame_list[k++] = save_list[i];
 				el.video_frames += save_list_len;
-				printf("Paste done ---- !!!!\n");
+				mjpeg_debug("Paste done ---- !!!!\n");
 			}
 
 			if(input_buffer[1]=='m')
@@ -857,7 +849,7 @@ int process_edit_input(char *input_buffer, int length)
 				sscanf(input_buffer+2,"%d %d",&nc1,&nc2);
 				if(nc1<-1||nc1>nc2||nc2>=el.video_frames)
 				{
-					fprintf(stderr,"Wrong parameters for setting frame borders!\n");
+					mjpeg_error("Wrong parameters for setting frame borders!\n");
 				}
 				else if (nc1==-1)
 				{
@@ -889,9 +881,10 @@ int process_edit_input(char *input_buffer, int length)
 				   nc3=-1 means just see nc1-nc2, nc3/nc4 can also be omitted */
 				x = sscanf(input_buffer+2, "%s %d %d %d %d", movie, &nc1, &nc2, &nc3, &nc4);
 				arguments[0] = movie;
-				printf("Opening %s", movie);
-				if (nc1!=-1) printf(" (frames %d-%d)", nc1, nc2);
-				printf("\n");
+				if( nc1 != -1 )
+					mjpeg_info("Opening %s (frames %d-%d)\n", movie, nc1,nc2);
+				else
+					mjpeg_info("Opening %s\n", movie);
 				read_video_files(arguments, 1, &el);
 				if (nc2>=el.video_frames || nc1 == -1) nc2=el.video_frames-1;
 				if (nc1<0) nc1=0;
@@ -1008,17 +1001,17 @@ static int set_option(char *name, char *value)
 		switch (value[0])
 		{
 			case 'S':
-				printf("Choosing software MJPEG playback\n");
+				mjpeg_info("Choosing software MJPEG playback\n");
 				screen_output = 0;
 				soft_play = 1;
 				break;
 			case 'H':
-				printf("Choosing hardware MJPEG playback (on-screen)\n");
+				mjpeg_info("Choosing hardware MJPEG playback (on-screen)\n");
 				screen_output = 1;
 				soft_play = 0;
 				break;
 			case 'C':
-				printf("Choosing hardware MJPEG playback (on-screen)\n");
+				mjpeg_info("Choosing hardware MJPEG playback (on-screen)\n");
 				screen_output = 0;
 				soft_play = 0;
 				break;
@@ -1028,7 +1021,7 @@ static int set_option(char *name, char *value)
 	{
 		if (sscanf(value, "%dx%d", &soft_width, &soft_height)!=2)
 		{
-			fprintf(stderr, "--size parameter requires NxN argument\n");
+			mjpeg_error( "--size parameter requires NxN argument\n");
 			nerr++;
 		}
 	}
@@ -1073,7 +1066,7 @@ static void check_command_line_options(int argc, char *argv[])
 		{
 			/* getopt_long values */
 			case 0:
-				nerr += set_option(long_options[option_index].name,
+				nerr += set_option((char *)long_options[option_index].name,
 					optarg);
 				break;
 
@@ -1086,6 +1079,8 @@ static void check_command_line_options(int argc, char *argv[])
 	}
 	if(optind>=argc) nerr++;
 	if(nerr) Usage(argv[0]);
+
+	mjpeg_default_handler_verbosity(verbose);
 
 	/* Get and open input files */
 	read_video_files(argv + optind, argc - optind, &el);
@@ -1125,7 +1120,7 @@ int main(int argc, char ** argv)
 
 	/* Seconds per video frame: */
 	spvf = 1.0 / el.video_fps;
-	fprintf( stderr, "DEBUG: 1.0/SPVF = %4.4f\n", 1.0 / spvf );
+	mjpeg_debug( "1.0/SPVF = %4.4f\n", 1.0 / spvf );
 
 	/* Seconds per audio sample: */
 	if(el.has_audio && audio_enable)
@@ -1139,8 +1134,7 @@ int main(int argc, char ** argv)
 	res = inc_frames(n);
 	if(res)
 	{
-		lavplay_msg(LAVPLAY_ERROR,"Start position is behind all files","");
-		exit(1);
+		mjpeg_error_exit1("Start position is behind all files\n");
 	}
 
 	/* allocate auxiliary video buffer for flicker reduction */
@@ -1161,15 +1155,13 @@ int main(int argc, char ** argv)
 	/* initialize SDL */
 	if (soft_play)
 		initialize_SDL_window();
-
 	if (el.has_audio && audio_enable)
 	{
 		res = audio_init(0,(el.audio_chans>1),el.audio_bits,
 						 (int)(el.audio_rate*test_factor));
 		if(res)
 		{
-			lavplay_msg(LAVPLAY_ERROR,"Error initializing Audio",audio_strerror());
-			exit(1);
+			mjpeg_error_exit1("Error initializing Audio: %s\n",audio_strerror());
 		}
 
 		audio_buffer_size = audio_get_buffer_size();
@@ -1184,7 +1176,7 @@ int main(int argc, char ** argv)
 	  are assisted if we're installed setuid root, we want to set the
 	  effective user id to the real user id */
    if( seteuid( getuid() ) < 0 )
-	   system_error("Can't set effective user-id: ",
+	   system_error("Can't set effective user-id: %s\n",
 					(char *)sys_errlist[errno]);
 
    /* Fill all buffers first */
@@ -1203,37 +1195,29 @@ int main(int argc, char ** argv)
 
    /* Set norm */       
 	bp.norm = (el.video_norm == 'n') ? VIDEO_MODE_NTSC : VIDEO_MODE_PAL;
-	sprintf(infostring,"Output norm: %s",bp.norm?"NTSC":"PAL");
-	lavplay_msg(LAVPLAY_INFO,infostring,"");
+	mjpeg_info("Output norm: %s\n",bp.norm?"NTSC":"PAL");
    
 	hn = bp.norm ? 480 : 576;  /* Height of norm */
    
 	bp.decimation = 0; /* we will set proper params ourselves */
-   
+
 	/* Check dimensions of video, select decimation factors */
 	if (!soft_play && !screen_output)
-	{
+	{		
 		/* set correct width of device for hardware
 		   DC10(+): 768 (PAL/SECAM) or 640 (NTSC), Buz/LML33: 720*/
 		res = ioctl(mjpeg->dev, VIDIOCGCAP,&vc);
-		if (res < 0)
-		{
-			sprintf(infostring, "getting device capabilities: %s\n",
-				sys_errlist[errno]);
-			lavplay_msg(LAVPLAY_ERROR, infostring, "");
-			exit(1);
-		}
+		if (res < 0) 
+			mjpeg_error_exit1("getting device capabilities: %s\n",sys_errlist[errno]);
 		playback_width = vc.maxwidth;
 
 		if( el.video_width > playback_width || el.video_height > hn )
 		{
 			/* This is definitely too large */
 	 
-			sprintf(infostring,"Video dimensions too large: %ld x %ld\n",
+			mjpeg_error_exit1("Video dimensions too large: %ld x %ld\n",
 					el.video_width,el.video_height);
-			lavplay_msg(LAVPLAY_ERROR,infostring,"");
-			exit(1);
-		};
+		}
 	}
        
 	/* if zoom_to_fit is set, HorDcm is independent of interlacing */
@@ -1279,10 +1263,11 @@ int main(int argc, char ** argv)
 		if (!soft_play && !screen_output &&  
 			( el.video_height > hn/2 || (!zoom_to_fit && el.video_width>playback_width/2) ))
 		{
-			sprintf(infostring,"Video dimensions (not interlaced) too large: %ld x %ld\n",
-					el.video_width,el.video_height);
-			lavplay_msg(LAVPLAY_ERROR,infostring,"");
-			if(el.video_width>playback_width/2) lavplay_msg(LAVPLAY_INFO,"Try -z option !!!!","");
+
+			mjpeg_error("Video dimensions (not interlaced) too large: %ld x %ld\n",
+						  el.video_width,el.video_height);
+			if(el.video_width>playback_width/2) 
+				mjpeg_error("Try -z option !!!!\n");
 			exit(1);
 		}
        
@@ -1309,12 +1294,10 @@ int main(int argc, char ** argv)
 	bp.img_x = (playback_width  - bp.img_width )/2 + h_offset;
 	bp.img_y = (hn/2 - bp.img_height)/2 + v_offset/2;
    
-	sprintf(infostring,"Output dimensions: %dx%d+%d+%d",
-			bp.img_width,bp.img_height*2,bp.img_x,bp.img_y*2);
-	lavplay_msg(LAVPLAY_INFO,infostring,"");
-	sprintf(infostring,"Output zoom factors: %d (hor) %d (ver)\n",
+	mjpeg_info("Output dimensions: %dx%d+%d+%d\n",
+			   bp.img_width,bp.img_height*2,bp.img_x,bp.img_y*2);
+	mjpeg_info("Output zoom factors: %d (hor) %d (ver)\n",
 			bp.HorDcm,bp.VerDcm*bp.TmpDcm);
-	lavplay_msg(LAVPLAY_INFO,infostring,"");
    
    /* Set field polarity for interlaced video */
    
@@ -1372,10 +1355,10 @@ int main(int argc, char ** argv)
 			/* Since we queue the frames in order, we have to get them back in order */
 			if(frame != nsync % mjpeg->br.count)
 			{
-				printf("frame = %d, nsync = %ld, mjpeg->br.count = %ld\n", frame, nsync, mjpeg->br.count);
-				lavplay_msg(LAVPLAY_INTERNAL,"Wrong frame order on sync","");
-				//mjpeg_close(mjpeg);
+				mjpeg_error("INTERNAL: Bad frame order on sync: frame = %d, nsync = %ld, mjpeg->br.count = %ld\n", 
+							frame, nsync, mjpeg->br.count);
 				x_shutdown(1);
+				exit(1);
 			}
 			nsync++;
 			/* Look on clock */
@@ -1385,11 +1368,12 @@ int main(int argc, char ** argv)
 		}
 		while(tdiff>spvf && (nsync-first_free)<mjpeg->br.count-1);
 
-		if(gui_mode) printf("@%c%ld/%ld/%d\n",(unsigned int)el.video_norm,frame_number[frame],
-							el.video_frames,play_speed);
+		if(gui_mode) 
+			printf("@%c%ld/%ld/%d\n",(unsigned int)el.video_norm,frame_number[frame],
+				   el.video_frames,play_speed);
 
 		if((nsync-first_free)> mjpeg->br.count-3)
-			lavplay_msg(LAVPLAY_WARNING,"Disk too slow, can not keep pace!","");
+			mjpeg_warn("Disk too slow, can not keep pace!\n");
 
 		if(el.has_audio && audio_enable)
 		{
@@ -1489,10 +1473,8 @@ int main(int argc, char ** argv)
 
 	if(sync_corr)
 	{
-		sprintf(infostring,"Corrections because video ahead  audio: %4d",numca);
-		lavplay_msg(LAVPLAY_INFO,infostring,"");
-		sprintf(infostring,"Corrections because video behind audio: %4d",numcb);
-		lavplay_msg(LAVPLAY_INFO,infostring,"");
+		mjpeg_info("Corrections because video ahead  audio: %4d\n",numca);
+		mjpeg_info("Corrections because video behind audio: %4d\n",numcb);
 	}
 
 	exit(0);

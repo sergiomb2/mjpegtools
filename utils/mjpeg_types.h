@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_types.h,v 1.1.2.1 2001/04/28 13:20:42 wackston Exp $
+    $Id: mjpeg_types.h,v 1.1.2.2 2001/06/09 11:46:03 wackston Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -54,11 +54,11 @@ typedef enum
   {
     false = 0,
     true = 1
-  } _Bool;
+  } locBool;
 
 #  define false   false
 #  define true    true
-#  define bool _Bool
+#  define bool locBool
 # endif
 #endif
 
