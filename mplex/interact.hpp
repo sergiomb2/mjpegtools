@@ -22,7 +22,6 @@
 #ifndef __INTERACT_HH__
 #define __INTERACT_HH__
 
-#include <config.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -141,7 +140,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.3"
-#define MPLEX_DATE   "$Date: 2003/12/11 21:42:41 $"
+#define MPLEX_DATE   "$Date: 2003/12/20 17:33:38 $"
 
 #endif // __INTERACT_H__
 
