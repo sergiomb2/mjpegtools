@@ -1,6 +1,6 @@
 
 /*
- * $Id: y4mshift.c,v 1.6 2003/05/24 02:50:36 sms00 Exp $
+ * $Id: y4mshift.c,v 1.7 2003/05/26 17:10:57 sms00 Exp $
  *
  * written by Steven M. Schultz <sms@2BSD.COM>
  *
@@ -35,7 +35,7 @@ extern  char    *__progname;
 
 	void	black_border(u_char **, char *, int, int);
 	void	vertical_shift(u_char **, int, int, int);
-static  void    usage();
+static  void    usage(void);
 
 int main(int argc, char **argv)
         {
@@ -341,7 +341,7 @@ void vertical_shift(u_char **yuv, int vshift, int width, int height)
 		}
 	}
 
-static void usage()
+static void usage(void)
         {
 
         fprintf(stderr, "%s: usage: [-v] [-h] [-M] [-b xoff,yoff,xsize,ysize] [-N num] -n N\n", __progname);
