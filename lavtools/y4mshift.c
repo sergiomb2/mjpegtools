@@ -1,6 +1,6 @@
 
 /*
- * $Id: y4mshift.c,v 1.9 2003/06/08 22:12:47 sms00 Exp $
+ * $Id: y4mshift.c,v 1.10 2003/11/01 10:18:23 sms00 Exp $
  *
  * written by Steven M. Schultz <sms@2BSD.COM>
  *
@@ -12,7 +12,7 @@
  * Simple program to shift the data an even number of pixels.   The shift count
  * is positive for shifting to the right and negative for a left shift.   
  *
- * Usage: y4mfill -n N [ -b xoffset,yoffset,xsize,ysize ]
+ * Usage: y4mshift -n N [ -b xoffset,yoffset,xsize,ysize ]
  *
  * No file arguments are needed since this is a filter only program.
 */
