@@ -1,5 +1,5 @@
 /*
- * $Id: pgmtoy4m.c,v 1.5 2003/05/26 18:17:19 sms00 Exp $
+ * $Id: pgmtoy4m.c,v 1.6 2003/05/26 18:25:19 sms00 Exp $
  *
  * pgmtoy4m converts the PGM output of "mpeg2dec -o pgmpipe" to YUV4MPEG2 on
  * stdout.
@@ -223,6 +223,7 @@ usage(void)
 
 	fprintf(stderr, "%s usage: [-v n] [-i t|b|p] [-a sample aspect] [-r rate]\n",
 		__progname);
+	fprintf(stderr, "%s\taspect and rate in ratio form: -a  10:11 and -r 30000:1001 or -r 25:1 for example\n", __progname);
 	exit(0);
 	}
 
