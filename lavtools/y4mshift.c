@@ -1,6 +1,6 @@
 
 /*
- * $Id: y4mshift.c,v 1.1 2002/12/01 18:55:43 waldviertler Exp $
+ * $Id: y4mshift.c,v 1.2 2003/02/27 20:32:28 rbultje Exp $
  *
  * written by Steven M. Schultz <sms@2BSD.COM>
  * Simple program to shift the data an even number of pixels.   The shift count
@@ -11,15 +11,17 @@
  * No file arguments are needed since this is a filter only program.
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
-/* Sigh - the mjpegtools stuff has internal stuff exposed it seems */
-#define HAVE_STDINT_H
-#include <mjpegtools/yuv4mpeg.h>
+#include "yuv4mpeg.h"
 
 extern  char    *__progname;
 
