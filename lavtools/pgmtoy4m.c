@@ -1,5 +1,5 @@
 /*
- * $Id: pgmtoy4m.c,v 1.2 2003/05/26 18:03:16 sms00 Exp $
+ * $Id: pgmtoy4m.c,v 1.3 2003/05/26 18:06:14 sms00 Exp $
  *
  * pgmtoy4m converts the PGM output of "mpeg2dec -o pgmpipe" to YUV4MPEG2 on
  * stdout.
@@ -212,6 +212,9 @@ main(int argc, char **argv)
 		frameno++;
 		mjpeg_log(LOG_DEBUG, "frame: %d P5MAGIC cols: %d rows: %d maxval: %d", frameno, columns, rows, maxval);
 		}
+	y4m_fini_frame_info(&oframe);
+	y4m_fini_stream_info(&ostream);
+	exit(0);
 	}
 
 static void
