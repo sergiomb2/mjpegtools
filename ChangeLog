@@ -9,7 +9,7 @@
 
 2000-12-07 Andrew Stevens (as@comlab.ox.ac.uk)
 
-	* 1.3b2 release.  Tag: 1_3Beta2
+	* 1.3b2 release.  Tag: Rel1_3Beta2
 
 	* Initial support for Software-only mjpeg playback.
 
@@ -32,6 +32,9 @@
        
 CVS log:
 $Log: ChangeLog,v $
+Revision 1.7  2000/12/19 14:34:06  wackston
+*** empty log message ***
+
 Revision 1.6  2000/12/19 14:29:14  wackston
 Tagging for beta2 release.
 
