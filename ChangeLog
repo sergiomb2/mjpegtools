@@ -69,7 +69,7 @@
 	
         * 1.5 series
 
-        * Single pass multiplexer.
+        * Single pass multiplexer. VBR audio multiplexing support.
 
         * Splitting mpeg encoder into re-entrant library and front-end(s).
 
@@ -77,6 +77,11 @@
 
 CVS log:
 $Log: ChangeLog,v $
+Revision 1.14  2001/07/08 21:21:15  wackston
+Added VBR audio support.
+Fixed wav headers so they indicate a long not a short stream
+if header is aborted...
+
 Revision 1.13  2001/06/23 14:14:41  wackston
 First stage of single-pass muxing.  Video now single-pass.
 
