@@ -1,5 +1,5 @@
 /*
- * $Id: y4mtoyuv.c,v 1.2 2004/01/01 23:30:35 sms00 Exp $
+ * $Id: y4mtoyuv.c,v 1.3 2004/01/01 23:33:24 sms00 Exp $
  *
  * Simple program to convert the YUV4MPEG2 format used by the 
  * mjpeg.sourceforge.net suite of programs into pure EYUV format used
@@ -100,7 +100,7 @@ main(int argc, char **argv)
 			}
 		}
 
-	uvlen = (height / ss_h) * (width / ss_v);
+	uvlen = (width / ss_h) * (height / ss_v);
 
 	yuv[0] = malloc(height * width);
 	yuv[1] = malloc(uvlen);
