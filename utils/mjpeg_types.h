@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_types.h,v 1.3 2001/06/09 12:48:32 wackston Exp $
+    $Id: mjpeg_types.h,v 1.4 2001/08/20 18:40:55 wackston2 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -20,6 +20,7 @@
 
 #ifndef __MJPEG_TYPES_H__
 #define __MJPEG_TYPES_H__
+#include <config.h>
 
 #if defined(HAVE_STDINT_H)
 # include <stdint.h>
@@ -44,7 +45,7 @@ typedef u_int64_t uint64_t;
 /* fixme */
 #endif /* HAVE_STDINT_H */
 
-#if defined(HAVE_STDBOOL_H)
+#if defined(HAVE_STDBOOL_H) && !defined(__cplusplus)
 #include <stdbool.h>
 #else
 /* ISO/IEC 9899:1999 <stdbool.h> missing -- enabling workaround */

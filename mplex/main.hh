@@ -25,7 +25,7 @@
 
 #include <config.h>
 #include <stdio.h>
-#include <inttypes.h>
+#include "mjpeg_types.h"
 #include "bits.hh"
 #include "inputstrm.hh"
 #include "outputstream.hh"
@@ -37,7 +37,7 @@
 *************************************************************************/
  
 #define MPLEX_VER    "1.5.1"
-#define MPLEX_DATE   "$Date: 2001/08/05 15:32:37 $"
+#define MPLEX_DATE   "$Date: 2001/08/20 18:40:55 $"
 
 
 
