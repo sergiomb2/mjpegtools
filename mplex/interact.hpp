@@ -114,7 +114,7 @@ public:
   unsigned int NumberOfTracks( StreamKind kind );
   void GetJobStreams( vector<JobStream *> &streams, StreamKind kind );
 
-private:
+protected:
   virtual void InputStreamsFromCmdLine (unsigned int argc, char* argv[] );
   virtual void Usage(char *program_name);
   virtual bool ParseVideoOpt( const char *optarg );
@@ -140,7 +140,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.2"
-#define MPLEX_DATE   "$Date: 2003/03/26 00:11:07 $"
+#define MPLEX_DATE   "$Date: 2003/03/27 23:59:42 $"
 
 
 #endif // __INTERACT_H__
