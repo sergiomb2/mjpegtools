@@ -1,5 +1,5 @@
 /*
- * $Id: pgmtoy4m.c,v 1.3 2003/05/26 18:06:14 sms00 Exp $
+ * $Id: pgmtoy4m.c,v 1.4 2003/05/26 18:08:56 sms00 Exp $
  *
  * pgmtoy4m converts the PGM output of "mpeg2dec -o pgmpipe" to YUV4MPEG2 on
  * stdout.
@@ -55,7 +55,7 @@ getmagicnumber(int fd)
 	}
 
 static int
-piperead(int fd, void *buf, int len)
+piperead(int fd, u_char *buf, int len)
 	{
 	int n = 0;
 	int r = 0;
