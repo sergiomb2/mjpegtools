@@ -55,15 +55,7 @@ MPEG2EncOptions::MPEG2EncOptions()
     closed_GOPs = 0;
     preserve_B = 0;
     Bgrp_size = 1;
-#ifdef _SC_NPROCESSORS_ONLN
-    num_cpus = sysconf (_SC_NPROCESSORS_ONLN);
-#else
     num_cpus = 1;
-#endif
-    if (num_cpus < 0)
-      num_cpus = 1;
-    if (num_cpus > 32)
-      num_cpus = 32;
     vid32_pulldown = 0;
     svcd_scan_data = -1;
     seq_hdr_every_gop = 0;
@@ -73,16 +65,17 @@ MPEG2EncOptions::MPEG2EncOptions()
     vbv_buffer_still_size = 0;
     force_interlacing = Y4M_UNKNOWN;
     input_interlacing = Y4M_UNKNOWN;
-    hack_svcd_hds_bug = 1;
-    hack_altscan_bug = 0;
-    hack_nodualprime = 0;
     mpeg2_dc_prec = 1;
     ignore_constraints = 0;
     unit_coeff_elim = 0;
-	verbose = 1;
+    force_cbr = 0;
+    verbose = 1;
+    hack_svcd_hds_bug = 1;
+    hack_altscan_bug = 0;
+    /* dual prime Disabled by default. --dualprime-mpeg2 to enable (set to 0) */
+    hack_nodualprime = 1;
+    force_cbr = 0;
 };
-
-
 
 
 static int infer_mpeg1_aspect_code( char norm, mpeg_aspect_code_t mpeg2_code )
@@ -310,15 +303,17 @@ int MPEG2EncOptions::CheckBasicConstraints()
 
 bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 {
+    int nerr = 0;
     in_img_width = strm.horizontal_size;
     in_img_height = strm.vertical_size;
+
 	switch( format  )
 	{
 	case MPEG_FORMAT_MPEG1 :  /* Generic MPEG1 */
 		mjpeg_info( "Selecting generic MPEG1 output profile");
 		if( video_buffer_size == 0 )
 			video_buffer_size = 46;
-		if( bitrate == 0 )
+		if (bitrate == 0)
 			bitrate = 1151929;
 		break;
 
@@ -326,9 +321,9 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 		mpeg = 1;
 		bitrate = 1151929;
 		video_buffer_size = 46;
-        preserve_B = true;
-        Bgrp_size = 3;
-        min_GOP_size = 9;
+        	preserve_B = true;
+        	Bgrp_size = 3;
+        	min_GOP_size = 9;
 		max_GOP_size = norm == 'n' ? 18 : 15;
 		mjpeg_info("VCD default options selected");
 		
@@ -337,52 +332,61 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 		mpeg = 1;
 		svcd_scan_data = 0;
 		seq_hdr_every_gop = 1;
-		if( bitrate == 0 )
+		if (bitrate == 0)
 			bitrate = 1151929;
-		if( video_buffer_size == 0 )
+		if (video_buffer_size == 0)
 			video_buffer_size = 46 * bitrate / 1151929;
-        if( seq_length_limit == 0 )
-            seq_length_limit = 700;
-        if( nonvid_bitrate == 0 )
-            nonvid_bitrate = 230;
+        	if (seq_length_limit == 0 )
+            		seq_length_limit = 700;
+        	if (nonvid_bitrate == 0)
+            		nonvid_bitrate = 230;
 		break;
 		
 	case  MPEG_FORMAT_MPEG2 : 
-		mpeg = 2;
 		mjpeg_info( "Selecting generic MPEG2 output profile");
 		mpeg = 2;
-		if( video_buffer_size == 0 )
+		if (!force_cbr && quant == 0)
+			quant = 8;
+		if (video_buffer_size == 0)
 			video_buffer_size = 230;
 		break;
 
 	case MPEG_FORMAT_SVCD :
 		mjpeg_info("SVCD standard settings selected");
-		bitrate = 2500000;
+		if (nonvid_bitrate == 0)
+		   /* 224 kbps for audio + around 2% of 2788800 bits */
+		   nonvid_bitrate = 288; 
+		if (bitrate == 0 || bitrate > 2788800 - nonvid_bitrate * 1000)
+		   bitrate = 2788800 - nonvid_bitrate * 1000;
 		max_GOP_size = norm == 'n' ? 18 : 15;
 		video_buffer_size = 230;
 
 	case  MPEG_FORMAT_SVCD_NSR :		/* Non-standard data-rate */
 		mjpeg_info( "Selecting SVCD output profile");
 		mpeg = 2;
-		if( quant == 0 )
+		if (!force_cbr && quant == 0)
 			quant = 8;
 		if( svcd_scan_data == -1 )
 			svcd_scan_data = 1;
+		if (video_buffer_size == 0)
+			video_buffer_size = 230;
 		if( min_GOP_size == -1 )
-            min_GOP_size = 9;
-        seq_hdr_every_gop = 1;
-        if( seq_length_limit == 0 )
-            seq_length_limit = 700;
-        if( nonvid_bitrate == 0 )
-            nonvid_bitrate = 230;
-        break;
+            		min_GOP_size = 9;
+        	seq_hdr_every_gop = 1;
+        	if (seq_length_limit == 0)
+            		seq_length_limit = 700;
+        	if (nonvid_bitrate == 0)
+            		nonvid_bitrate = 230;
+        	break;
 
 	case MPEG_FORMAT_VCD_STILL :
 		mjpeg_info( "Selecting VCD Stills output profile");
 		mpeg = 1;
-		/* We choose a generous nominal bit-rate as its VBR anyway
-		   there's only one frame per sequence ;-). It *is* too small
-		   to fill the frame-buffer in less than one PAL/NTSC frame
+		quant = 0;	/* We want to try and hit our size target */
+
+		/* We choose a generous nominal bit-rate as there's only 
+		   one frame per sequence ;-).  It *is* too small to fill 
+		   the frame-buffer in less than one PAL/NTSC frame
 		   period though...*/
 		bitrate = 8000000;
 
@@ -426,8 +430,6 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 			mjpeg_error("VCD normal resolution stills must be 352x288 (PAL) or 352x240 (NTSC)");
 			mjpeg_error_exit1( "VCD high resolution stills must be 704x576 (PAL) or 704x480 (NTSC)");
 		}
-		quant = 0;		/* We want to try and hit our size target */
-		
 		seq_hdr_every_gop = 1;
 		seq_end_every_gop = 1;
 		min_GOP_size = 1;
@@ -437,11 +439,13 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 	case MPEG_FORMAT_SVCD_STILL :
 		mjpeg_info( "Selecting SVCD Stills output profile");
 		mpeg = 2;
-		/* We choose a generous nominal bit-rate as its VBR anyway
-		   there's only one frame per sequence ;-). It *is* too small
-		   to fill the frame-buffer in less than one PAL/NTSC frame
-		   period though...*/
+		quant = 0;	/* We want to try and hit our size target */
 
+		/* We choose a generous nominal bitrate as there's only one 
+		   frame per sequence ;-). It *is* too small to fill the 
+		   frame-buffer in less than one PAL/NTSC frame 
+		   period though...
+		*/
 		bitrate = 2500000;
 		video_buffer_size = 230;
 		vbv_buffer_still_size = 220*1024;
@@ -483,21 +487,33 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
 		max_GOP_size = 1;
 		break;
 
-
 	case MPEG_FORMAT_DVD :
 	case MPEG_FORMAT_DVD_NAV :
 		mjpeg_info( "Selecting DVD output profile");
-		
-		if( bitrate == 0 )
-			bitrate = 7500000;
-        if( video_buffer_size == 0 )
-            video_buffer_size = 230;
 		mpeg = 2;
-		if( quant == 0 )
+		if (bitrate == 0)
+			bitrate = 7500000;
+        	if (video_buffer_size == 0)
+            		video_buffer_size = 230;
+		if (!force_cbr && quant == 0)
 			quant = 8;
 		seq_hdr_every_gop = 1;
 		break;
 	}
+
+
+    /*
+     * At this point the command line arguments have been processed, the format (-f)
+     * selection has had a chance to set the bitrate.  IF --cbr was used and we
+     * STILL do not have a bitrate set then declare an error because a Constant
+     * Bit Rate of 0 makes no sense (most of the time CBR doesn't either ... ;))
+     */
+     if (force_cbr && bitrate == 0)
+        {
+        nerr++;
+        mjpeg_error("--cbr used but no bitrate set with -b or -f!");
+        }
+
 
     switch( mpeg )
     {
@@ -516,16 +532,11 @@ bool MPEG2EncOptions::SetFormatPresets( const MPEG2EncInVidParams &strm )
     }
 	if( svcd_scan_data == -1 )
 		svcd_scan_data = 0;
-
-	int nerr = 0;
 	nerr += InferStreamDataParams(strm);
 	nerr += CheckBasicConstraints();
 
 	return nerr != 0;
-    
 }
-
-
 
 /* 
  * Local variables:

@@ -67,9 +67,20 @@
 void enable_altivec_quantization(struct QuantizerCalls *calls, int opt_mpeg1);
 #endif
 #if defined(HAVE_ASM_MMX) && defined(HAVE_ASM_NASM)
-void enable_x86_quantization( struct QuantizerCalls *calls,
-                              int mpeg1 );
+void init_x86_quantization( struct QuantizerCalls *calls,
+                                                        int mpeg1 );
 #endif
+
+#define fabsshift ((8*sizeof(unsigned int))-1)
+
+#define signmask(x) (((int)x)>>fabsshift)
+static __inline__ int intsamesign(int x, int y)
+{
+	return (y+(signmask(x) & -(y<<1)));
+}
+
+#undef signmask
+#undef fabsshift
 
 
 /*
@@ -521,7 +532,7 @@ void init_quantizer( struct QuantizerCalls *calls,
 #if defined(HAVE_ASM_MMX) && defined(HAVE_ASM_NASM)
     if( cpu_accel() )
     {
-        enable_x86_quantization( calls, mpeg1 );
+        init_x86_quantization( calls, mpeg1 );
     }
 #endif
 #ifdef HAVE_ALTIVEC

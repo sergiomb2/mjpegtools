@@ -3,103 +3,148 @@
 # and mpeg2enc command line wrapper.
 #
 
-
 bin_PROGRAMS = mpeg2enc 
 
 mpeg2encpp_MMXSSE_ASM = \
-    fdct_mmx.s fdctdata.c idct_mmx.s idctdata.c \
-    quant_mmx.s predict_mmx.s \
-    predcomp_mmxe.s predcomp_mmx.s 
+	fdct_mmx.s \
+	fdctdata.c \
+	idct_mmx.s \
+	idctdata.c \
+	predict_mmx.s \
+	predcomp_mmxe.s \
+	predcomp_mmx.s \
+	quant_mmx.s
 
-mpeg2encpp_MMXSSE_INLINE = transfrm_x86.c quantize_x86.c predict_x86.c
+mpeg2encpp_MMXSSE_INLINE = \
+	predict_x86.c \
+	quantize_x86.c \
+	transfrm_x86.c
 
-
-EXTRA_DIST = NOTES .cvsignore
-
+EXTRA_DIST = NOTES
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = -I $(top_srcdir) -I $(top_srcdir)/utils
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/utils
 
-lib_LIBRARIES = libmpeg2encpp.a
+LIBMJPEGUTILS = $(top_builddir)/utils/libmjpegutils.la
 
+lib_LTLIBRARIES = libmpeg2encpp.la
 
 if HAVE_ASM_MMX
 if HAVE_ASM_NASM
-
-noinst_LIBRARIES = libmmxsseasm.a
-libmmxsseasm_a_SOURCES = $(mpeg2encpp_MMXSSE_ASM)
+noinst_LTLIBRARIES = libmmxsseasm.la
+libmmxsseasm_la_SOURCES = $(mpeg2encpp_MMXSSE_ASM)
 SIMD_INLINE = $(mpeg2encpp_MMXSSE_INLINE)
-LIBSIMDASM_LIB = libmmxsseasm.a $(top_builddir)/utils/mmxsse/libmmxsse.a
-
-else
-LIBSIMDASM_LIB = 
-SIMD_INLINE = 
-endif
-else
-LIBSIMDASM_LIB = 
-SIMD_INLINE = 
-endif
-
+LIBSIMDASM_LIB = libmmxsseasm.la
+endif # HAVE_ASM_NASM
+endif # HAVE_ASM_MMX
 
 # Reference implementations of lowlevel routines that may have Architecture
 # dependent (usually SIMD) implementations
 
-mpeg2enc_REF = quantize_ref.c  quantize_ref.h transfrm_ref.c transfrm_ref.h \
-			fdctref.c idct.c predict_ref.c predict_ref.h
+mpeg2enc_REF = \
+	fdctref.c \
+	idct.c \
+	predict_ref.c \
+	quantize_ref.c \
+	transfrm_ref.c
 
-mpeg2enc_SOURCES = mpeg2enc.cc 
+mpeg2enc_noinst_header_REF = \
+	transfrm_ref.h
 
-libmpeg2encpp_a_SOURCES = mpeg2encparams.h \
-	mpeg2encoptions.hh mpeg2encoptions.cc \
-	mpeg2encoder.hh mpeg2encoder.cc \
-	encoderparams.h encoderparams.cc conform.cc \
-    seqencoder.hh putseq.cc \
-	picture.hh picture.cc putpic.cc \
-	macroblock.hh macroblock.cc  \
-	mpeg2coder.hh mpeg2coder.cc tables.h tables.c  \
-	elemstrmwriter.hh elemstrmwriter.cc \
+mpeg2enc_inst_header_REF = \
+	predict_ref.h
+
+mpeg2enc_SOURCES = \
+	mpeg2enc.cc 
+
+libmpeg2encpp_la_SOURCES = \
+	conform.cc \
+	elemstrmwriter.cc \
+	encoderparams.cc \
+	macroblock.cc  \
 	motionest.cc \
-	predict.hh predict.cc \
-	transfrm.hh transfrm.cc \
-	quantize.hh quantize.cc \
-	ratectl.hh ratectl.cc stats.cc writepic.cc  synchrolib.cc \
-	pass1ratectl.cc \
+	mpeg2coder.cc \
+	mpeg2encoptions.cc \
+	mpeg2encoder.cc \
+	picture.cc \
 	picturereader.cc \
-	mpeg2enc.h \
-	simd.h synchrolib.h $(mpeg2enc_REF) $(SIMD_INLINE)
+	predict.cc \
+	putpic.cc \
+	putseq.cc \
+	quantize.cc \
+	ratectl.cc \
+	pass1ratectl.cc \
+	stats.cc \
+	synchrolib.cc \
+	tables.c  \
+	transfrm.cc \
+	writepic.cc \
+	$(mpeg2enc_REF) \
+	$(SIMD_INLINE)
 
-#libmpeg2encpp_a_LDFLAGS = \
-##	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
-#	-release $(LT_RELEASE) \
-#	-export-dynamic 
+noinst_HEADERS = \
+	mpeg2syntaxcodes.h \
+	quantize_precomp.h \
+	simd.h \
+	tables.h \
+	$(mpeg2enc_noinst_header_REF)
 
-#libmpeg2encpp_a_DEPENDENCIES = $(top_builddir)/utils/libmotion.a \
-#				$(top_builddir)/utils/libmjpegutils.a \
-#						$(LIBSIMDASM_LIB)
+libmpeg2encpp_includedir = $(pkgincludedir)/mpeg2enc
 
-#libmpeg2encpp_a_LIBADD = $(top_builddir)/utils/libmotion.a \
-#			  $(top_builddir)/utils/libmjpegutils.a \
-#						 $(LIBSIMDASM_LIB)
+libmpeg2encpp_include_HEADERS = \
+	elemstrmwriter.hh \
+	encoderparams.hh \
+	macroblock.hh \
+	mpeg2coder.hh \
+	mpeg2encoder.hh \
+	mpeg2encoptions.hh \
+	mpeg2encparams.h \
+	picture.hh \
+	picturereader.hh \
+	quantize.hh \
+	quantize_ref.h \
+	ratectl.hh \
+	seqencoder.hh \
+	synchrolib.h \
+	syntaxconsts.h \
+	$(mpeg2enc_inst_header_REF)
 
-mpeg2enc_DEPENDENCIES = $(top_builddir)/utils/libmotion.a \
-			  $(top_builddir)/utils/libmjpegutils.a \
-			  $(top_builddir)/utils/libcpuaccel.a \
-			  libmpeg2encpp.a  $(LIBSIMDASM_LIB)
+libmpeg2encpp_la_LDFLAGS = \
+	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
+	-release $(LT_RELEASE)
 
-mpeg2enc_LDADD= libmpeg2encpp.a \
-			  $(top_builddir)/utils/libmotion.a \
-			  $(top_builddir)/utils/libmjpegutils.a \
-			  $(top_builddir)/utils/libcpuaccel.a \
-				 $(LIBSIMDASM_LIB) \
-		        @PTHREAD_LIBS@ @LIBGETOPT_LIB@ $(LIBM_LIBS)
+libmpeg2encpp_la_DEPENDENCIES = \
+	$(LIBMJPEGUTILS) \
+	$(top_builddir)/utils/libcpuaccel.la \
+	$(top_builddir)/utils/libmotion.la \
+	$(LIBSIMDASM_LIB)
 
+libmpeg2encpp_la_LIBADD = \
+	$(LIBMJPEGUTILS) \
+	$(top_builddir)/utils/libcpuaccel.la \
+	$(top_builddir)/utils/libmotion.la \
+	$(LIBSIMDASM_LIB)
+
+mpeg2enc_DEPENDENCIES = \
+	$(LIBMJPEGUTILS) \
+	$(top_builddir)/mpeg2enc/libmpeg2encpp.la
+
+mpeg2enc_LDADD = \
+	$(top_builddir)/mpeg2enc/libmpeg2encpp.la \
+	$(LIBMJPEGUTILS) \
+	@PTHREAD_LIBS@ @LIBGETOPT_LIB@ $(LIBM_LIBS)
 
 # VITAL: Override default compilation rules generated by automake...
 # It shoves in a -c flag that nasm barfs on...
-# %.o: %.x86c ; 	$(CC) $(CFLAGS) -mmmx -o $@ $<
 
-%.o: %.s ; 	$(AS) $(ASFLAGS) -o $@ $<
+NO_FPIC = $(SHELL) $(top_srcdir)/strip_fPIC.sh
+CCASCOMPILE = $(AS) $(ASFLAGS)
+LTCCASCOMPILE = $(LIBTOOL) --mode=compile --tag=CC $(NO_FPIC) $(CCASCOMPILE)
 
+%.lo: %.s
+	$(LTCCASCOMPILE) -o $@ $<
+
+#%.o: %.x86c ; 	$(CC) $(CFLAGS) -mmmx -o $@ $<
 
 # Comment....

@@ -116,7 +116,6 @@ public:
         }
 
 
-
 private:
     FILE *outfile;
 };
@@ -135,12 +134,9 @@ class Y4MPipeReader : public PictureReader
 {
 public:
 
-    Y4MPipeReader( EncoderParams &encparams, int istrm_fd ) :
-        PictureReader( encparams ),
-        pipe_fd( istrm_fd )
-        {
-        }
-    ~Y4MPipeReader() {}
+    Y4MPipeReader( EncoderParams &encparams, int istrm_fd );
+    ~Y4MPipeReader();
+
     void StreamPictureParams( MPEG2EncInVidParams &strm );
 protected:
     bool LoadFrame( );
@@ -148,10 +144,25 @@ private:
     int PipeRead(  uint8_t *buf, int len);
 
     int pipe_fd;
+    y4m_stream_info_t _si;
+    y4m_frame_info_t _fi;
 };
  
 
+Y4MPipeReader::Y4MPipeReader( EncoderParams &encparams, int istrm_fd ) :
+    PictureReader( encparams ),
+    pipe_fd( istrm_fd )
+{
+    y4m_init_stream_info(&_si);
+    y4m_init_frame_info(&_fi);
+}
 
+
+Y4MPipeReader::~Y4MPipeReader()
+{
+    y4m_fini_stream_info(&_si);
+    y4m_fini_frame_info(&_fi);
+}
 
 
 /****************************************
@@ -169,24 +180,22 @@ void Y4MPipeReader::StreamPictureParams( MPEG2EncInVidParams &strm )
 {
    int n;
    y4m_ratio_t sar;
-   y4m_stream_info_t si;
 
-   y4m_init_stream_info (&si);  
-   if ((n = y4m_read_stream_header (pipe_fd, &si)) != Y4M_OK) {
+   if ((n = y4m_read_stream_header (pipe_fd, &_si)) != Y4M_OK) {
        mjpeg_log( LOG_ERROR, 
                   "Could not read YUV4MPEG2 header: %s!",
                   y4m_strerr(n));
       exit (1);
    }
 
-   strm.horizontal_size = y4m_si_get_width(&si);
-   strm.vertical_size = y4m_si_get_height(&si);
-   strm.frame_rate_code = mpeg_framerate_code(y4m_si_get_framerate(&si));
-   strm.interlacing_code = y4m_si_get_interlace(&si);
+   strm.horizontal_size = y4m_si_get_width(&_si);
+   strm.vertical_size = y4m_si_get_height(&_si);
+   strm.frame_rate_code = mpeg_framerate_code(y4m_si_get_framerate(&_si));
+   strm.interlacing_code = y4m_si_get_interlace(&_si);
 
    /* Deduce MPEG aspect ratio from stream's frame size and SAR...
       (always as an MPEG-2 code; that's what caller expects). */
-   sar = y4m_si_get_sampleaspect(&si);
+   sar = y4m_si_get_sampleaspect(&_si);
    strm.aspect_ratio_code = 
        mpeg_guess_mpeg_aspect_code(2, sar, 
                                    strm.horizontal_size, 
@@ -211,13 +220,11 @@ void Y4MPipeReader::StreamPictureParams( MPEG2EncInVidParams &strm )
 
 bool Y4MPipeReader::LoadFrame( )
 {
-   y4m_frame_info_t fi;
    int h,v,y;
-   y4m_init_frame_info (&fi);
    int buffer_slot = frames_read % input_imgs_buf_size;
 
 
-   if ((y = y4m_read_frame_header (pipe_fd, &fi)) != Y4M_OK) 
+   if ((y = y4m_read_frame_header (pipe_fd, &_si, &_fi)) != Y4M_OK) 
    {
        if( y != Y4M_ERR_EOF )
            mjpeg_log (LOG_WARN, 
@@ -454,7 +461,7 @@ void MPEG2EncCmdLineOptions::Usage()
 "--video-bitrate|-b num\n"
 "    Set Bitrate of compressed video in KBit/sec\n"
 "    (default: 1152 for VCD, 2500 for SVCD, 7500 for DVD)\n"
-"--nonvideo-birate|-B num\n"
+"--nonvideo-bitrate|-B num\n"
 "    Non-video data bitrate to assume for sequence splitting\n"
 "    calculations (see also --sequence-length).\n"
 "--quantisation|-q num\n"
@@ -490,7 +497,7 @@ void MPEG2EncCmdLineOptions::Usage()
 "    Preserve two B frames between I/P frames when placing GOP boundaries\n"
 "--quantisation-reduction|-Q num\n"
 "    Max. quantisation reduction for highly active blocks\n"
-"    [0.0 .. 5] (default: 0.0)\n"
+"    [-4.0 .. 5.0] (default: 0.0)\n"
 "--quant-reduction-max-var|-X num\n"
 "    Luma variance below which quantisation boost (-Q) is used\n"
 "    [0.0 .. 2500.0](default: 0.0)\n"
@@ -530,6 +537,11 @@ void MPEG2EncCmdLineOptions::Usage()
 "--no-altscan-mpeg2\n"
 "    Force MPEG2 *not* to use alternate block scanning.  This may allow some\n"
 "    buggy players to play SVCD streams\n"
+"--no-dualprime-mpeg2\n"
+"    Turn OFF dual-prime motion compensation.  This is the default.\n"
+"--dualprime-mpeg2\n"
+"    Turn ON the use of dual-prime motion compensation.  This is not the\n"
+"    default because artifacting has been observed (bug).  See mpeg2enc(1).\n"
 "--no-constraints\n"
 "    Deactivate constraints for maximum video resolution and sample rate.\n"
 "    Could expose bugs in the software at very high resolutions!\n"
@@ -548,6 +560,8 @@ void MPEG2EncCmdLineOptions::Usage()
 "    coefficients are included.  Reasonable values -40 to 40\n"
 "--b-per-refframe| -R 0|1|2\n"
 "    The number of B frames to generate between each I/P frame\n"
+"--cbr|-u\n"
+"    For MPEG-2 force the use of (suboptimal) ConstantBitRate (CBR) encoding\n"
 "--help|-?\n"
 "    Print this lot out!\n"
 	);
@@ -596,6 +610,8 @@ void MPEG2EncCmdLineOptions::StartupBanner()
 
 int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
 {
+    int n;
+    int nerr = 0;
     static const char	short_options[]=
         "m:a:f:n:b:z:T:B:q:o:S:I:r:M:4:2:A:Q:X:D:g:G:v:V:F:N:tpdsZHOcCPK:E:R:";
 
@@ -617,7 +633,7 @@ int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
         { "reduction-2x2",  1, 0, '2'},
         { "min-gop-size",      1, 0, 'g'},
         { "max-gop-size",      1, 0, 'G'},
-        { "closed-gop",        1, 0, 'c'},
+        { "closed-gop",        0, 0, 'c'},
         { "force-b-b-p", 0, &preserve_B, 1},
         { "ratecontroller", 1, 0, 'A' },
         { "quantisation-reduction", 1, 0, 'Q' },
@@ -634,18 +650,17 @@ int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
         { "no-constraints", 0, &ignore_constraints, 1},
         { "no-altscan-mpeg2", 0, &hack_altscan_bug, 1},
         { "no-dualprime-mpeg2", 0, &hack_nodualprime, 1},
+        { "dualprime-mpeg2", 0, &hack_nodualprime, 0},
         { "playback-field-order", 1, 0, 'z'},
         { "multi-thread",      1, 0, 'M' },
         { "custom-quant-matrices", 1, 0, 'K'},
         { "unit-coeff-elim",   1, 0, 'E'},
-        { "b-per-refframe",           1, 0, 'R' },
+        { "b-per-refframe",    1, 0, 'R' },
+	    { "cbr",               0, 0, 'u'},
         { "help",              0, 0, '?' },
         { 0,                   0, 0, 0 }
     };
 
-
-    int n;
-    int nerr = 0;
     while( (n=getopt_long(argc,argv,short_options,long_options, NULL)) != -1 )
 #else
     while( (n=getopt(argc,argv,short_options)) != -1)
@@ -861,6 +876,11 @@ int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
 		case 'K':
 			ParseCustomOption(optarg);
 			break;
+
+        case 'u':
+		    force_cbr = 1;
+    		break;
+
         case 'E':
             unit_coeff_elim = atoi(optarg);
             if (unit_coeff_elim < -40 || unit_coeff_elim > 40)
@@ -895,7 +915,7 @@ int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
 			act_boost = atof(optarg);
 			if( act_boost <-4.0 || act_boost > 4.0)
 			{
-				mjpeg_error( "-q option requires arg -4.0 .. 4.0");
+				mjpeg_error( "-Q option requires arg -4.0 .. 5.0");
 				++nerr;
 			}
 			break;
@@ -939,6 +959,14 @@ int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
 		mjpeg_error("Output file name (-o option) is required!");
 		++nerr;
 	}
+
+/* 
+ * Probably not necessary but err on the safe side.  If someone wants to
+ * waste space by using a Constant Bit Rate stream then disable the '-q'
+ * parameter.  Further checks for CBR are made in mpeg2encoptions.cc 
+*/
+    if (force_cbr != 0)
+       quant = 0;
 
     return nerr;
 }
