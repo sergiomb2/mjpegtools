@@ -23,7 +23,9 @@
 #define __INTERACT_HH__
 
 #include <config.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <vector>
 #include "mjpeg_types.h"
 #include "stream_params.hpp"
@@ -95,7 +97,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.2"
-#define MPLEX_DATE   "$Date: 2003/02/12 21:36:31 $"
+#define MPLEX_DATE   "$Date: 2003/02/14 17:50:22 $"
 
 
 #endif // __INTERACT_H__
