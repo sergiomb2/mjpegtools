@@ -287,6 +287,16 @@ encoding DVD-like streams for playback using a DXR2.
 .PP
 This flag deactivates all constraints for the maximum video samplerate or video resolution. Its purpose is to allow the encoding of unusual resolutions of MPEG-video (e.g. 2200 x 576, 160 degrees FOV VR-theatre MPEG movies), but should be used with care: It can possible circumvent a number of other security checks, and untested settings can cause mpeg2enc to crash in this mode. 
 .PP
+.BR -z|--playback-field-order b|t
+.PP
+This flag forces the playback field order to bottom or top first. And sets
+which field is shown first on a TV. You only need that option when you
+notice some weird "juddering" effects when playing back the stream on a TV.
+You should not need that option because it would point to a problem in the
+capturing/encoding process where the order in time of the two fields in each
+frame can get mislabeled somehow. Also check the mjpeg-howto for
+more information about interlacing problems. 
+.PP
 
 .SH "OPTION LETTERS CONTROLLING VIDEO PARAMETERS"
 .PP
