@@ -73,9 +73,9 @@ class MultiplexJob : public MultiplexParams
 {
 public:
   MultiplexJob();
-  void SetFromCmdLine( int argc, char *argv[]);
+  void SetFromCmdLine( unsigned int argc, char *argv[]);
 private:
-  void InputStreamsFromCmdLine (int argc, char* argv[] );
+  void InputStreamsFromCmdLine (unsigned int argc, char* argv[] );
   static void Usage(char *program_name);
   bool ParseVideoOpt( const char *optarg );
   bool ParseLpcmOpt( const char *optarg );
@@ -95,7 +95,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.2"
-#define MPLEX_DATE   "$Date: 2002/11/01 18:57:40 $"
+#define MPLEX_DATE   "$Date: 2003/02/02 12:18:08 $"
 
 
 #endif // __INTERACT_H__
