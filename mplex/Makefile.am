@@ -51,6 +51,7 @@ noinst_HEADERS = \
 	interact.hpp \
 	mplexconsts.hpp \
 	multiplexor.hpp \
+	outputstrm.hpp \
 	padstrm.hpp \
 	stillsstream.hpp \
 	stream_params.hpp \

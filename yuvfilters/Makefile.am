@@ -24,8 +24,8 @@ noinst_HEADERS = \
 
 yuvkineco_SOURCES = main.c
 yuvkineco_CFLAGS = -DFILTER=yuvkineco
-yuvkineco_LDADD = libyuvfilters.a $(MJPEGLIB) @LIBDL_LIB@
+yuvkineco_LDADD = libyuvfilters.a $(MJPEGLIB)
 
 yuvycsnoise_SOURCES = main.c
 yuvycsnoise_CFLAGS = -DFILTER=yuvycsnoise
-yuvycsnoise_LDADD = libyuvfilters.a $(MJPEGLIB) @LIBDL_LIB@
+yuvycsnoise_LDADD = libyuvfilters.a $(MJPEGLIB)

@@ -18,17 +18,27 @@ bin_SCRIPTS = mjpegtools-config
 # info to be copied into the dist
 #
 EXTRA_DIST = \
-	README.avilib \
-	README.lavpipe \
-	README.transist \
-	README.DV \
-	README.glav \
-	README.AltiVec \
-	HINTS \
-	TODO \
 	BUGS \
 	CHANGES \
+	HINTS \
 	PLANS \
+	README.AltiVec \
+	README.DV \
+	README.avilib \
+	README.glav \
+	README.lavpipe \
+	README.transist \
+	TODO \
+	debian/changelog \
+	debian/control \
+	debian/copyright \
+	debian/libmjpegtools-dev.files \
+	debian/libmjpegtools0.files \
+	debian/mjpegtools.docs \
+	debian/mjpegtools.files \
+	debian/mjpegtools.info \
+	debian/mjpegtools.manpages \
+	debian/rules \
 	mjpeg_howto.txt \
 	mjpegtools.spec \
 	mjpegtools.spec.in \
@@ -65,7 +75,8 @@ rpm: Makefile
 	rpmbuild -ta --clean $(PACKAGE)-$(VERSION).tar.gz
 
 ## make debs
-deb: 
-	mkdir debian/tmp
-	dpkg-buildpackage -rfakeroot
-	rm -r debian/tmp
+deb: Makefile dist
+	-chmod -R +w $(PACKAGE)-$(VERSION)
+	rm -rf $(PACKAGE)-$(VERSION)
+	tar xzf $(PACKAGE)-$(VERSION).tar.gz
+	cd $(PACKAGE)-$(VERSION); dpkg-buildpackage -rfakeroot
