@@ -1,5 +1,5 @@
 /*
- * $Id: pgmtoy4m.c,v 1.4 2003/05/26 18:08:56 sms00 Exp $
+ * $Id: pgmtoy4m.c,v 1.5 2003/05/26 18:17:19 sms00 Exp $
  *
  * pgmtoy4m converts the PGM output of "mpeg2dec -o pgmpipe" to YUV4MPEG2 on
  * stdout.
@@ -223,6 +223,7 @@ usage(void)
 
 	fprintf(stderr, "%s usage: [-v n] [-i t|b|p] [-a sample aspect] [-r rate]\n",
 		__progname);
+	exit(0);
 	}
 
 static int
