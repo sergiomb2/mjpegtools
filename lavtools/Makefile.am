@@ -2,7 +2,8 @@
 
 INCLUDES =  -I$(top_srcdir) -I$(top_srcdir)/mjpeg -I$(includedir) \
 	-DG_LOG_DOMAIN=\"lavtools\" -DLAVPLAY_VERSION=\"$(VERSION)\" \
-	$(MOVTAR_CFLAGS) $(QUICKTIME_CFLAGS) -I /usr/X11R6/include/X11 -I /usr/X11R6/include
+	$(MOVTAR_CFLAGS) $(QUICKTIME_CFLAGS) -I /usr/X11R6/include/X11 \
+        $(DV_CFLAGS) -I /usr/X11R6/include
 # *********************************************************************
 # Support lib
 
@@ -45,7 +46,7 @@ testrec_LDADD = $(PTHREAD_LIBS)
 
 lav2yuv_SOURCES = lav2yuv.c  jpegutils.c $(lav_headers)
 lav2yuv_LDADD = -L$(top_builddir)/lavtools -lavio $(QUICKTIME_LIBS) \
-	$(MOVTAR_LIBS) 	$(JPEG_LIBS)
+	$(MOVTAR_LIBS) 	$(JPEG_LIBS) $(DV_LIBS)
 
 lavpipe_SOURCES = lavpipe.c yuv4mpeg.c pipelist.c $(lav_headers)
 lavpipe_LDADD =

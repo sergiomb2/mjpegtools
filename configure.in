@@ -143,6 +143,9 @@ fi
 
 dnl *********************************************************************
 dnl Check for the libdv
+dnl At the end of this mess, DV_LIBS will contain the libraries and 
+dnl flags needed to link with the jpeg library and DV_CFLAGS will 
+dnl have the needed flags to compile against said library
 AC_SUBST(DV_LIBS)
 AC_SUBST(DV_CFLAGS)
 if test x$with_dv = xyes ; then
@@ -150,7 +153,7 @@ if test x$with_dv = xyes ; then
 *** A directory must be specified for the --with-dv option.])
 else if test x$with_dv = x ; then
   with_dv_l=/usr/local/lib
-  with_dv_i=/usr/local/include
+  with_dv_i=/usr/local/include/libdv
 fi
 fi
 have_dv=false
@@ -160,8 +163,8 @@ else
   EXTRA_LIBS="-L$with_dv$with_dv_l $GLIB_LIBS -ldl -lm"
 fi
 AC_CHECK_LIB(dv, dv_init,
-  [ QUICKTIME_LIBS="-L$with_dv$with_dv_l -ldv ${EXTRA_LIBS}"
-    QUICKTIME_CFLAGS="-I$with_dv$with_dv_i"
+  [ DV_LIBS="-L$with_dv$with_dv_l -ldv ${EXTRA_LIBS}"
+    DV_CFLAGS="-I$with_dv$with_dv_i"
     AC_DEFINE(SUPPORT_READ_DV2)
     AC_DEFINE(SUPPORT_READ_YUV420)
     have_dv=true],, 
@@ -176,8 +179,8 @@ else
   EXTRA_LIBS="-L$with_dv$with_dv_l $GLIB_LIBS -ldl -lm"
 fi
 AC_CHECK_LIB(dv, dv_init,
-  [ QUICKTIME_LIBS="-L$with_dv$with_dv_l -ldv ${EXTRA_LIBS}"
-    QUICKTIME_CFLAGS="-I$with_dv$with_dv_i"
+  [ DV_LIBS="-L$with_dv$with_dv_l -ldv ${EXTRA_LIBS}"
+    DV_CFLAGS="-I$with_dv$with_dv_i"
     AC_DEFINE(LIBDV_PAL_YV12)],,
     -L$with_dv$with_dv_l  ${EXTRA_LIBS})
 fi
