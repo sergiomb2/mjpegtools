@@ -229,136 +229,169 @@ restart:
  * upwards which partly compensates.
  */
 static int trunc_mxcsr = 0x7f80;
- 
+
 static int quant_non_intra_sse( struct QuantizerWorkSpace *wsp,
 								int16_t *src, int16_t *dst,
 								int q_scale_type,
 								int satlim,
 								int *nonsat_mquant)
 {
-	int saturated;
-	float *i_quant_matf; 
-	int mquant = *nonsat_mquant;
-	int   coeff_count = 64*BLOCK_COUNT;
-	uint32_t nzflag, flags;
-	int16_t *psrc, *pdst;
-	float *piqf;
-	int i;
-	uint32_t tmp;
+    int saturated;
+    int mquant = *nonsat_mquant;
+    int   coeff_count = 64*BLOCK_COUNT;
+    uint32_t nzflag, flags;
+    int16_t *psrc, *pdst;
+    float *piqf, *i_quant_matf;
+    int i, oldcsr;
 
-	/* Initialise zero block flags */
-	/* Load 1 into mm6 */
-	__asm__ ( "movl %0, %%eax\n" 
-			  "movd %%eax, %%mm6\n"
-			  : :"g" (1) : "eax" );
-	/* Set up SSE rounding mode */
-	__asm__ ( "ldmxcsr %0\n" : : "X" (trunc_mxcsr) );
+    /* Initialise zero block flags */
+    /* Set up SSE rounding mode */
+    /* __asm__ ( "ldmxcsr %0\n" : : "X" (trunc_mxcsr) ); */
 
-	/* Load satlim into mm1 */
-	movd_m2r( satlim, mm1 );
-	punpcklwd_r2r( mm1, mm1 );
-	punpckldq_r2r( mm1, mm1 );
-restart:
-	i_quant_matf = wsp->i_inter_q_tblf[mquant];
-	flags = 0;
-	piqf = i_quant_matf;
-	saturated = 0;
-	nzflag = 0;
-	psrc = src;
-	pdst = dst;
-	for (i=0; i < coeff_count ; i+=4)
-	{
+    /* register usage:
+       mm0 = saturated (any non 0 value means true)
+       mm1 = satlim (on all 4 16-bit words)
+       mm2 = flags (on all bits)
+       mm3 = temp
+    */
 
-		/* Load 4 words, unpack into mm2 and mm3 (with sign extension!)
-		 */
+    /* Load satlim into mm1 */
+    movd_m2r( satlim, mm1 );
+    punpcklwd_r2r( mm1, mm1 );
+    punpckldq_r2r( mm1, mm1 );
+ restart:
+    i_quant_matf = wsp->i_inter_q_tblf[mquant];
+    piqf = i_quant_matf;
+    pxor_r2r( mm2, mm2 );	// initialize flags
+    pxor_r2r( mm0, mm0 );	// initialize saturated
+    nzflag = 0;
+    psrc = src;
+    pdst = dst;
 
-		movq_m2r( *(mmx_t *)&psrc[0], mm2 );
-		movq_r2r( mm2, mm7 );
-		psraw_i2r( 16, mm7 );	/* Replicate sign bits mm2 in mm7 */
-		movq_r2r( mm2, mm3 );
-		punpcklwd_r2r( mm7, mm2 ); /* Unpack with sign extensions */
-		punpckhwd_r2r( mm7, mm3);
+    for (i=0; i < coeff_count ; i+=8)
+    {
 
-		/* Multiply by sixteen... */
-		pslld_i2r( 4, mm2 );
-		pslld_i2r( 4, mm3 );
+        /* Load 4 words, unpack into mm4 and mm5 (with sign extension!)
+         */
+
+        movq_m2r ( *(mmx_t *)&psrc[0], mm4 );
+        movq_m2r ( *(mmx_t *)&psrc[4], mm6 );
+        prefetcht0( *(mmx_t *)&psrc[8] );
+
+        movq_r2r ( mm4, mm3 );
+        movq_r2r ( mm4, mm5 );
+        psraw_i2r(  16, mm3 );	/* Replicate sign bits mm4 in mm3 */
+        punpcklwd_r2r( mm3, mm4 ); /* Unpack with sign extensions */
+        punpckhwd_r2r( mm3, mm5 );
+
+        movq_r2r ( mm6, mm3 );
+        movq_r2r ( mm6, mm7 );
+        psraw_i2r(  16, mm3 );	/* Replicate sign bits mm4 in mm3 */
+        punpcklwd_r2r( mm3, mm6 ); /* Unpack with sign extensions */
+        punpckhwd_r2r( mm3, mm7 );
+
+        pslld_i2r( 4, mm4 );
+        pslld_i2r( 4, mm5 );
+        pslld_i2r( 4, mm6 );
+        pslld_i2r( 4, mm7 );
 		
-		/*
-		  Convert mm2 and mm3 to float's  in xmm2 and xmm3
-		 */
-		cvtpi2ps_r2r( mm2, xmm2 );
-		cvtpi2ps_r2r( mm3, xmm3 );
-		shufps_r2ri(  xmm3, xmm2, 0*1 + 1*4 + 0 * 16 + 1 * 64 );
+        /*
+          Convert mm4 and mm5 to float's  in xmm4 and xmm5
+        */
+        /* "Divide" by multiplying by inverse quantisation
+           and convert back to integers*/
+        movlps_m2r  ( *(mmx_t*)&piqf[0], xmm0 );
+        cvtpi2ps_r2r(  mm4, xmm4 );
+        mulps_r2r   ( xmm0, xmm4 );
+        cvttps2pi_r2r( xmm4, mm4 );
 
-		/* "Divide" by multiplying by inverse quantisation
-		 and convert back to integers*/
-		mulps_m2r( *(mmx_t*)&piqf[0], xmm2 );
-		cvtps2pi_r2r( xmm2, mm2 );
-		shufps_r2ri( xmm2, xmm2, 2*1 + 3*4 + 0 * 16 + 1 * 64 );
-		cvtps2pi_r2r( xmm2, mm3 );
+        movlps_m2r  ( *(mmx_t*)&piqf[2], xmm1 );
+        cvtpi2ps_r2r(  mm5, xmm5 );
+        mulps_r2r   ( xmm1, xmm5 );
+        cvttps2pi_r2r( xmm5, mm5 );
 
-		/* Convert the two pairs of double words into four words */
-		packssdw_r2r(  mm3, mm2);
+        movlps_m2r  ( *(mmx_t*)&piqf[4], xmm2 );
+        cvtpi2ps_r2r(  mm6, xmm6 );
+        mulps_r2r   ( xmm2, xmm6 );
+        cvttps2pi_r2r( xmm6, mm6 );
 
+        movlps_m2r  ( *(mmx_t*)&piqf[6], xmm3 );
+        cvtpi2ps_r2r(  mm7, xmm7 );
+        mulps_r2r   ( xmm3, xmm7 );
+        cvttps2pi_r2r( xmm7, mm7 );
 
-		/* Accumulate saturation... */
-		movq_r2r( mm2, mm4 );
+        /* Convert the two pairs of double words into four words */
+        packssdw_r2r( mm5, mm4 );
 
-		pxor_r2r( mm5, mm5 );	// mm5 = -mm2
-		pcmpgtw_r2r( mm1, mm4 ); // mm4 = (mm2 > satlim) 
-		psubw_r2r( mm2, mm5 );
-		pcmpgtw_r2r( mm1, mm5 ); // mm5 = -mm2 > satlim
-		por_r2r( mm5, mm4 );  // mm4 = abs(mm2) > satlim
-		movq_r2r( mm4, mm5 );
-		psrlq_i2r( 32, mm5);
-		por_r2r( mm5, mm4 );
+        packssdw_r2r( mm7, mm6 );
 
-		movd_m2r( saturated, mm5 ); // saturated |= mm4
-		por_r2r( mm4, mm5 );
-		movd_r2m( mm5, saturated );
+        /* Store and accumulate zero-ness */
+        /* Accumulate saturation... */
+        pxor_r2r ( mm5, mm5 );	// mm5 = -mm4
+        por_r2r  ( mm4, mm2 );
+        movq_r2m ( mm4, *(mmx_t*)&pdst[0] );
+        psubw_r2r( mm4, mm5 );
 
-		/* Store and accumulate zero-ness */
-		movq_r2r( mm2, mm3 );
-		movq_r2m( mm2, *(mmx_t*)pdst );
-		psrlq_i2r( 32, mm3 );
-		por_r2r( mm3, mm2 );
-		movd_r2m( mm2, tmp );
-		flags |= tmp;
-				
-		piqf += 4;
-		pdst += 4;
-		psrc += 4;
+        pxor_r2r ( mm7, mm7 );	// mm5 = -mm4
+        por_r2r  ( mm6, mm2 );
+        movq_r2m ( mm6, *(mmx_t*)&pdst[4] );
+        psubw_r2r( mm6, mm7 );
 
-		if( (i & 63) == (63/4)*4 )
-		{
+        pcmpgtw_r2r( mm1, mm4 ); // mm4 = (mm4 > satlim) 
+        por_r2r( mm4, mm0 );
 
-			if( saturated )
-			{
-				int new_mquant = next_larger_quant( q_scale_type, mquant );
-				if( new_mquant != mquant )
-				{
-					mquant = new_mquant;
-					goto restart;
-				}
-				else
-				{
-					return quant_non_intra(wsp, src, dst, 
-										   q_scale_type,
-										   satlim,
-										   nonsat_mquant);
-				}
-			}
+        pcmpgtw_r2r( mm1, mm6 ); // mm4 = (mm4 > satlim) 
+        por_r2r( mm6, mm0 );
 
-			nzflag = (nzflag<<1) | !!flags;
-			flags = 0;
-			piqf = i_quant_matf;
-		}
+        pcmpgtw_r2r( mm1, mm5 ); // mm5 = -mm4 > satlim
+        por_r2r( mm5, mm0 );  // mm0 |= abs(mm4) > satlim
+
+        pcmpgtw_r2r( mm1, mm7 ); // mm5 = -mm4 > satlim
+        por_r2r( mm7, mm0 );  // mm0 |= abs(mm4) > satlim
+
+        piqf += 8;
+        pdst += 8;
+        psrc += 8;
+
+        if( (i & 63) == (63/8)*8 )
+        {
+            movq_r2r ( mm0, mm3 ); // collapse saturated into 32 bits
+            psrlq_i2r(  32, mm0 );
+            por_r2r  ( mm3, mm0 );
+            movd_r2m ( mm0, saturated );
+
+            if( saturated )
+            {
+                int new_mquant = next_larger_quant( q_scale_type, mquant );
+                if( new_mquant != mquant )
+                {
+                    mquant = new_mquant;
+                    goto restart;
+                }
+                else
+                {
+                    return quant_non_intra(wsp, src, dst, 
+                                           q_scale_type,
+                                           satlim,
+                                           nonsat_mquant);
+                }
+            }
+
+            movq_r2r ( mm2, mm3 ); // collapse flags into 32 bits
+            psrlq_i2r(  32, mm2 );
+            por_r2r  ( mm3, mm2 );
+            movd_r2m ( mm2, flags );
+
+            nzflag = (nzflag<<1) | !!flags;
+            pxor_r2r( mm2, mm2 );	// initialize flags
+            piqf = i_quant_matf;
+        }
 			
-	}
-	emms();
+    }
+    emms();
 
-	//nzflag = (nzflag<<1) | (!!flags);
-	return nzflag;
+    //nzflag = (nzflag<<1) | (!!flags);
+    return nzflag;
 }
 
 /*
