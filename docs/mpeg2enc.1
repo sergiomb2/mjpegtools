@@ -1,4 +1,4 @@
-.TH "mpeg2enc" "1" "2 June 2001" "MJPEG Linux Square" "MJPEG tools manual"
+.TH "mpeg2enc" "1" "25 Aug 2002" "MJPEG Tools Team" "MJPEG tools manual"
 
 .SH "NAME"
 mpeg2enc \- MPEG 1/2 encoder
@@ -14,6 +14,8 @@ mpeg2enc \- MPEG 1/2 encoder
 .IR bitrate_kbps ]
 .RB [ -V | --video-buffer
 .IR video_buf_size_kB ]
+.RB [ -T | --target-still-size
+.IR still_size_kB ] 
 .RB [ -q | --quantisation
 .IR quantization ]
 .RB [ -r | --motion-search-radius
@@ -107,6 +109,7 @@ stream structure are simply ignored.
 	-	User VCD.
 As for profile 2 but bit-rate and video buffer size can
 be set to non-standard values. Frame size may also be non-standard.
+Bit-rate and buffer sizes default to those for standard VCD.
 .PP
 .BR -f|--format \ 3
 	-	Generic MPEG2.
@@ -131,6 +134,7 @@ non-standard stream structure are simply ignored.
 As for profile 4 but bit-rate, video
 buffer size, GOP sizes and structure can be set to
 non-standard values. Frame size may also be non-standard.
+Bit-rate and buffer sizes default to those for standard SVCD.
 .PP
 .BR -f|--format \ 6
 	-	VCD Stills sequence.
@@ -140,23 +144,22 @@ used for still images on VCDs.  To use this profile you must
 set the target size you wish to compress the images to using the
 -T flag.   Reasonable values are around 35KB for standard resolution
 stills (352 wide) and 120KB for high resolution stills (704 wide).
-.TP
-.BI -T \ num
-Set the target size for VCD still images in KB.
 .PP
 .BR -f|--format \ 7
 	-	SVCD Stills sequence.
 .PP
 Encodes the special style of MPEG stream
 used for still images on SVCDs.  Both standard (480 wide) and high
-resolution (704 wide) images are supported.
+resolution (704 wide) images are supported. As with VCD stills you
+select how big each compressed still should be using the -T flag.
 .PP
-.BR -f|--format \ 8
+.BR -f|--format \ 8|9
 	-	DVD MPEG-2. 
 .PP
 Just a very basic implementation. Useful with DXR2 board and similar
 hardware that can decode MPEG-2 only if it is presented in a DVD like
-form.
+form.  Bit-rate defaults to 7500kbps, buffer sizes to the maximum
+permitted by the DVD specification.
 
 .SH "GENERAL FUNCTION LETTERS"
 .PP
@@ -179,9 +182,10 @@ adjusted for the standard VCD and SVCD profiles.
 .BR -b|--video-bitrate \ num 
 .PP
 The bit-rate of the output video stream in k Bits/sec.  The default is
-exactly the bit-rate required for VCD streams. A sensible bit-rate to
-set for SVCD is 2500.  If variable bit-rate mode has been selected (see the -q option) this
-is the 
+exactly the bit-rate required for VCD streams. Selecting one of the
+non-generic formats sets a default bit-rate that makes sense for the
+selected format. If variable bit-rate mode has been selected (see the
+-q option) this is the
 .I maximum
 bit-rate of the stream.
 .PP
@@ -192,8 +196,9 @@ KBytes.  The default is 46KB the (tiny) size specified for VCD.  The
 size to use for SVCD is the (more reasonable) 230KB.  If you are
 encoding for a half-decent software decoder it makes sense to push
 this up to 500K or more.
-
-
+.PP
+.BR -T|--target-still-size \ num
+Set the target size for (S)VCD still images in KB.
 .PP
 .BR -s|--sequence-header-every-gop
 .PP
@@ -354,6 +359,7 @@ Note that setting -I 1 for non-interlaced material will not do any
 harm but the encoder will waste a lot of time on calculations that
 aren't needed.  
 
+
 .PP
 .BR -g|--min-gop-size " num "
 .PP
@@ -377,6 +383,14 @@ Note: Mpeg2enc is currently hard-wired to produce 2 B frames between
 each I/P frame unless the GOP size forces less.  This is reasonable
 for medium to high bit-rates (>= 1Mbps) but probably sub-optimal for
 low-bit-rate encoding.
+.PP
+.BR -c|--closed-GOPs
+.PP
+Setting this flag causes the encoder to generate only "closed" GOPs
+(Groups of Pictures) that can be decoded without reference to their
+predecessor.  This is useful for streams that are supposed to be used
+in multi-angle DVD's and applications where more easily edittable MPEG
+is required.
 .PP
 .BR -P|--force-b-b-p
 .PP
