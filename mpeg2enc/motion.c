@@ -692,6 +692,7 @@ static void frame_ME(pict_data_s *picture,
 	zeromot_mc.pos.x = i;
 	zeromot_mc.pos.y = j;
 	zeromot_mc.fieldsel = 0;
+	zeromot_mc.fieldoff = 0;
 	zeromot_mc.blk = picture->oldref[0]+mb_row_start+i;
 
 	/* Compute variance MB as a measure of Intra-coding complexity
