@@ -1,5 +1,5 @@
 /*
- * $Id: y4mblack.c,v 1.2 2003/10/04 18:32:07 sms00 Exp $
+ * $Id: y4mblack.c,v 1.3 2003/12/21 07:57:25 sms00 Exp $
  *
  * Used to generate YUV4MPEG2 frames with the specific interlace, 
  * dimensions, pixel aspect  and Y/U/V values.  By default the frames 
@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "yuv4mpeg.h"
 
