@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.h,v 1.4 2001/06/09 12:48:32 wackston Exp $
+    $Id: mjpeg_logging.h,v 1.5 2001/06/17 13:39:08 wackston Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -30,6 +30,9 @@ typedef enum {
   LOG_ERROR
 } log_level_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void
 mjpeg_log(log_level_t level, const char format[], ...) GNUC_PRINTF(2, 3);
 
@@ -57,6 +60,10 @@ mjpeg_error(const char format[], ...) GNUC_PRINTF(1,2);
 
 void
 mjpeg_error_exit1(const char format[], ...) GNUC_PRINTF(1,2);
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* __MJPEG_LOGGING_H__ */
 
 
