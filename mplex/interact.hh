@@ -33,6 +33,7 @@
     Entry points...
 *************************************************************************/
 
+using std::vector;
     
 int intro_and_options( int, char **, char**);
 
@@ -80,7 +81,7 @@ extern off_t opt_max_segment_size;
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.1"
-#define MPLEX_DATE   "$Date: 2002/01/21 21:44:29 $"
+#define MPLEX_DATE   "$Date: 2002/02/04 19:06:14 $"
 
 
 #endif // __INTERACT_H__
