@@ -39,7 +39,7 @@ bin_PROGRAMS = yuvycsnoise yuvkineco yuvfilter
 noinst_LIBRARIES = libyuvfilters.a
 pkglib_LTLIBRARIES = $(YUVFILTER)
 
-AM_CPPFLAGS = -I$(top_srcdir)/utils -I$(top_srcdir)/mjpegtools \
+AM_CPPFLAGS = -I$(top_srcdir)/utils \
 	-DPKGLIBDIR=\"$(pkglibdir)\" -DUSE_LIBYST=1
 MJPEGLIB = $(top_builddir)/utils/libmjpegutils.a
 
