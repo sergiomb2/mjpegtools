@@ -60,9 +60,16 @@
 	* Unified output logging format and consistent command line flags.
 
 	* Lots of bug fixes.
+
+	* Man pages.
+	
+	* Binary packages.
 	
 CVS log:
 $Log: ChangeLog,v $
+Revision 1.12  2001/05/26 12:37:50  wackston
+Tidying doco for packaging...
+
 Revision 1.11  2001/05/10 19:52:36  wackston
 Tidyings and fixing up to the 1.4 release.
 
