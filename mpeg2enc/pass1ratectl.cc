@@ -230,9 +230,9 @@ void Pass1RateCtl::InitGOP( int np, int nb)
 
 
 /* Step 1: compute target bits for current picture being coded */
-void Pass1RateCtl::InitPict(Picture &picture, int64_t bitcount_SOP)
+void Pass1RateCtl::InitNewPict(Picture &picture, int64_t bitcount_SOP)
 {
-	double target_Q;
+ 	double target_Q;
 	double current_Q;
 	int available_bits;
 	double Xsum,varsum;
@@ -302,8 +302,6 @@ void Pass1RateCtl::InitPict(Picture &picture, int64_t bitcount_SOP)
 							  );
 	}
 
-	min_q = min_d = INT_MAX;
-	max_q = max_d = INT_MIN;
     Xsum = 0.0;
     int i;
     for( i = FIRST_PICT_TYPE; i <= LAST_PICT_TYPE; ++i )
@@ -377,7 +375,10 @@ void Pass1RateCtl::InitPict(Picture &picture, int64_t bitcount_SOP)
 
 }
 
-
+void Pass1RateCtl::InitKnownPict(Picture &picture)
+{
+    abort();
+}
 
 /*
  * Update rate-controls statistics after pictures has ended..
@@ -386,7 +387,8 @@ void Pass1RateCtl::InitPict(Picture &picture, int64_t bitcount_SOP)
  * rate constraints...
  */
 
-int Pass1RateCtl::UpdatePict(Picture &picture, int64_t _bitcount_EOP)
+void Pass1RateCtl::UpdatePict( Picture &picture, int64_t _bitcount_EOP,
+                               int &padding_needed, bool &recode )
 {
 	double X;
 	double K;
@@ -524,7 +526,8 @@ int Pass1RateCtl::UpdatePict(Picture &picture, int64_t _bitcount_EOP)
                 
 	VbvEndOfPict(picture, bitcount_EOP);
 
-    return 0;                   // No Padding bits
+    padding_needed = 0;
+    recode = false;
 }
 
 /* compute initial quantization stepsize (at the beginning of picture) 

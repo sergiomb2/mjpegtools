@@ -34,11 +34,14 @@ public:
     RateCtl( EncoderParams &encoder );
 	virtual void InitSeq( bool reinit ) = 0;
 	virtual void InitGOP( int nb, int np ) = 0;
-	virtual void InitPict (Picture &picture, int64_t bitcount)= 0;
-	virtual int UpdatePict (Picture &picture, int64_t bitcount) = 0;
+	virtual void InitNewPict (Picture &picture, int64_t bitcount) = 0;
+	virtual void InitKnownPict (Picture &picture) = 0;
+	virtual void UpdatePict (Picture &picture, int64_t bitcount, 
+                             int &padding_needed, bool &recode ) = 0;
 	virtual int  MacroBlockQuant( const MacroBlock &mb, int64_t bitcount) = 0;
 	virtual int  InitialMacroBlockQuant(Picture &picture) = 0;
 	virtual void CalcVbvDelay (Picture &picture) = 0;
+
     static double InvScaleQuant(  int q_scale_type, int raw_code );
     static int ScaleQuant( int q_scale_type, double quant );
 protected:
@@ -53,8 +56,10 @@ public:
 	OnTheFlyRateCtl( EncoderParams &encoder );
 	virtual void InitSeq( bool reinit );
 	virtual void InitGOP( int nb, int np );
-	virtual void InitPict (Picture &picture, int64_t bitcount);
-	virtual int UpdatePict (Picture &picture, int64_t bitcount);
+	virtual void InitNewPict (Picture &picture, int64_t bitcount);
+	virtual void InitKnownPict (Picture &picture);
+	virtual void UpdatePict ( Picture &picture, int64_t bitcount,
+                              int &padding_needed, bool &recode );
 	virtual int  MacroBlockQuant( const MacroBlock &mb, int64_t bitcount );
 	virtual int  InitialMacroBlockQuant(Picture &picture);
 	virtual void CalcVbvDelay (Picture &picture);
@@ -154,12 +159,20 @@ private:
      *
      */
     int32_t pict_base_bits[NUM_PICT_TYPES];
-
     bool first_encountered[NUM_PICT_TYPES];
+
+    
+    /*
+     * Reinitialisation data for recoding pictures where prediction is too
+     * far off.
+     *
+     */
+    double actual_Xhi;
+    double actual_avg_Q;
+
 
     // Some statistics for measuring if things are going well.
     double sum_size[NUM_PICT_TYPES];
-
     int pict_count[NUM_PICT_TYPES];
 
 	// VBV calculation data
@@ -175,8 +188,10 @@ public:
 	Pass1RateCtl( EncoderParams &encoder );
 	virtual void InitSeq( bool reinit );
 	virtual void InitGOP( int nb, int np );
-	virtual void InitPict (Picture &picture, int64_t bitcount);
-	virtual int UpdatePict (Picture &picture, int64_t bitcount);
+	virtual void InitNewPict (Picture &picture, int64_t bitcount);
+	virtual void InitKnownPict (Picture &picture);
+	virtual void UpdatePict (Picture &picture, int64_t bitcount,
+                            int &padding_needed, bool &recode);
 	virtual int  MacroBlockQuant( const MacroBlock &mb, int64_t bitcount );
 	virtual int  InitialMacroBlockQuant(Picture &picture);
 	virtual void CalcVbvDelay (Picture &picture);
@@ -239,9 +254,6 @@ private:
     int N[NUM_PICT_TYPES];
 	int64_t S;
 
-
-	int min_d, max_d;
-	int min_q, max_q;
 
 	double bits_per_mb;
 	bool fast_tune;

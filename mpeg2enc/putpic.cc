@@ -343,10 +343,6 @@ void Picture::PutSliceHdr( int slice_mb_y )
  * putpict - Quantise and encode picture with Sequence and GOP headers
  * as required.
  *
- *
- * TODO: Really we should seperate the Sequence start / GOP start logic
- * out.
- *
  ******************/
 
 void Picture::PutHeadersAndEncoding( RateCtl &ratecontrol )
@@ -370,30 +366,17 @@ void Picture::PutHeadersAndEncoding( RateCtl &ratecontrol )
 		ratecontrol.InitGOP( np, nb);
 	}
 
+    MPEG2CoderState pre_picture_state = coder.CurrentState();
 	ratecontrol.CalcVbvDelay(*this);
-    ratecontrol.InitPict(*this, coder.BitCount()); /* set up rate control */
-
-	/* Sequence header if new sequence or we're generating for a
-       format like (S)VCD that mandates sequence headers every GOP to
-       do fast forward, rewind etc.
-	*/
-
-    if( new_seq || decode == 0 ||
-        (gop_start && encparams.seq_hdr_every_gop) )
+    ratecontrol.InitNewPict(*this, coder.BitCount()); /* set up rate control */
+    bool recoding_suggested = TryEncoding(ratecontrol);
+    if( recoding_suggested )
     {
-		coder.PutSeqHdr();
+        mjpeg_info( "RECODING!");
+        coder.RestoreCodingState( pre_picture_state );
+        ratecontrol.InitKnownPict(*this);
+        TryEncoding(ratecontrol);
     }
-	if( gop_start )
-	{
-		/* set closed_GOP in first GOP only No need for per-GOP seqhdr
-		   in first GOP as one has already been created.
-		*/
-        
-		coder.PutGopHdr( decode,  closed_gop );
-	}
-    
-    QuantiseAndPutEncoding(ratecontrol);
-    coder.AlignBits();
 }
 
 /* ************************************************
@@ -408,11 +391,27 @@ void Picture::PutHeadersAndEncoding( RateCtl &ratecontrol )
  *
  * *********************************************** */
 
-void Picture::QuantiseAndPutEncoding(RateCtl &ratectl)
+bool Picture::TryEncoding(RateCtl &ratectl)
 {
+	/* Sequence header if new sequence or we're generating for a
+       format like (S)VCD that mandates sequence headers every GOP to
+       do fast forward, rewind etc.
+	*/
+
+    if( new_seq || decode == 0 ||
+        (gop_start && encparams.seq_hdr_every_gop) )
+    {
+		coder.PutSeqHdr();
+    }
+	if( gop_start )
+	{
+		coder.PutGopHdr( decode,  closed_gop );
+	}
+    
 	int i, j, k;
 	int MBAinc;
 	MacroBlock *cur_mb = 0;
+
     
 	/* picture header and picture coding extension */
     PutHeader();
@@ -521,10 +520,13 @@ void Picture::QuantiseAndPutEncoding(RateCtl &ratectl)
         } /* Slice MB loop */
     } /* Slice loop */
     int64_t bitcount_EOP = coder.BitCount();
-	int padding_needed = ratectl.UpdatePict(*this, bitcount_EOP );
+	int padding_needed;
+    bool recoding_suggested;
+    ratectl.UpdatePict( *this, bitcount_EOP, 
+                        padding_needed, recoding_suggested );
+    coder.AlignBits();
     if( padding_needed > 0 )
     {
-        coder.AlignBits();          // Important: per-pic rate control byte based
         mjpeg_debug( "Padding coded picture to size: %d extra bytes", 
                      padding_needed );
         for( i = 0; i < padding_needed; ++i )
@@ -532,7 +534,7 @@ void Picture::QuantiseAndPutEncoding(RateCtl &ratectl)
             coder.PutBits(0, 8);
         }
     }
-    
+    return recoding_suggested;
 }
 
 

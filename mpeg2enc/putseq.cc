@@ -443,6 +443,8 @@ void SeqEncoder::GopStart( StreamState *ss )
 		ss->new_seq = true;
 	}
 
+    /* Normally set closed_GOP in first GOP only...   */
+
     ss->closed_gop = ss->i == 0 || encparams.closed_GOPs;
 	ss->gop_start_frame = ss->seq_start_frame + ss->i;
 	

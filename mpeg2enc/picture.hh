@@ -101,7 +101,7 @@ public:
 
     // In putpic..c
     void PutHeadersAndEncoding( RateCtl &ratecontrol );
-    void QuantiseAndPutEncoding(RateCtl &ratecontrol);
+    bool TryEncoding(RateCtl &ratecontrol);
     void PutHeader(); 
 
     // In ratectl.cc
