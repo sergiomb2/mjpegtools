@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.h,v 1.7 2003/02/12 21:36:32 wackston2 Exp $
+    $Id: mjpeg_logging.h,v 1.8 2004/09/01 02:55:30 sms00 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -21,7 +21,7 @@
 #ifndef __MJPEG_LOGGING_H__
 #define __MJPEG_LOGGING_H__
 
-#include "mjpeg_types.h"
+#include <mjpeg_types.h>
 
 typedef enum {
   LOG_NONE = 0,
