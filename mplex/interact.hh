@@ -32,7 +32,6 @@ class IBitStream;
 
 using std::vector;
 
-
 /*************************************************************************
  *
  * The Multiplexor job Parameters:
@@ -84,6 +83,7 @@ public:
   vector<IBitStream *> ac3_files;
   vector<IBitStream *> lpcm_files;
   vector<IBitStream *> video_files;
+  vector<IBitStream *> z_alpha_files;
   vector<LpcmParams *> lpcm_param;
   vector<VideoParams *> video_param;
 };
@@ -95,7 +95,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.2"
-#define MPLEX_DATE   "$Date: 2003/02/02 12:18:08 $"
+#define MPLEX_DATE   "$Date: 2003/02/10 16:51:16 $"
 
 
 #endif // __INTERACT_H__
