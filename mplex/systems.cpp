@@ -506,31 +506,14 @@ PS_Stream::CreateSector (Pack_struc	 	 *pack,
 
     actual_packet_data_size = mux_strm.ReadPacketPayload(index,packet_data_to_read);
 
+    bytes_short = target_packet_data_size - actual_packet_data_size;
 #ifdef MUX_DEBUG
     if( type == PRIVATE_STR_1 )
     {
-        unsigned int syncwords_found;
-        for( i = 0; i < actual_packet_data_size; ++i )
-        {
-            if( index[i+4] == 0x0b && 
-                i+5 < actual_packet_data_size && index[i+5] == 0x77 )
-            {
-                if( syncwords_found == 0 )
-                {
-                    if(  ac3_header[2] != static_cast<uint8_t>((i+1) >>8) ||
-                         ac3_header[3] != static_cast<uint8_t>((i+1) & 0xff) )
-                        printf( "BROKEN HEADER %2x %2x (%2x %2x)\n",
-                                ac3_header[2],
-                                ac3_header[3],
-                                static_cast<uint8_t>((i+1) >>8),
-                                static_cast<uint8_t>((i+1) & 0xff) );
-                }
-                ++syncwords_found;
-            }
-        }
+        mjpeg_info( "Substream %02x short %d", index[0], bytes_short );
+
     }
 #endif
-    bytes_short = target_packet_data_size - actual_packet_data_size;
 	
     /* Handle the situations where we don't have enough data to fill
        the packet size fully ...  small shortfalls are dealt with here
@@ -560,7 +543,7 @@ PS_Stream::CreateSector (Pack_struc	 	 *pack,
             {
                 uint8_t *pes_header_len_offset = size_offset + 4;
                 unsigned int pes_header_len = 
-                    index-(pes_header_len_offset+1);
+                    index+bytes_short-(pes_header_len_offset+1);
                 *pes_header_len_offset = static_cast<uint8_t>(pes_header_len);	            }
         }
         index += bytes_short;
