@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_types.h,v 1.5 2001/12/02 18:57:20 waldviertler Exp $
+    $Id: mjpeg_types.h,v 1.6 2002/04/27 22:03:57 rbultje Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -65,6 +65,10 @@ typedef enum
 #  define true    true
 #  define bool locBool
 # endif
+#endif
+
+#ifndef PRId64
+#define PRId64 PRID64_STRING_FORMAT
 #endif
 
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
