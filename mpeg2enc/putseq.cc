@@ -694,7 +694,7 @@ void SeqEncoder::Encode()
     //
     despatcher.Init( encparams.mb_width, 
                      encparams.mb_height, 
-                     2 );
+                     encparams.num_cpus );
     int i;
 	Picture *b_pictures[encparams.max_active_b_frames];
 	Picture *ref_pictures[encparams.max_active_ref_frames];

@@ -49,7 +49,6 @@
 #include "elemstrmwriter.hh"
 #include "mpeg2encoder.hh"
 #include <cassert>
-#include <stdio.h>
 #include <string.h>
 
 ElemStrmWriter::ElemStrmWriter(EncoderParams &_encparams ) :
@@ -135,31 +134,11 @@ void ElemStrmWriter::PutBits(uint32_t val, int n)
 }
 
 
-
-FILE_StrmWriter::FILE_StrmWriter( EncoderParams &encparams, const char *outfilename ) :
-	ElemStrmWriter( encparams )
-{
-	/* open output file */
-	if (!(outfile=fopen(outfilename,"wb")))
-	{
-		mjpeg_error_exit1("Couldn't create output file %s",outfilename);
-	}
-}
-
-void FILE_StrmWriter::WriteOutBufferUpto( const size_t flush_upto )
-{
-	size_t written = fwrite( buffer, 
-							 sizeof(uint8_t), flush_upto,
-							 outfile );
-	if( written != flush_upto )
-	{
-		mjpeg_error_exit1( strerror(ferror(outfile)) );
-	}
-	
-}
-
-FILE_StrmWriter::~FILE_StrmWriter()
-{
-	fclose( outfile );
-}
-
+
+/* 
+ * Local variables:
+ *  c-file-style: "stroustrup"
+ *  tab-width: 4
+ *  indent-tabs-mode: nil
+ * End:
+ */

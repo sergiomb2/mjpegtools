@@ -494,6 +494,11 @@ void init_quantizer( struct QuantizerCalls *calls,
     int q, i;
     struct QuantizerWorkSpace *wsp =
         bufalloc(sizeof(struct QuantizerWorkSpace));
+    if( ((int)wsp)%16 != 0 )
+    {
+        printf( "BANG!");
+        abort();
+    }
     *workspace = wsp;
     for (i = 0; i < 64; i++)
     {

@@ -22,8 +22,8 @@
  */
 
 #include <config.h>
-#include <mjpeg_types.h>
 #include <pthread.h>
+#include "mjpeg_types.h"
 #include "picture.hh"
 
 class EncoderParams;
@@ -72,20 +72,6 @@ protected:
     int istrm_nframes;
 };
 
-class Y4MPipeReader : public PictureReader
-{
-public:
-    Y4MPipeReader( EncoderParams &encparams, int pipe_fd );
-    ~Y4MPipeReader() {}
-    void StreamPictureParams( MPEG2EncInVidParams &strm );
-protected:
-    bool LoadFrame( );
-private:
-    int PipeRead(  uint8_t *buf, int len);
-
-    int pipe_fd;
-};
- 
 
 /* 
  * Local variables:

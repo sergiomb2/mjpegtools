@@ -21,7 +21,6 @@
  */
 
 #include <config.h>
-#include "stdio.h"
 #include "mjpeg_types.h"
 
 class EncoderParams;
@@ -111,17 +110,6 @@ private:
     int last_flushed_serial_id; // Serial Id of buffer state flushed last
 };
 
-
-class FILE_StrmWriter : public ElemStrmWriter
-{
-public:
-    FILE_StrmWriter( EncoderParams &encoder, const char *ofile_ptr ); 
-    virtual ~FILE_StrmWriter();       
-    virtual void WriteOutBufferUpto( const size_t flush_upto );
-
-private:
-    FILE *outfile;
-};
 
 /* 
  * Local variables:

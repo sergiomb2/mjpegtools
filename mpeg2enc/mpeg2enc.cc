@@ -65,13 +65,210 @@
 #include "ratectl.hh"
 #include "seqencoder.hh"
 #include "mpeg2coder.hh"
+
 #include "format_codes.h"
+#include "mpegconsts.h"
+#include "yuv4mpeg.h"
 
 #ifdef HAVE_ALTIVEC
 /* needed for ALTIVEC_BENCHMARK and print_benchmark_statistics() */
 #include "../utils/altivec/altivec_conf.h"
 #endif
 
+
+
+/**************************
+ *
+ * Derived class for File (actually: pipe and FIFO) based bitstream output
+ *
+ *************************/
+
+
+
+class FILE_StrmWriter : public ElemStrmWriter
+{
+public:
+
+
+    FILE_StrmWriter( EncoderParams &encparams, const char *outfilename ) :
+        ElemStrmWriter( encparams )
+        {
+            /* open output file */
+            if (!(outfile=fopen(outfilename,"wb")))
+            {
+                mjpeg_error_exit1("Couldn't create output file %s",outfilename);
+            }
+        }
+
+    virtual void WriteOutBufferUpto( const size_t flush_upto )
+        {
+            size_t written = fwrite( buffer, 
+                                     sizeof(uint8_t), flush_upto,
+                                     outfile );
+            if( written != flush_upto )
+            {
+                mjpeg_error_exit1( strerror(ferror(outfile)) );
+            }
+	
+        }
+
+    virtual ~FILE_StrmWriter()
+        {
+            fclose( outfile );
+        }
+
+
+
+private:
+    FILE *outfile;
+};
+
+
+
+
+/**************************
+ *
+ * Derived class for File (actually: pipe and FIFO) based input of frames
+ * in the YUV4MPEG2 format
+ *
+ *************************/
+
+class Y4MPipeReader : public PictureReader
+{
+public:
+
+    Y4MPipeReader( EncoderParams &encparams, int istrm_fd ) :
+        PictureReader( encparams ),
+        pipe_fd( istrm_fd )
+        {
+        }
+    ~Y4MPipeReader() {}
+    void StreamPictureParams( MPEG2EncInVidParams &strm );
+protected:
+    bool LoadFrame( );
+private:
+    int PipeRead(  uint8_t *buf, int len);
+
+    int pipe_fd;
+};
+ 
+
+
+
+
+/****************************************
+ *
+ * Initialise the reader and return the parameter of the video stream
+ * to be encoded.
+ *
+ * WARNING: This routine must run before encoder parameters are defined.
+ * TODO: Reader should be constructed before EncoderParams and this
+ * routine invoked from EncoderParams constructor...
+ *
+ *****************************************/
+
+void Y4MPipeReader::StreamPictureParams( MPEG2EncInVidParams &strm )
+{
+   int n;
+   y4m_ratio_t sar;
+   y4m_stream_info_t si;
+
+   y4m_init_stream_info (&si);  
+   if ((n = y4m_read_stream_header (pipe_fd, &si)) != Y4M_OK) {
+       mjpeg_log( LOG_ERROR, 
+                  "Could not read YUV4MPEG2 header: %s!",
+                  y4m_strerr(n));
+      exit (1);
+   }
+
+   strm.horizontal_size = y4m_si_get_width(&si);
+   strm.vertical_size = y4m_si_get_height(&si);
+   strm.frame_rate_code = mpeg_framerate_code(y4m_si_get_framerate(&si));
+   strm.interlacing_code = y4m_si_get_interlace(&si);
+
+   /* Deduce MPEG aspect ratio from stream's frame size and SAR...
+      (always as an MPEG-2 code; that's what caller expects). */
+   sar = y4m_si_get_sampleaspect(&si);
+   strm.aspect_ratio_code = 
+       mpeg_guess_mpeg_aspect_code(2, sar, 
+                                   strm.horizontal_size, 
+                                   strm.vertical_size);
+   if(strm.horizontal_size <= 0)
+   {
+       mjpeg_error_exit1("Horizontal size from input stream illegal");
+   }
+   if(strm.vertical_size <= 0)
+   {
+       mjpeg_error("Vertical size from input stream illegal");
+   }
+}
+
+/*****************************
+ *
+ * LoadFrame - pull in the image data planes from pipe (planar YUV420)
+ *
+ * RETURN: true iff EOF or ERROR
+ *
+ ****************************/
+
+bool Y4MPipeReader::LoadFrame( )
+{
+   y4m_frame_info_t fi;
+   int h,v,y;
+   y4m_init_frame_info (&fi);
+   int buffer_slot = frames_read % input_imgs_buf_size;
+
+
+   if ((y = y4m_read_frame_header (pipe_fd, &fi)) != Y4M_OK) 
+   {
+       if( y != Y4M_ERR_EOF )
+           mjpeg_log (LOG_WARN, 
+                      "Error reading frame header (%d): code%s!", 
+                      frames_read,
+                      y4m_strerr (y));
+       return true;
+      }
+      
+   v = encparams.vertical_size;
+   h = encparams.horizontal_size;
+   int i;
+   for(i=0;i<v;i++)
+   {
+       if( PipeRead(input_imgs_buf[buffer_slot][0]+i*encparams.phy_width,h)!=h)
+           return true;
+   }
+   lum_mean[buffer_slot] = LumMean(input_imgs_buf[buffer_slot][0] );
+   v = encparams.vertical_size/2;
+   h = encparams.horizontal_size/2;
+   for(i=0;i<v;i++)
+   {
+       if(PipeRead(input_imgs_buf[buffer_slot][1]+i*encparams.phy_chrom_width,h)!=h)
+           return true;
+   }
+   for(i=0;i<v;i++)
+   {
+       if(PipeRead(input_imgs_buf[buffer_slot][2]+i*encparams.phy_chrom_width,h)!=h)
+           return true;
+   }
+   return false;
+}
+
+
+
+int Y4MPipeReader::PipeRead(uint8_t *buf, int len)
+{
+   int n, r;
+
+   r = 0;
+
+   while(r<len)
+   {
+      n = read(pipe_fd,buf+r,len-r);
+      if(n==0) return r;
+      r += n;
+   }
+   return r;
+}
 
 
 
@@ -683,9 +880,9 @@ int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
 			break;
 		case 'Q' :
 			act_boost = atof(optarg);
-			if( act_boost <-4.0 || act_boost > 10.0)
+			if( act_boost <-4.0 || act_boost > 4.0)
 			{
-				mjpeg_error( "-q option requires arg -4.0 .. 10.0");
+				mjpeg_error( "-q option requires arg -4.0 .. 4.0");
 				++nerr;
 			}
 			break;
@@ -732,6 +929,7 @@ int MPEG2EncCmdLineOptions::SetFromCmdLine( int argc,	char *argv[] )
 
     return nerr;
 }
+
 
 
 
