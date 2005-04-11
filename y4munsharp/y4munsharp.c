@@ -1,5 +1,5 @@
 /* 
- * $Id: y4munsharp.c,v 1.5 2004/12/24 23:31:24 sms00 Exp $
+ * $Id: y4munsharp.c,v 1.6 2005/04/11 18:16:42 sms00 Exp $
  *
  * Constructed using:
  * unsharp.c 0.10 -- This is a plug-in for the GIMP 1.0
@@ -45,7 +45,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-#include <math.h>
 #include <yuv4mpeg.h>
 
 #define MAX(a,b) ((a) >= (b) ? (a) : (b))
