@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.c,v 1.13 2004/12/24 23:12:03 sms00 Exp $
+    $Id: mjpeg_logging.c,v 1.14 2005/05/18 17:21:47 sms00 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -23,17 +23,12 @@
 # include <config.h>
 #endif
 
-#ifdef _WIN32
-#include <win32defs.h>
-#endif
-
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
 
-extern int fred;
 #include "mjpeg_logging.h"
 
 #define MAX_DEFAULT_ID_SIZE 16

@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_types.h,v 1.13 2005/02/18 05:26:27 sms00 Exp $
+    $Id: mjpeg_types.h,v 1.14 2005/05/18 17:21:47 sms00 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -32,8 +32,6 @@
 # include <stdint.h>
 #elif defined(HAVE_INTTYPES_H)
 # include <inttypes.h>
-#elif  defined(_WIN32)
-#include <win32defs.h>
 #else
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
