@@ -1,5 +1,5 @@
 /*
- * $Id: yuyvtoy4m.c,v 1.1 2005/04/23 03:31:14 sms00 Exp $
+ * $Id: yuyvtoy4m.c,v 1.2 2005/05/25 02:28:28 sms00 Exp $
  *
  * A simple progam that can be used to convert 'yuyv' (also known as yuv2)
  * 4:2:2 packed into 4:2:2 planar format.  Additional packings may be added
@@ -64,7 +64,7 @@ main(int argc, char **argv)
 	if	(argc == 1)
 		usage();
 
-	while	((c = getopt(argc, argv, "w:h:r:i:a:")) != EOF)
+	while	((c = getopt(argc, argv, "w:h:r:i:a:k")) != EOF)
 		{
 		switch	(c)
 			{
