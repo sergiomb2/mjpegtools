@@ -1,5 +1,5 @@
 /*
- * $Id: y4mblack.c,v 1.6 2004/07/17 16:19:17 sms00 Exp $
+ * $Id: y4mblack.c,v 1.7 2005/06/17 00:30:02 sms00 Exp $
  *
  * Used to generate YUV4MPEG2 frames with the specific interlace, 
  * dimensions, pixel aspect  and Y/U/V values.  By default the frames 
@@ -29,7 +29,7 @@ static	void	chroma_usage(void);
 int
 main(int argc, char **argv)
 	{
-	int	sts, c, width = 720, height = 480, noheader = 0;
+	int	sts, c, width = 640, height = 480, noheader = 0;
 	int	Y = 16, U = 128, V = 128, chroma_mode = Y4M_CHROMA_420MPEG2;
 	int	numframes = 1, force = 0;
 	y4m_ratio_t	rate_ratio = y4m_fps_NTSC;
@@ -179,7 +179,7 @@ void usage(void)
 	fprintf(stderr, "\n      NOTE: Only 3 plane formats supported");
 	fprintf(stderr, "\n  Allow out of range Y/U/V values [-f]");
 	fprintf(stderr, "\n  Numframes [-n num] (1)");
-	fprintf(stderr, "\n  Width [-w width] (720)");
+	fprintf(stderr, "\n  Width [-w width] (640)");
 	fprintf(stderr, "\n  Height [-h height] (480)");
 	fprintf(stderr, "\n  Interlace codes [-i X] p (none/progressive) t (top first) b (bottom first) (p)");
 	fprintf(stderr, "\n  Rate (as ratio) [-r N:M] (30000:1001)");
