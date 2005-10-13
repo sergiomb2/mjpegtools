@@ -1,5 +1,5 @@
 /*
- * $Id: pgmtoy4m.c,v 1.15 2004/05/07 04:19:45 sms00 Exp $
+ * $Id: pgmtoy4m.c,v 1.16 2005/10/13 04:40:24 sms00 Exp $
  *
  * pgmtoy4m converts the PGM output of "mpeg2dec -o pgmpipe" to YUV4MPEG2 on
  * stdout.
@@ -84,7 +84,7 @@ main(int argc, char **argv)
 	int	ss_h, ss_v, chroma_height, chroma_width;
 	int	chroma_mode = Y4M_UNKNOWN;
 	u_char	*yuv[3];
-	char	junkbuffer[16384];
+	u_char	junkbuffer[16384];
 	y4m_ratio_t	rate_ratio = y4m_fps_UNKNOWN;
 	y4m_ratio_t	aspect_ratio = y4m_sar_UNKNOWN;
 	char	ilace = Y4M_ILACE_TOP_FIRST;
