@@ -64,7 +64,8 @@ public:
   bool stills;
   int verbose;
   int max_timeouts;
-  char *outfile_pattern;
+  const char *outfile_pattern;
+  const char *vdr_index_pathname;
   int max_segment_size;
   int min_pes_header_len;
   Workarounds workarounds;      // Special work-around flags that
@@ -140,7 +141,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.4"
-#define MPLEX_DATE   "$Date: 2005/08/28 17:50:54 $"
+#define MPLEX_DATE   "$Date: 2005/11/07 01:17:40 $"
 
 #endif // __INTERACT_H__
 
