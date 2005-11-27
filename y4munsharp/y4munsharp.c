@@ -1,5 +1,5 @@
 /* 
- * $Id: y4munsharp.c,v 1.6 2005/04/11 18:16:42 sms00 Exp $
+ * $Id: y4munsharp.c,v 1.7 2005/11/27 17:26:50 sms00 Exp $
  *
  * Constructed using:
  * unsharp.c 0.10 -- This is a plug-in for the GIMP 1.0
@@ -186,13 +186,13 @@ main(int argc, char **argv)
 	y4m_copy_stream_info(&ostream, &istream);
 	y4m_write_stream_header(fileno(stdout), &ostream);
 
-	mjpeg_log(LOG_INFO, "Luma radius: %lf", y_radius);
-	mjpeg_log(LOG_INFO, "Luma amount: %lf", y_amount);
+	mjpeg_log(LOG_INFO, "Luma radius: %f", y_radius);
+	mjpeg_log(LOG_INFO, "Luma amount: %f", y_amount);
 	mjpeg_log(LOG_INFO, "Luma threshold: %d", y_threshold);
 	if	(uv_radius != -1.0)
 		{
-		mjpeg_log(LOG_INFO, "Chroma radius: %lf", uv_radius);
-		mjpeg_log(LOG_INFO, "Chroma amount: %lf", uv_amount);
+		mjpeg_log(LOG_INFO, "Chroma radius: %f", uv_radius);
+		mjpeg_log(LOG_INFO, "Chroma amount: %f", uv_amount);
 		mjpeg_log(LOG_INFO, "Chroma threshold: %d", uv_threshold);
 		}
 
