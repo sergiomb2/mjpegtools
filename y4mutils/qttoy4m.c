@@ -1,5 +1,5 @@
 /*
- * $Id: qttoy4m.c,v 1.2 2005/11/28 18:46:27 sms00 Exp $
+ * $Id: qttoy4m.c,v 1.3 2005/11/28 23:24:45 sms00 Exp $
  *
  * Extract uncompressed Y'CbCr data from a Quicktime file and generate a
  * YUV4MPEG2 stream.  As many of the attributes (frame rate, sample aspect, etc)
@@ -223,13 +223,6 @@ int main(int argc, char *argv[])
 
 	lqt_colormodel_get_chroma_sub(cmodel, &ss_h, &ss_v);
 	y4m_si_set_chroma(&ostream, y4mchroma);
-
-/*
- * This should not be necessary but lqt assumes the row_span from the
- * stream format rather than the model set by lqt_set_cmodel()
-*/
-	lqt_set_row_span(file, vtrack, width);
-	lqt_set_row_span_uv(file, vtrack, width / ss_h);
 
 /*
  * If interlacing was specified on the commandline use it (override/ignore
