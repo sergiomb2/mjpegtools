@@ -1,5 +1,5 @@
 /*
- * $Id: y4mtoqt.c,v 1.4 2005/11/27 04:22:34 sms00 Exp $
+ * $Id: y4mtoqt.c,v 1.5 2005/11/28 04:56:40 sms00 Exp $
  *
  * Simple utility to place 4:2:2 YUV4MPEG2 data in a quicktime wrapper.   An
  * audio track can also be added by specifying '-a wavfile' (16bit pcm only).
@@ -100,7 +100,7 @@ main(int argc, char **argv)
 			qtchroma = QUICKTIME_2VUY;	/* 2vuy */
 			break;
 		case	Y4M_CHROMA_444:			/* v308 */
-			qtchroma = QUICKTIME_YUV444;    /* QUICKTIME_V308 */
+			qtchroma = QUICKTIME_V308;
 			break;
 		default:
 			mjpeg_error_exit1("unsupported chroma sampling: %d",
