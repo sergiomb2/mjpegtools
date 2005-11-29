@@ -1,5 +1,5 @@
 /*
- * $Id: qttoy4m.c,v 1.3 2005/11/28 23:24:45 sms00 Exp $
+ * $Id: qttoy4m.c,v 1.4 2005/11/29 22:24:02 sms00 Exp $
  *
  * Extract uncompressed Y'CbCr data from a Quicktime file and generate a
  * YUV4MPEG2 stream.  As many of the attributes (frame rate, sample aspect, etc)
@@ -211,10 +211,10 @@ int main(int argc, char *argv[])
 		}
 
 /*
- * Report unsupported conversions - the only conversions known to be
- * missing are BC_YUV422P16 -> BC_YUV422P and 444P16 -> 444P.  This means that
- * 'v210' and 'v410' files can't be processed at the present time.  IF the 
- * output model is set (non 0) then check if the conversion is supported.
+ * Report unsupported conversions - the only conversion known to be missing
+ * is the 444P16 -> 444P.  This means that 'v410' files can't be processed at 
+ * the present time.  IF the output model is set (non 0) then check if the 
+ * conversion is supported.
 */
 	if	(omodel && !lqt_colormodel_has_conversion(cmodel, omodel))
 		mjpeg_error_exit1("libquicktime can't convert from %s to %s :(",
