@@ -1,5 +1,5 @@
 /*
- * $Id: qttoy4m.c,v 1.6 2005/12/03 05:21:37 sms00 Exp $
+ * $Id: qttoy4m.c,v 1.7 2005/12/04 17:18:36 sms00 Exp $
  *
  * Extract uncompressed Y'CbCr data from a Quicktime file and generate a
  * YUV4MPEG2 stream.  As many of the attributes (frame rate, sample aspect, etc)
@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <quicktime.h>
 #include <lqt.h>
 #include <colormodels.h>
 #include "yuv4mpeg.h"
