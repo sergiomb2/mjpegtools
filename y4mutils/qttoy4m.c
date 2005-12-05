@@ -1,5 +1,5 @@
 /*
- * $Id: qttoy4m.c,v 1.7 2005/12/04 17:18:36 sms00 Exp $
+ * $Id: qttoy4m.c,v 1.8 2005/12/05 00:16:02 sms00 Exp $
  *
  * Extract uncompressed Y'CbCr data from a Quicktime file and generate a
  * YUV4MPEG2 stream.  As many of the attributes (frame rate, sample aspect, etc)
@@ -52,7 +52,7 @@ static void do_audio(quicktime_t *, FILE *, int);
 static void usage(void)
 {
 	mjpeg_warn("usage: [-r rate] [-a sar] [-i t|b|p] [-t vtrack] [-T atrack] [-A audiofile] input.mov > output.y4m");
-	mjpeg_warn("    Decode specified video track to YUV4MPEG2 on stdout");
+	mjpeg_warn("    Decode specified video track to YUV4MPEG2 on stdout (-1 disables video output)");
 	mjpeg_warn("    Extract specified audio track to 'audiofile'");
 	exit(1);
 }
