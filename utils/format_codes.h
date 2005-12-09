@@ -1,5 +1,5 @@
 /*
-    $Id: format_codes.h,v 1.9 2002/12/17 21:54:24 wackston2 Exp $
+    $Id: format_codes.h,v 1.10 2005/12/09 23:07:56 wackston2 Exp $
 
     Copyright (C) 2001 Andrew Stevens <andrew.stevens@planet-interkom.de>
 
@@ -31,9 +31,16 @@
 #define MPEG_FORMAT_SVCD_STILL 7
 #define MPEG_FORMAT_DVD_NAV 8
 #define MPEG_FORMAT_DVD      9
+#define MPEG_FORMAT_ATSC480i 10
+#define MPEG_FORMAT_ATSC480p 11
+#define MPEG_FORMAT_ATSC720p 12
+#define MPEG_FORMAT_ATSC1080i 13
 
 #define MPEG_FORMAT_FIRST 0
-#define MPEG_FORMAT_LAST MPEG_FORMAT_DVD
+#define MPEG_FORMAT_LAST MPEG_FORMAT_ATSC1080i
 
-#define MPEG_STILLS_FORMAT(x) (x==MPEG_FORMAT_VCD_STILL||x==MPEG_FORMAT_SVCD_STILL)
+#define MPEG_STILLS_FORMAT(x) ((x)==MPEG_FORMAT_VCD_STILL||(x)==MPEG_FORMAT_SVCD_STILL)
+#define MPEG_ATSC_FORMAT(x) ((x)>=MPEG_FORMAT_ATSC480i && (x)<=MPEG_FORMAT_ATSC1080i)
+#define MPEG_HDTV_FORMAT(x) MPEG_ATSC_FORMAT(x)
+#define MPEG_SDTV_FORMAT(x) (!MPEG_HDTV_FORMAT(x))
 #endif /* __FORMAT_CODES_H__ */
