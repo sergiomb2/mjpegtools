@@ -1,5 +1,5 @@
 /*
- * $Id: y4mhist.c,v 1.7 2005/12/26 16:59:30 waldviertler Exp $
+ * $Id: y4mhist.c,v 1.8 2006/01/06 18:14:43 sms00 Exp $
  *
  * Simple program to print a crude histogram of the Y'CbCr values for YUV4MPEG2
  * stream.  Usually used with a small number (single) of frames but that's not
@@ -374,11 +374,15 @@ usage(void)
 int
 main(int argc, char **argv)
 	{
-	int	i, j, fdin, ss_v, ss_h, chroma_ss, textout;
+	int	i, fdin, ss_v, ss_h, chroma_ss, textout;
 	int 	do_vectorscope;
 	int	pwidth, pheight; /* Needed for the vectorscope */
 	int	plane0_l, plane1_l, plane2_l;
-	u_char	*yuv[3], *cp, *cpx, *cpy;
+	u_char	*yuv[3], *cp;
+#ifdef	HAVE_SDLgfx
+	int	j;
+	u_char	*cpx, *cpy;
+#endif
 	y4m_stream_info_t istream;
 	y4m_frame_info_t iframe;
 
