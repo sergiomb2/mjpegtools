@@ -69,6 +69,7 @@ public:
   const char *vdr_index_pathname;
   int max_segment_size;
   int min_pes_header_len;
+  int run_in_frames;            // Run-in expressed in Frame intervals
   Workarounds workarounds;      // Special work-around flags that
                                 // constrain the syntax to suit
                                 // the foibles of particular MPEG
@@ -142,7 +143,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.5"
-#define MPLEX_DATE   "$Date: 2006/01/06 14:50:49 $"
+#define MPLEX_DATE   "$Date: 2006/01/15 14:19:23 $"
 
 #endif // __INTERACT_H__
 
