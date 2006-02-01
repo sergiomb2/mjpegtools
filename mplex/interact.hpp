@@ -142,8 +142,8 @@ public:
     Program ID
 *************************************************************************/
  
-#define MPLEX_VER    "2.2.6"
-#define MPLEX_DATE   "$Date: 2006/01/15 15:56:52 $"
+#define MPLEX_VER    "2.2.7"
+#define MPLEX_DATE   "$Date: 2006/02/01 22:23:01 $"
 
 #endif // __INTERACT_H__
 
