@@ -1,5 +1,5 @@
 /*
- * $Id: y4mhist.c,v 1.10 2006/01/22 13:07:18 waldviertler Exp $
+ * $Id: y4mhist.c,v 1.11 2006/02/11 03:55:02 sms00 Exp $
  *
  * Simple program to print a crude histogram of the Y'CbCr values for YUV4MPEG2
  * stream.  Usually used with a small number (single) of frames but that's not
@@ -192,7 +192,7 @@ void make_histogram_desc(long number_of_frames)
 /* Here we draw the souroundings for the color points */
 void makepoint(int laeng, int winkel)
 {
-	int i, p1_x, p1_y, p2_x, p2_y;
+	int p1_x, p1_y, p2_x, p2_y;
 	int sm,la;
 
 	sm = 5;
