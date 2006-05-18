@@ -1,5 +1,5 @@
 /*
- * $Id: y4mhist.c,v 1.11 2006/02/11 03:55:02 sms00 Exp $
+ * $Id: y4mhist.c,v 1.12 2006/05/18 16:15:39 sms00 Exp $
  *
  * Simple program to print a crude histogram of the Y'CbCr values for YUV4MPEG2
  * stream.  Usually used with a small number (single) of frames but that's not
@@ -7,16 +7,9 @@
  * counts.
 */
 
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#else
-#define HAVE_STDINT_H
-#include <stdint.h>
-#endif
 #include <stdio.h>
-#include <sys/types.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
 #include <yuv4mpeg.h>
