@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.h,v 1.8 2004/09/01 02:55:30 sms00 Exp $
+    $Id: mjpeg_logging.h,v 1.9 2006/05/18 15:50:42 sms00 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -22,6 +22,13 @@
 #define __MJPEG_LOGGING_H__
 
 #include <mjpeg_types.h>
+
+#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
+#define GNUC_PRINTF( format_idx, arg_idx )    \
+  __attribute__((format (printf, format_idx, arg_idx)))
+#else   /* !__GNUC__ */
+#define GNUC_PRINTF( format_idx, arg_idx )
+#endif  /* !__GNUC__ */
 
 typedef enum {
   LOG_NONE = 0,
@@ -68,13 +75,6 @@ mjpeg_error_exit1(const char format[], ...) GNUC_PRINTF(1,2);
 #ifdef __cplusplus
 }
 #endif
-#endif /* __MJPEG_LOGGING_H__ */
 
-
-/* 
- * Local variables:
- *  c-file-style: "gnu"
- *  tab-width: 8
- *  indent-tabs-mode: nil
- * End:
- */
+
+#endif /* __MJPEG_LOGGING_H__ */
