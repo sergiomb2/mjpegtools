@@ -1,5 +1,5 @@
 /* 
- * $Id: y4munsharp.c,v 1.7 2005/11/27 17:26:50 sms00 Exp $
+ * $Id: y4munsharp.c,v 1.8 2006/05/18 20:22:07 sms00 Exp $
  *
  * Constructed using:
  * unsharp.c 0.10 -- This is a plug-in for the GIMP 1.0
@@ -35,11 +35,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#ifdef	HAVE_CONFIG_H
 #include "config.h"
-#else
-#define HAVE_STDINT_H
-#endif
 #include <stdlib.h>
 #include <math.h>
 #include <unistd.h>
