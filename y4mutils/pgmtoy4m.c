@@ -1,5 +1,5 @@
 /*
- * $Id: pgmtoy4m.c,v 1.1 2005/11/24 17:32:53 sms00 Exp $
+ * $Id: pgmtoy4m.c,v 1.2 2006/05/18 16:21:42 sms00 Exp $
  *
  * pgmtoy4m converts the PGM output of "mpeg2dec -o pgmpipe" to YUV4MPEG2 on
  * stdout.
@@ -31,15 +31,11 @@
  *	"-x chroma_tag" option or chaos and/or a program crash will occur.
 */
 
-#if defined(HAVE_CONFIG_H)
 #include "config.h"
-#endif
 
 #include <stdio.h>
-#include <sys/types.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "yuv4mpeg.h"

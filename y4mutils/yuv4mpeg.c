@@ -1,5 +1,5 @@
 /*
- * $Id: yuv4mpeg.c,v 1.1 2005/11/24 17:32:53 sms00 Exp $
+ * $Id: yuv4mpeg.c,v 1.2 2006/05/18 16:21:42 sms00 Exp $
  *
  * A simple progam that's quite useful when dealing with raw/headerless data 
  * from programs such as ffmpeg or fxtv.
@@ -48,15 +48,10 @@
  *       and places in the output stream the correct 'C' tag.
 */
 
-#ifdef	HAVE_CONFIG_H
 #include "config.h"
-#endif
-
 #include <stdio.h>
 #include <errno.h>
-#include <sys/types.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "yuv4mpeg.h"

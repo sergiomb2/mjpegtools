@@ -1,5 +1,5 @@
 /*
- * $Id: y4minterlace.c,v 1.1 2005/11/24 17:32:53 sms00 Exp $
+ * $Id: y4minterlace.c,v 1.2 2006/05/18 16:21:42 sms00 Exp $
  *
  * A simple program to generate interlaced output from progressive input by
  * using one field from each of two frames and reducing the rate by a factor
@@ -24,16 +24,10 @@
  * be needed.
 */
 
-#ifdef	HAVE_CONFIG_H
 #include "config.h"
-#else
-#define HAVE_STDINT_H
-#endif
 
 #include <stdio.h>
-#include <sys/types.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "yuv4mpeg.h"

@@ -1,5 +1,5 @@
 /*
- * $Id: yuyvtoy4m.c,v 1.1 2005/11/24 17:32:53 sms00 Exp $
+ * $Id: yuyvtoy4m.c,v 1.2 2006/05/18 16:21:42 sms00 Exp $
  *
  * A simple progam that can be used to convert 'yuyv' (also known as yuv2)
  * 4:2:2 packed into 4:2:2 planar format.  Additional packings may be added
@@ -30,17 +30,10 @@
  *       the same attributes (dimensions,  interlacing, etc)!
 */
 
-#ifdef	HAVE_CONFIG_H
 #include "config.h"
-#else
-#define HAVE_STDINT_H
-#endif
-
 #include <stdio.h>
 #include <errno.h>
-#include <sys/types.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "yuv4mpeg.h"

@@ -1,5 +1,5 @@
 /*
- * $Id: y4mivtc.c,v 1.1 2006/03/15 00:00:50 sms00 Exp $
+ * $Id: y4mivtc.c,v 1.2 2006/05/18 16:21:42 sms00 Exp $
  *
  * Simple program to remove the 2:3 pulldown from a YUV4MPEG2 stream.   This
  * was written because yuvkineco only works with TOP field first streams and
@@ -31,16 +31,9 @@
  * 2006/3/13 - Initial release.
 */
 
-#ifdef	HAVE_CONFIG_H
 #include "config.h"
-#else
-#define	HAVE_STDINT_H
-#endif
-
 #include <stdio.h>
-#include <sys/types.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "yuv4mpeg.h"

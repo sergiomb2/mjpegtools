@@ -1,5 +1,5 @@
 /*
- * $Id: y4mtoyuv.c,v 1.1 2005/11/24 17:32:53 sms00 Exp $
+ * $Id: y4mtoyuv.c,v 1.2 2006/05/18 16:21:42 sms00 Exp $
  *
  * Simple program to convert the YUV4MPEG2 format used by the 
  * mjpeg.sourceforge.net suite of programs into pure EYUV format used
@@ -10,16 +10,10 @@
  * 2004/4/5 - Rewritten to use the new YUV4MPEG2 API.
 */
 
-#ifdef	HAVE_CONFIG_H
 #include "config.h"
-#else
-#define	HAVE_STDINT_H
-#endif
 
 #include <stdio.h>
-#include <sys/types.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "yuv4mpeg.h"

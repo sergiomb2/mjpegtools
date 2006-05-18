@@ -1,5 +1,5 @@
 /*
- * $Id: y4mtoqt.c,v 1.7 2005/12/04 17:18:37 sms00 Exp $
+ * $Id: y4mtoqt.c,v 1.8 2006/05/18 16:21:42 sms00 Exp $
  *
  * Utility to place 4:2:2 or 4:4:4 YUV4MPEG2 data in a Quicktime wrapper.   An
  * audio track can also be added by specifying '-a wavfile' (16bit pcm only).
@@ -13,14 +13,9 @@
  *   -X enables 10bit packed output, 2vuy becomes v210 and v308 becomes v410.
 */
 
-#ifdef	HAVE_CONFIG_H
 #include "config.h"
-#else
-#define HAVE_STDINT_H
-#endif
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <quicktime.h>
 #include <lqt.h>
 #include <colormodels.h>
