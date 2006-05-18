@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_types.h,v 1.15 2006/05/18 15:50:42 sms00 Exp $
+    $Id: mjpeg_types.h,v 1.16 2006/05/18 18:19:05 sms00 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -22,22 +22,7 @@
 #define __MJPEG_TYPES_H__
 
 #include <sys/types.h> /* FreeBSD, others - ssize_t */
-
-/*
- * modern CYGWIN releases have stdint/inttypes so there's no need
- * to check for it or provide typedefs/defines
-*/
-
-#if defined(HAVE_STDINT_H)
-# include <stdint.h>
-#elif defined(HAVE_INTTYPES_H)
-# include <inttypes.h>
-#else
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
-typedef long long int int64_t;
-#endif /* HAVE_STDINT_H */
+#include <stdint.h>
+#include <inttypes.h>
 
 #endif /* __MJPEG_TYPES_H__ */
