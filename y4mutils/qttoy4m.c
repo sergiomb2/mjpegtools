@@ -1,5 +1,5 @@
 /*
- * $Id: qttoy4m.c,v 1.9 2006/01/11 04:44:24 sms00 Exp $
+ * $Id: qttoy4m.c,v 1.10 2006/06/04 06:55:24 sms00 Exp $
  *
  * Extract uncompressed Y'CbCr data from a Quicktime file and generate a
  * YUV4MPEG2 stream.  As many of the attributes (frame rate, sample aspect, etc)
@@ -242,9 +242,9 @@ int main(int argc, char *argv[])
 			interlace = Y4M_ILACE_NONE;
 		else if	(nfields == 2)
 			{
-			if	(dominance == 14)
+			if	(dominance == 14 || dominance == 6)
 				interlace = Y4M_ILACE_BOTTOM_FIRST;
-			else if	(dominance == 9)
+			else if	(dominance == 9 || dominance == 1)
 				interlace = Y4M_ILACE_TOP_FIRST;
 			else
 				mjpeg_error_exit1("Unknown fiel dominance %d",
