@@ -1,5 +1,5 @@
 /*
- * $Id: qttoy4m.c,v 1.10 2006/06/04 06:55:24 sms00 Exp $
+ * $Id: qttoy4m.c,v 1.11 2006/06/25 02:36:35 sms00 Exp $
  *
  * Extract uncompressed Y'CbCr data from a Quicktime file and generate a
  * YUV4MPEG2 stream.  As many of the attributes (frame rate, sample aspect, etc)
@@ -264,6 +264,7 @@ int main(int argc, char *argv[])
 */
 	if	(Y4M_RATIO_EQL(sar, y4m_sar_UNKNOWN))
 		{
+		memset(&pasp, 0, sizeof (pasp));
 		lqt_get_pasp(file, vtrack, &pasp);
 		if	(pasp.hSpacing && pasp.vSpacing)
 			{
