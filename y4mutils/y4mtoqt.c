@@ -1,5 +1,5 @@
 /*
- * $Id: y4mtoqt.c,v 1.8 2006/05/18 16:21:42 sms00 Exp $
+ * $Id: y4mtoqt.c,v 1.9 2006/08/13 23:58:01 sms00 Exp $
  *
  * Utility to place 4:2:2 or 4:4:4 YUV4MPEG2 data in a Quicktime wrapper.   An
  * audio track can also be added by specifying '-a wavfile' (16bit pcm only).
@@ -104,6 +104,16 @@ main(int argc, char **argv)
 
 	switch	(y4mchroma = y4m_si_get_chroma(&istream))
 		{
+		case	Y4M_CHROMA_420MPEG2:
+		case	Y4M_CHROMA_420JPEG:
+			/*
+			 * Quicktime doesn't appear to have a way to reliably
+			 * tell the two non-PALDV variants apart so treat them
+			 * both the same (like most other software in the world)
+			*/
+			qtchroma = QUICKTIME_YUV420;	/* yv12 */
+			imodel = BC_YUV420P;
+			break;
 		case	Y4M_CHROMA_422:
 			if	(tenbit)
 				qtchroma = QUICKTIME_V210;
