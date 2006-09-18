@@ -1,5 +1,5 @@
 /*
- * $Id: y4mblack.c,v 1.2 2006/05/18 16:15:39 sms00 Exp $
+ * $Id: y4mblack.c,v 1.3 2006/09/18 21:53:01 sms00 Exp $
  *
  * Used to generate YUV4MPEG2 frames with the specific interlace, 
  * dimensions, pixel aspect  and Y/U/V values.  By default the frames 
@@ -166,7 +166,7 @@ main(int argc, char **argv)
 void usage(void)
 	{
 
-	fprintf(stderr, "%s usage: [-H] [-f] [-n numframes] [-w width] [-h height] [-Y val] [-U val] [-V val] [-a pixel aspect] [-i p|t|b] [-r rate]\n", __progname);
+	fprintf(stderr, "%s usage: [-H] [-f] [-n numframes] [-w width] [-h height] [-Y val] [-U val] [-V val] [-a pixel aspect] [-i p|t|b] [-x chroma] [-r rate]\n", __progname);
 	fprintf(stderr, "\n  Omit the YUV4MPEG2 header [-H]");
 	fprintf(stderr, "\n  Specify chroma sampling [-x string] (420mpeg2)");
 	fprintf(stderr, "\n      -x help for list");
