@@ -1,5 +1,5 @@
 /*
- * $Id: y4mtoqt.c,v 1.11 2006/09/06 03:30:50 sms00 Exp $
+ * $Id: y4mtoqt.c,v 1.12 2006/12/16 20:33:40 sms00 Exp $
  *
  * Utility to place 4:2:2 or 4:4:4 YUV4MPEG2 data in a Quicktime wrapper.   An
  * audio track can also be added by specifying '-a wavfile' (16bit pcm only).
@@ -286,7 +286,7 @@ main(int argc, char **argv)
 
 		err = quicktime_encode_video(qtf, tenbit ? (uint8_t **)yuv10: yuv, 0);
 		if	(err != 0)
-			mjpeg_error_exit1("quicktime_encode_video} failed.");
+			mjpeg_error_exit1("quicktime_encode_video failed.");
 		}
 
 	if	(audiofilename)
