@@ -1,5 +1,5 @@
 /*
- * $Id: y4minterlace.c,v 1.2 2006/05/18 16:21:42 sms00 Exp $
+ * $Id: y4minterlace.c,v 1.3 2007/04/01 17:32:18 sms00 Exp $
  *
  * A simple program to generate interlaced output from progressive input by
  * using one field from each of two frames and reducing the rate by a factor
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 	chroma_id = y4m_si_get_chroma(&istream);
 
 	if	(y4m_chroma_ss_y_ratio(chroma_id).d != 1)
-		mjpeg_log(LOG_WARN, "Vertically subsampled chroma (%s) should be upsampled but will proceed.", y4m_chroma_keyword(chroma_id));
+		mjpeg_warn("Vertically subsampled chroma (%s) should be upsampled but will proceed.", y4m_chroma_keyword(chroma_id));
 
 /*
  * NOTE:  each buffer to be allocated will only hold 1 field or 1/2 a frame.

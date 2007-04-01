@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.h,v 1.9 2006/05/18 15:50:42 sms00 Exp $
+    $Id: mjpeg_logging.h,v 1.10 2007/04/01 17:32:17 sms00 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -23,20 +23,15 @@
 
 #include <mjpeg_types.h>
 
+/*  to avoid changing all the places log_level_t is used */
+typedef int log_level_t; 
+
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
 #define GNUC_PRINTF( format_idx, arg_idx )    \
   __attribute__((format (printf, format_idx, arg_idx)))
 #else   /* !__GNUC__ */
 #define GNUC_PRINTF( format_idx, arg_idx )
 #endif  /* !__GNUC__ */
-
-typedef enum {
-  LOG_NONE = 0,
-  LOG_DEBUG,
-  LOG_INFO,
-  LOG_WARN,
-  LOG_ERROR
-} log_level_t;
 
 #ifdef __cplusplus
 extern "C" {
