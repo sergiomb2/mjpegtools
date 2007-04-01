@@ -1,5 +1,5 @@
 /*
- * $Id: y4mtoyuv.c,v 1.2 2006/05/18 16:21:42 sms00 Exp $
+ * $Id: y4mtoyuv.c,v 1.3 2007/04/01 18:06:06 sms00 Exp $
  *
  * Simple program to convert the YUV4MPEG2 format used by the 
  * mjpeg.sourceforge.net suite of programs into pure EYUV format used
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 	yuv[1] = malloc(plane_length[1]);
 	yuv[2] = malloc(plane_length[2]);
 
-	y4m_log_stream_info(LOG_INFO, "", &istream);
+	y4m_log_stream_info(mjpeg_loglev_t("info"), "", &istream);
 
 	while	(y4m_read_frame(fd_in, &istream, &iframe, yuv) == Y4M_OK)
 		{

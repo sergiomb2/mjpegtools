@@ -1,5 +1,5 @@
 /*
-    $Id: mjpeg_logging.c,v 1.15 2007/04/01 17:32:17 sms00 Exp $
+    $Id: mjpeg_logging.c,v 1.16 2007/04/01 18:06:06 sms00 Exp $
 
     Copyright (C) 2000 Herbert Valerio Riedel <hvr@gnu.org>
 
@@ -45,7 +45,7 @@ extern const char *__progname;
 
 #define LOG_DEBUG 1
 #define LOG_INFO 2
-#define  LOG_WARN 3
+#define LOG_WARN 3
 #define LOG_ERROR 4
 
 static log_level_t mjpeg_log_verbosity = 0;
@@ -217,4 +217,14 @@ mjpeg_error_exit1(const char format[], ...)
   mjpeg_logv( LOG_ERROR, format, args);
   va_end(args);           
   exit(EXIT_FAILURE);
+}
+
+log_level_t
+mjpeg_loglev_t(const char *level)
+{
+    if (strcasecmp("debug", level) == 0) return(LOG_DEBUG);
+    else if (strcasecmp("info", level) == 0) return(LOG_INFO);
+    else if (strcasecmp("warn", level) == 0) return(LOG_WARN);
+    else if (strcasecmp("error", level) == 0) return(LOG_ERROR);
+    return(0);
 }

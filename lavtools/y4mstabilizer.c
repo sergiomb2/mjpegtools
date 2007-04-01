@@ -1,5 +1,5 @@
 /*
- * $Id: y4mstabilizer.c,v 1.8 2007/04/01 17:32:17 sms00 Exp $
+ * $Id: y4mstabilizer.c,v 1.9 2007/04/01 18:06:06 sms00 Exp $
  *
  * written by J. Macropol <jm@wx.gd-ais.com>
  *	Framework and shifting code adapted from y4mshift by Steve Schultz.
@@ -189,7 +189,7 @@ main (int argc, char **argv)
     width = y4m_si_get_width(&istream);
     height = y4m_si_get_height(&istream);
     if (Stab.verbose)
-	y4m_log_stream_info(LOG_INFO, "", &istream);
+	y4m_log_stream_info(mjpeg_loglev_t("info"), "", &istream);
 
     /* Initialize output stream */
     y4m_init_stream_info(&ostream);

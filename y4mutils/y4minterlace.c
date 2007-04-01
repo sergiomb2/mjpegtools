@@ -1,5 +1,5 @@
 /*
- * $Id: y4minterlace.c,v 1.3 2007/04/01 17:32:18 sms00 Exp $
+ * $Id: y4minterlace.c,v 1.4 2007/04/01 18:06:06 sms00 Exp $
  *
  * A simple program to generate interlaced output from progressive input by
  * using one field from each of two frames and reducing the rate by a factor
@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 	y4m_si_set_interlace(&ostream, ilace);
 	y4m_si_set_framerate(&ostream, rate_ratio);
 
-	y4m_log_stream_info(LOG_INFO, "ostream", &ostream);
+	y4m_log_stream_info(mjpeg_loglev_t("info"), "ostream", &ostream);
 
 	y4m_write_stream_header(fdout, &ostream);
 	while	((err = y4m_read_fields(fdin, &istream, &iframe, f1_top, f1_bot)) == Y4M_OK)
