@@ -1,5 +1,5 @@
 /*
- * $Id: y4mtoqt.c,v 1.12 2006/12/16 20:33:40 sms00 Exp $
+ * $Id: y4mtoqt.c,v 1.13 2007/05/10 03:07:36 sms00 Exp $
  *
  * Utility to place 4:2:2 or 4:4:4 YUV4MPEG2 data in a Quicktime wrapper.   An
  * audio track can also be added by specifying '-a wavfile' (16bit pcm only).
@@ -274,7 +274,7 @@ main(int argc, char **argv)
  * compressed formats it seems.
 */
 
-		if	(qtchroma == QUICKTIME_YUV420)
+		if	(strcmp(qtchroma, QUICKTIME_YUV420) == 0)
 			{
 			if	(allow_wrong_yv12 == 0)
 				{
