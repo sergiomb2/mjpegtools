@@ -1,5 +1,5 @@
 /*
- * $Id: y4mstabilizer.c,v 1.9 2007/04/01 18:06:06 sms00 Exp $
+ * $Id: y4mstabilizer.c,v 1.10 2009/01/24 18:06:45 sms00 Exp $
  *
  * written by J. Macropol <jm@wx.gd-ais.com>
  *	Framework and shifting code adapted from y4mshift by Steve Schultz.
@@ -636,16 +636,16 @@ for (i = 0; i < h; i++)
 {
 if (shift > 0)
 {
-bcopy(vsrc, vdst+shift, w-shift);
+memmove(vdst + shift, vsrc, w - shift);
 memset(vdst, blk, shift); /* black */
 }
 else if (shift < 0)
 {
-bcopy(vsrc-shift, vdst, w+shift);
+memmove(vdst, vsrc - shift, w + shift);
 memset(vdst+w+shift, blk, -shift);
 }
 else
-bcopy(vsrc, vdst, w);
+memmove(vdst, vsrc, w);
 vsrc += ws;
 vdst += ws;
 }
