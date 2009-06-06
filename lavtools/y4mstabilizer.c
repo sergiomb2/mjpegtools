@@ -1,5 +1,5 @@
 /*
- * $Id: y4mstabilizer.c,v 1.10 2009/01/24 18:06:45 sms00 Exp $
+ * $Id: y4mstabilizer.c,v 1.11 2009/06/06 16:46:44 sms00 Exp $
  *
  * written by J. Macropol <jm@wx.gd-ais.com>
  *	Framework and shifting code adapted from y4mshift by Steve Schultz.
@@ -350,7 +350,7 @@ exit(1);
 static void
 alloc_yuv (u_char **yuv, int h, int w)
 {
-int len = h * w;
+int len = h * w * 2;	/* Double the amount - overkill but it's easier than figuring out how much (off by one?) is really needed */
 int uvlen = Stab.nosuper ? (len / (SS_H * SS_V)) : len;
 yuv[0] = malloc(len);
 if (yuv[0] == NULL)
