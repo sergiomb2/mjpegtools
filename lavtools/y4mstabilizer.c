@@ -1,5 +1,5 @@
 /*
- * $Id: y4mstabilizer.c,v 1.11 2009/06/06 16:46:44 sms00 Exp $
+ * $Id: y4mstabilizer.c,v 1.12 2009/09/19 19:01:43 sms00 Exp $
  *
  * written by J. Macropol <jm@wx.gd-ais.com>
  *	Framework and shifting code adapted from y4mshift by Steve Schultz.
@@ -57,8 +57,6 @@
 
 #include "yuv4mpeg.h"
 #include "subsample.h"
-
-extern  char    *__progname;
 
 struct
     {
