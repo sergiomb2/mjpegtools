@@ -77,6 +77,9 @@
 
 CVS log:
 $Log: ChangeLog,v $
+Revision 1.16  2011/05/14 11:59:36  waldviertler
+documented some (hopefully most to all) changes since the last release
+
 Revision 1.15  2008/11/29 19:31:20  wackston2
 Trial fix: stop sampling frames at Q floor (where Actual bits *expected* to be
            < Target bits) to compute mean Target/Actual ratio after pass2
@@ -187,3 +190,25 @@ Changes to lavtools-1.0
 
 - steering of lavplay (forward, backward, pause etc.) with commands
   (for real command line hardliners)
+
+Changes to lavtools 1.9.0 (in no particular order)
+
+- added changes to support the compiling for new CPUs
+
+- some autoconf/configure fixes (x11 and other libs
+- patch to compile png2yuv with newer png lib
+- clean upf for vrious compiling problems
+- jpegutil fix for neser libjpeg
+
+- mpeg2enc some more two-pass encoding support
+- mpeg2enc fixes for bit rate problems
+
+- mplex added support for subtitle streams from tcextract 
+- mplex small fixes
+
+- y4mdenoise better, faster, fixed the problem in dark/cloudy areas
+
+- fixes for the __progname problem
+
+- yuvdenoise god speed up by a SSE2 ASM version of some code
+
