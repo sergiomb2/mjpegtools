@@ -95,10 +95,6 @@ enum StreamKind
     DTS_AUDIO,
     MPEG_VIDEO,
     SUBP_STREAM,
-#ifdef ZALPHA
-    ,
-    Z_ALPHA
-#endif
   };
 
 class JobStream
@@ -136,9 +132,6 @@ public:
   unsigned int video_tracks;
   unsigned int subtitle_tracks;
   unsigned int lpcm_tracks;
-#ifdef ZALPHA
-  unsigned int z_alpha_tracks;
-#endif
 };
 
 
@@ -147,7 +140,7 @@ public:
 *************************************************************************/
  
 #define MPLEX_VER    "2.2.7"
-#define MPLEX_DATE   "$Date: 2010/03/13 13:05:07 $"
+#define MPLEX_DATE   "$Date: 2012/11/17 01:55:16 $"
 
 #endif // __INTERACT_H__
 
