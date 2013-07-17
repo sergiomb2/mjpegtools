@@ -1,5 +1,5 @@
 /*
- * $Id: y4mhist.c,v 1.12 2006/05/18 16:15:39 sms00 Exp $
+ * $Id: y4mhist.c,v 1.13 2013/07/17 23:59:09 sms00 Exp $
  *
  * Simple program to print a crude histogram of the Y'CbCr values for YUV4MPEG2
  * stream.  Usually used with a small number (single) of frames but that's not
@@ -465,7 +465,7 @@ void make_stat()
 static void
 usage(void)
 	{
-	fprintf(stderr, "usage: [-t]  [-v num]\n");
+	fprintf(stderr, "usage: [-t] [-p] [-s num] \n");
 	fprintf(stderr, "  -t      emit text summary even if graphical mode enabled\n");
 	fprintf(stderr, "  -p      label the scale in percent not absolute numbers\n");
 	fprintf(stderr, "  -s num  enable also the vectorscope, allowed numbers 1-16\n");
