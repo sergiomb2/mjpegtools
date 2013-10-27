@@ -431,7 +431,6 @@ disable_simd(char *name)
 int
 simd_name_ok(char *name)
 	{
-	int foundit = 0;
 	const char **dft;
 
 	for	(dft = disable_simd_flags; *dft; dft++)
