@@ -491,7 +491,33 @@ else
   echo enable_static_build="\'${enable_static_build}\'"
 fi
 
-
+dnl ********************************************************************
+dnl Check to see whether realpath accepts NULL as second argument
+dnl (allocating a new buffer for the result, as specified in POSIX.1-2008)
+AC_CACHE_CHECK([whether realpath(path, NULL) allocates memory for result],
+               [have_cv_realpath_null],
+               [AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdlib.h>
+]], [[
+char *result;
+result = realpath(__FILE__, NULL);
+if (result == NULL)
+  return 1;
+return 0;
+]])],
+                               [have_cv_realpath_null=yes],
+                              [have_cv_realpath_null=no],
+                               [[
+                case "$host" in
+                                      # glibc supports this already
+                *-gnu*)               have_cv_realpath_null="guessing yes";;
+                                      # no idea
+                *)                    have_cv_realpath_null="guessing no";;
+                esac
+                               ]])])
+if test x$have_cv_realpath_null = xyes ; then
+  AC_DEFINE(HAVE_REALPATH_NULL, 1, [realpath accepts NULL as second parameter])
+fi
 
 dnl **********************************************************************
 dnl All the conditional stuff for the Makefiles

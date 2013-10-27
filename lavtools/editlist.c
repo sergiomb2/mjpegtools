@@ -37,7 +37,11 @@ static void malloc_error(void)
 int open_video_file(char *filename, EditList *el, int preserve_pathname)
 {
    int i, n, nerr;
+#ifdef HAVE_REALPATH_NULL
+   char *realname;
+#else
    char realname[PATH_MAX];
+#endif
 
    /* Get full pathname of file if the user hasn't specified preservation
 	  of pathnames...
@@ -45,10 +49,24 @@ int open_video_file(char *filename, EditList *el, int preserve_pathname)
 
    if( preserve_pathname )
    {
+#ifdef HAVE_REALPATH_NULL
+       realname = strdup(filename);
+       if(realname == NULL)
+          malloc_error();
+#else
 	   strcpy(realname, filename);
+#endif
    }
-   else if(realpath(filename,realname)==0)
+   else
    {
+       char *result;
+#ifdef HAVE_REALPATH_NULL
+       realname = realpath(filename, NULL);
+       result = realname;
+#else
+       result = realpath(filename, realname);
+#endif
+       if(result == NULL)
 	   mjpeg_error_exit1( "Cannot deduce real filename: %s", strerror(errno));
    }
 
@@ -207,6 +225,10 @@ int open_video_file(char *filename, EditList *el, int preserve_pathname)
       if(nerr) 
 		  exit(1);
    }
+
+#ifdef HAVE_REALPATH_NULL
+   free(realname);
+#endif
 
    return n;
 }

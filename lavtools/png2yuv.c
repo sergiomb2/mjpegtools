@@ -386,9 +386,12 @@ int decode_png(const char *pngname, uint8_t *yuv[], parameters_t *param)
  */
 static int init_parse_files(parameters_t *param)
 { 
-  char pngname[PATH_MAX+1]; /* See POSIX 1003.1 section 2.9.5 */
+  char *pngname;
+  size_t pngnamelen;
 
-  snprintf(pngname, sizeof(pngname), 
+  pngnamelen = strlen(param->pngformatstr) + sizeof(param->begin) * 3 + 1;
+  pngname = (char *)malloc(pngnamelen * sizeof(char));
+  snprintf(pngname, pngnamelen,
 	   param->pngformatstr, param->begin);
   mjpeg_debug("Analyzing %s to get the right pic params", pngname);
   
@@ -432,6 +435,7 @@ static int init_parse_files(parameters_t *param)
     }
   mjpeg_info("Frame size:  %u x %u", param->width, param->height);
 
+  free(pngname);
   return 0;
 }
 
@@ -441,6 +445,8 @@ static int generate_YUV4MPEG(parameters_t *param)
   uint8_t *yuv[3];  /* Buffers, initially for R,G,B then Y,Cb,Cr */
   y4m_stream_info_t streaminfo;
   y4m_frame_info_t frameinfo;
+  char *pngname;
+  size_t pngnamelen;
 
   /* Make the output even, so the output may be one larger than the
    * original PNG image width.
@@ -464,12 +470,14 @@ static int generate_YUV4MPEG(parameters_t *param)
 
   y4m_write_stream_header(STDOUT_FILENO, &streaminfo);
 
+  pngnamelen = strlen(param->pngformatstr) + sizeof(frame) * 3 + 1;
+  pngname = (char *)malloc(pngnamelen * sizeof(char));
+
   for (frame = param->begin;
        (frame < param->numframes + param->begin) || (param->numframes == -1);
        frame++) 
     {
-      char pngname[PATH_MAX+1];
-      snprintf(pngname, sizeof(pngname), param->pngformatstr, frame);
+      snprintf(pngname, pngnamelen, param->pngformatstr, frame);
             
       /* decode_png reads the PNG into the yuv buffers as r,g,b [0..255]
        * values.
@@ -506,6 +514,7 @@ static int generate_YUV4MPEG(parameters_t *param)
   free(yuv[0]);
   free(yuv[1]);
   free(yuv[2]);
+  free(pngname);
 
   return 0;
 }

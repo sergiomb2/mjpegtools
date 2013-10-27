@@ -79,6 +79,7 @@ class FileOutputStream : public OutputStream
 {
 public:
     FileOutputStream( const char *filename_pat );
+    ~FileOutputStream();
     virtual int  Open( );
     virtual void Close();
     virtual uint64_t SegmentSize( );
@@ -87,8 +88,9 @@ public:
 
 private:
     FILE *strm;
-    char filename_pat[MAXPATHLEN];
-    char cur_filename[MAXPATHLEN];
+    char *filename_pat;
+    char *cur_filename;
+    size_t cur_filename_len;
 
 };
 
@@ -96,9 +98,18 @@ private:
 
 FileOutputStream::FileOutputStream( const char *name_pat ) 
 {
-	strncpy( filename_pat, name_pat, MAXPATHLEN );
-	snprintf( cur_filename, MAXPATHLEN, filename_pat, segment_num );
+    filename_pat = strcpy( new char[strlen(name_pat)+1], name_pat );
+    cur_filename_len = strlen(filename_pat)+sizeof(segment_num)*3+1;
+    cur_filename = new char[cur_filename_len];
+    snprintf( cur_filename, cur_filename_len, filename_pat, segment_num );
 }
+
+FileOutputStream::~FileOutputStream()
+{
+    delete [] filename_pat;
+    delete [] cur_filename;
+}
+
       
 int FileOutputStream::Open()
 {
@@ -132,7 +143,7 @@ FileOutputStream::NextSegment( )
 	fclose(strm);
 	++segment_num;
     strcpy( prev_filename, cur_filename );
-	snprintf( cur_filename, MAXPATHLEN, filename_pat, segment_num );
+	snprintf( cur_filename, cur_filename_len, filename_pat, segment_num );
 	if( strcmp( prev_filename, cur_filename ) == 0 )
 	{
 		mjpeg_error_exit1( 
