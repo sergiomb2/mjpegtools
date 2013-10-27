@@ -110,7 +110,7 @@ void EncoderParams::RangeChecks()
   if (mpeg1 && vbv_buffer_code>=1024)
     mjpeg_error_exit1("vbv_buffer_size must be less than 1024 (MPEG-1)");
 
-  if (video_format<0 || video_format>5)
+  if (video_format>5)
     mjpeg_error_exit1("video_format must be in range 0...5");
 
   if (color_primaries<1 || color_primaries>7 || color_primaries==3)
@@ -123,12 +123,12 @@ void EncoderParams::RangeChecks()
   if (matrix_coefficients<1 || matrix_coefficients>7 || matrix_coefficients==3)
     mjpeg_error_exit1("matrix_coefficients must be in range 1...2 or 4...7");
 
-  if (display_horizontal_size<0 || display_horizontal_size>16383)
+  if (display_horizontal_size>16383)
     mjpeg_error_exit1("display_horizontal_size must be in range 0...16383");
-  if (display_vertical_size<0 || display_vertical_size>16383)
+  if (display_vertical_size>16383)
     mjpeg_error_exit1("display_vertical_size must be in range 0...16383");
 
-  if (dc_prec<0 || dc_prec>3)
+  if (dc_prec>3)
     mjpeg_error_exit1("intra_dc_precision must be in range 0...3");
 
   for (i=0; i<M; i++)
