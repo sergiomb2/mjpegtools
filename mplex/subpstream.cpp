@@ -160,7 +160,7 @@ bool SUBPStream::ParseAUBitwise()
 		
 		} else {
 		// calculate the time from lpts
-		mjpeg_info( "Subtitle: fallback to lpts", subpid);
+		mjpeg_info( "Subtitle %d: fallback to lpts", subpid);
 		access_unit.PTS= (double)(header.lpts/300)/90000.0;
 		}
 
