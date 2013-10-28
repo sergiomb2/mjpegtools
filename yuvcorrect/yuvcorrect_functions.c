@@ -82,10 +82,10 @@ handle_args_yuv_rgb (int argc, char *argv[], yuv_correction_t * yuv_correct, rgb
 		{
 		  // Coherence check:
 		  if ((f1 <= 0.0) ||
-		      (ui1 < 0) || (ui1 > 255) ||
-		      (ui2 < 0) || (ui2 > 255) ||
-		      (ui3 < 0) || (ui3 > 255) ||
-		      (ui4 < 0) || (ui4 > 255) || (ui1 > ui2) || (ui3 > ui4))
+		      (ui1 > 255) ||
+		      (ui2 > 255) ||
+		      (ui3 > 255) ||
+		      (ui4 > 255) || (ui1 > ui2) || (ui3 > ui4))
 		    mjpeg_error_exit1
 		      ("Uncoherent luminance correction (0<>255, small, large): Gamma=%f, InputYmin=%u, InputYmax=%u, OutputYmin=%u, OutputYmax=%u\n",
 		       f1, ui1, ui2, ui3, ui4);
@@ -110,10 +110,10 @@ handle_args_yuv_rgb (int argc, char *argv[], yuv_correction_t * yuv_correct, rgb
 		{
 		  // Coherence check:
 		  if ((f1 <= 0.0) ||
-		      (ui1 < 0) || (ui1 > 255) ||
-		      (ui2 < 0) || (ui2 > 255) ||
-		      (ui3 < 0) || (ui3 > 255) ||
-		      (ui4 < 0) || (ui4 > 255) || (ui1 > ui2) || (ui3 > ui4))
+		      (ui1 > 255) ||
+		      (ui2 > 255) ||
+		      (ui3 > 255) ||
+		      (ui4 > 255) || (ui1 > ui2) || (ui3 > ui4))
 		    mjpeg_error_exit1
 		      ("Uncoherent luminance correction (0<>255, small, large): Gamma=%f, InputYmin=%u, InputYmax=%u, OutputYmin=%u, OutputYmax=%u\n",
 		       f1, ui1, ui2, ui3, ui4);
@@ -137,11 +137,11 @@ handle_args_yuv_rgb (int argc, char *argv[], yuv_correction_t * yuv_correct, rgb
 		{
 		  // Coherence check:
 		  if ((f2 <= 0.0) || (f3 <= 0.0) ||
-		      (ui1 < 0) || (ui1 > 255) ||
-		      (ui2 < 0) || (ui2 > 255) ||
-		      (ui3 < 0) || (ui3 > 255) ||
-		      (ui4 < 0) || (ui4 > 255) ||
-		      (ui3 > ui4) || (ui1 > ui4) || (ui2 > ui4))
+		      (ui1 > 255) ||
+		      (ui2 > 255) ||
+		      (ui3 > 255) ||
+		      (ui4 > 255) ||
+		      (ui1 > ui4) || (ui2 > ui4))
 		    mjpeg_error_exit1
 		      ("Uncoherent chrominance correction (0<>255, small, large): UVrotation=%f, Ufactor=%f, Ucenter=%u, Vfactor=%f, Vcenter=%u, UVmin=%u, UVmax=%u, \n",
 		       f1, f2, ui1, f3, ui2, ui3, ui4);
@@ -168,10 +168,10 @@ handle_args_yuv_rgb (int argc, char *argv[], yuv_correction_t * yuv_correct, rgb
 		{
 		  // Coherence check:
 		  if ((f2 <= 0.0) || (f3 <= 0.0) ||
-		      (ui1 < 0) || (ui1 > 255) ||
-		      (ui2 < 0) || (ui2 > 255) ||
-		      (ui3 < 0) || (ui3 > 255) ||
-		      (ui4 < 0) || (ui4 > 255) ||
+		      (ui1 > 255) ||
+		      (ui2 > 255) ||
+		      (ui3 > 255) ||
+		      (ui4 > 255) ||
 		      (ui3 > ui4) || (ui1 > ui4) || (ui2 > ui4))
 		    mjpeg_error_exit1
 		      ("Uncoherent chrominance correction (0<>255, small, large): UVrotation=%f, Ufactor=%f, Ucenter=%u, Vfactor=%f, Vcenter=%u, UVmin=%u, UVmax=%u, \n",
@@ -228,10 +228,10 @@ handle_args_yuv_rgb (int argc, char *argv[], yuv_correction_t * yuv_correct, rgb
 		{
 		  // Coherence check:
 		  if ((f1 <= 0.0) ||
-		      (ui1 < 0) || (ui1 > 255) ||
-		      (ui2 < 0) || (ui2 > 255) ||
-		      (ui3 < 0) || (ui3 > 255) ||
-		      (ui4 < 0) || (ui4 > 255) || (ui1 > ui2) || (ui3 > ui4))
+		      (ui1 > 255) ||
+		      (ui2 > 255) ||
+		      (ui3 > 255) ||
+		      (ui4 > 255) || (ui1 > ui2) || (ui3 > ui4))
 		    mjpeg_error_exit1
 		      ("Uncoherent RED correction (0<>255, small, large): Gamma=%f, InputYmin=%u, InputYmax=%u, OutputYmin=%u, OutputYmax=%u\n",
 		       f1, ui1, ui2, ui3, ui4);
@@ -255,10 +255,10 @@ handle_args_yuv_rgb (int argc, char *argv[], yuv_correction_t * yuv_correct, rgb
 		{
 		  // Coherence check:
 		  if ((f1 <= 0.0) ||
-		      (ui1 < 0) || (ui1 > 255) ||
-		      (ui2 < 0) || (ui2 > 255) ||
-		      (ui3 < 0) || (ui3 > 255) ||
-		      (ui4 < 0) || (ui4 > 255) || (ui1 > ui2) || (ui3 > ui4))
+		      (ui1 > 255) ||
+		      (ui2 > 255) ||
+		      (ui3 > 255) ||
+		      (ui4 > 255) || (ui1 > ui2) || (ui3 > ui4))
 		    mjpeg_error_exit1
 		      ("Uncoherent GREEN correction (0<>255, small, large): Gamma=%f, InputYmin=%u, InputYmax=%u, OutputYmin=%u, OutputYmax=%u\n",
 		       f1, ui1, ui2, ui3, ui4);
@@ -282,10 +282,10 @@ handle_args_yuv_rgb (int argc, char *argv[], yuv_correction_t * yuv_correct, rgb
 		{
 		  // Coherence check:
 		  if ((f1 <= 0.0) ||
-		      (ui1 < 0) || (ui1 > 255) ||
-		      (ui2 < 0) || (ui2 > 255) ||
-		      (ui3 < 0) || (ui3 > 255) ||
-		      (ui4 < 0) || (ui4 > 255) || (ui1 > ui2) || (ui3 > ui4))
+		      (ui1 > 255) ||
+		      (ui2 > 255) ||
+		      (ui3 > 255) ||
+		      (ui4 > 255) || (ui1 > ui2) || (ui3 > ui4))
 		    mjpeg_error_exit1
 		      ("Uncoherent BLUE correction (0<>255, small, large): Gamma=%f, InputYmin=%u, InputYmax=%u, OutputYmin=%u, OutputYmax=%u\n",
 		       f1, ui1, ui2, ui3, ui4);

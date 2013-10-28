@@ -362,8 +362,6 @@ CmdLineMultiplexJob::CmdLineMultiplexJob(unsigned int argc, char *argv[]) :
 
         case 'r':
             data_rate = atoi(optarg);
-            if( data_rate < 0 )
-                Usage(argv[0]);
             /* Convert from kbit/sec (user spec) to 50B/sec units... */
             data_rate = (( data_rate * 1000 / 8 + 49) / 50 ) * 50;
             break;
@@ -522,8 +520,6 @@ bool CmdLineMultiplexJob::ParseSubtitleOptions( const char *optarg  )
 			else if(!strcmp(e,"c")){ persecond=CLOCKS;e++;}
 		}
 		subtitle_offset = static_cast<int>(f*CLOCKS/(persecond));
-		if( subtitle_offset < 0 )
-			subtitle_offset = 0; // always positive
 		if (*e ==':'){
 		 ++e;
 		 int nr;
