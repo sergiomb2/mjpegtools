@@ -48,11 +48,12 @@ static size_t do_write( int fd, void *buf, size_t count )
 {
 	char *cbuf = buf;
 	size_t count_left = count;
-	size_t written;
-	while( count_left > 0 )
+	ssize_t written;
+
+	while ( count_left > 0 )
 	{
 		written = write( fd, cbuf, count_left );
-		if( written < 0 )
+		if ( written < 0 )
 			return count-count_left;
 		count_left -= written;
 		cbuf += written;
@@ -119,7 +120,7 @@ static void wav_close(int fd)
 	/* Find how long our file is in total, including header */
 	size = lseek(fd, 0, SEEK_CUR);
 
-	if (size < 0 ) 
+	if (size == -1) 
 	{
 		if( fd > 2 )
 			mjpeg_error("lseek failed - wav-header is corrupt");
