@@ -360,7 +360,7 @@ yuvscaler_nearest_integer_division (unsigned long int p, unsigned long int q)
   if (reste >= frontiere)
     ratio++;
 
-  if ((ratio < 0) || (ratio > 255))
+  if (ratio > 255)
     mjpeg_error_exit1 ("Division error: %lu/%lu not in [0;255] range !!\n", p,
 		       q);
   return ((uint8_t) ratio);
