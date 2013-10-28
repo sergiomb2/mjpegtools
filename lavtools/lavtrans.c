@@ -275,8 +275,7 @@ int main(int argc, char ** argv)
    if (process_image_frame != -1)
    {
       nv = el_get_video_frame(vbuff, process_image_frame, &el);
-      sprintf(imgfname,outfile);
-      imgfd = fopen(imgfname,"wb");
+      imgfd = fopen(outfile,"wb");
       if (imgfd==0) system_error("opening image file","fopen");
       res = fwrite(vbuff,nv,1,imgfd);
       if (res!=1) system_error("writing image","fwrite");
