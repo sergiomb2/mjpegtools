@@ -785,11 +785,6 @@ while( (n=getopt(argc,argv,short_options)) != -1)
         if( aspect_ratio == 0 )
             DisplayAspectRatios();
         /* Checking has to come later once MPEG 1/2 has been selected...*/
-        if( aspect_ratio < 0 )
-        {
-            mjpeg_error( "-a option must be positive");
-            ++nerr;
-        }
         break;
 
     case 'F' :
