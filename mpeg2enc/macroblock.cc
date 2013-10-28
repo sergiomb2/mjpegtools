@@ -74,7 +74,7 @@ void MacroBlock::SelectCodingModeOnVariance()
             best_score = cur_score;
             best_me = &*i;
         }
-        if( i->mb_type & MB_BACKWARD == 0 && cur_score < best_fwd_score)
+        if( (i->mb_type & MB_BACKWARD) == 0 && cur_score < best_fwd_score)
         {   
             best_fwd_score = cur_score;
             best_fwd_me = &*i;
