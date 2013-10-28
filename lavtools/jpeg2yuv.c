@@ -451,7 +451,7 @@ static int generate_YUV4MPEG(parameters_t *param, char *firstjpeg)
            
            if (firstjpeg) {
                p = firstjpeg;
-               sprintf(jpegname, firstjpeg);
+               strcpy(jpegname, firstjpeg);
                firstjpeg = NULL;
            }
            else {
