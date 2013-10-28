@@ -1,5 +1,5 @@
 /*
- * $Id: y4mtoqt.c,v 1.13 2007/05/10 03:07:36 sms00 Exp $
+ * $Id: y4mtoqt.c,v 1.14 2013/10/28 00:20:12 sms00 Exp $
  *
  * Utility to place 4:2:2 or 4:4:4 YUV4MPEG2 data in a Quicktime wrapper.   An
  * audio track can also be added by specifying '-a wavfile' (16bit pcm only).
@@ -35,7 +35,7 @@ main(int argc, char **argv)
 	uint16_t *yuv10[3];
 	int	fdin, y_len, u_len, v_len, nfields = 1, dominance = 0, afd = -1;
 	int	imodel = 0, allow_wrong_yv12 = 0;
-	int	err, i, c, frames, channels = 0, y4mchroma, tenbit = 0;
+	int	err, i, c, channels = 0, y4mchroma, tenbit = 0;
 	char	*qtchroma = NULL;
 	quicktime_t *qtf;
 	quicktime_pasp_t pasp;
@@ -242,7 +242,7 @@ main(int argc, char **argv)
 	if	(lqt_set_clap(qtf, 0, &clap) == 0)
 		mjpeg_error_exit1("lqt_set_clap(qtf, 0, ...) failed");
 
-	for	(;y4m_read_frame(fdin,&istream,&iframe,yuv) == Y4M_OK; frames++)
+	for	(;y4m_read_frame(fdin,&istream,&iframe,yuv) == Y4M_OK; )
 		{
 		if	(tenbit)
 			{
