@@ -559,7 +559,7 @@ int main (int argc, char *argv[])
         
         case 'h':
         case '?':
-          print_usage (argv);
+          print_usage ();
           return 0 ;
           break;
         }
