@@ -380,8 +380,8 @@ void OnTheFlyPass2::InitPict(Picture &picture)
   double target_ABQ = picture.ABQ * actual_bits / target_bits;
   // If the correction of the correction looks reasonable... use it...
   double debiased_target_ABQ = target_ABQ * mean_reencode_A_T_ratio;
-  if( actual_bits > target_bits &&  debiased_target_ABQ > picture.ABQ ||
-      actual_bits < target_bits && debiased_target_ABQ < picture.ABQ )
+  if( (actual_bits > target_bits &&  debiased_target_ABQ > picture.ABQ) ||
+      (actual_bits < target_bits && debiased_target_ABQ < picture.ABQ ))
   {
      target_ABQ = debiased_target_ABQ;
   }
