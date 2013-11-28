@@ -18,6 +18,6 @@ noinst_HEADERS = \
 
 EXTRA_DIST = yuvscaler_implementation.txt
 
-yuvscaler_CFLAGS=@PROGRAM_NOPIC@
+yuvscaler_CFLAGS=
 yuvscaler_SOURCES = yuvscaler.c yuvscaler_resample.c yuvscaler_bicubic.c
 yuvscaler_LDADD = $(LIBMJPEGUTILS) $(LIBM_LIBS)

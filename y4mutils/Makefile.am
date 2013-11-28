@@ -2,7 +2,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-AM_CFLAGS   = @PROGRAM_NOPIC@
+AM_CFLAGS   =
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/utils
 
 LIBMJPEGUTILS = $(top_builddir)/utils/libmjpegutils.la

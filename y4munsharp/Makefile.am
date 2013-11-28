@@ -4,7 +4,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I $(top_srcdir)/utils -I $(top_srcdir)
 
-y4munharp_CFLAGS=@PROGRAM_NOPIC@
+y4munharp_CFLAGS=
 
 bin_PROGRAMS = y4munsharp
 
