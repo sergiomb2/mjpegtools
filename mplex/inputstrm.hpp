@@ -126,7 +126,7 @@ class ElementaryStream : //public InputStream,
 						 public MuxStream
 {
 public:
-	enum stream_kind { audio, video, dummy };
+	enum stream_kind { audio, video, subtitle, dummy };
 
  ElementaryStream( IBitStream &ibs,
                       Multiplexor &into, 

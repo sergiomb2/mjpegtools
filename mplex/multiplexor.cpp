@@ -686,7 +686,8 @@ void Multiplexor::Init()
 	{
 		switch( (*str)->Kind() )
 		{
-		case ElementaryStream::audio :
+		 case ElementaryStream::audio :
+		 case ElementaryStream::subtitle :
 			(*str)->SetMaxPacketData( 
 				psstrm->PacketPayload( **str, NULL, NULL, 
 									   false, true, false ) 

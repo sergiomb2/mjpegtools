@@ -179,6 +179,7 @@ private:
     LpcmParams *parms;
 }; 	
 
+
 class SUBPStream : public AudioStream
 {
 public:   
@@ -190,22 +191,23 @@ public:
     virtual unsigned int NominalBitRate() {return 50*1024;}
     virtual unsigned int ReadPacketPayload(uint8_t *dst, unsigned int to_read);
     virtual unsigned int StreamHeaderSize() { return 1; }
-    
+    // OutputSector from AudioStream allows merging of Units -- we don't
+    void OutputSector ( );
 
 private:
 	virtual void FillAUbuffer(unsigned int frames_to_buffer);
     bool ParseAUBitwise();
-    static const unsigned int default_buffer_size;
+	bool CheckAndSkipHeader( struct  vobsub_header_s& vobsub, bool bitwise);
+    //static const unsigned int default_buffer_size;
 
 	/* State variables for scanning source bit-stream */
-    unsigned int framesize;
-    unsigned int samples_per_second;
-    unsigned int bit_rate;
-    unsigned int stream_num;
+
+    //unsigned int stream_num;
     unsigned int num_frames;
     int64_t     initial_offset;  // DTS of first Subp.
     SubtitleStreamParams* parms;
     int8_t sub_stream_id; // substream_id
+    int8_t last_sub_stream_id; // substream_id
 }; 	
 
 
