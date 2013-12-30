@@ -9,8 +9,6 @@ endif
 
 DIST_SUBDIRS = altivec mmxsse
 
-EXTRA_DIST = cpuinfo.c
-
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/utils
 
 lib_LTLIBRARIES = libmjpegutils.la
