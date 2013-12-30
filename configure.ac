@@ -453,35 +453,6 @@ EOF
   fi
 fi
 
-dnl *********************************************************************
-dnl For x86 and ppc machines check which code model we should use.  This is
-dnl done with the helper script cpuinfo.sh because the logic to do the job
-dnl correctly is complex and lengthy (about as long as the entire configure.ac
-dnl file).
-
-if test x$have_x86cpu = xtrue -o x$have_ppccpu = xtrue; then
-  if test x$host_alias != x; then
-    dnl This is to allow cross compiling
-    AC_MSG_CHECKING(sub-architecture settings)
-    if test x$have_x86cpu = xtrue; then
-       host_mod_cpu=`echo $host_cpu | tr _ -`
-       ARCHFLAGS="-march=$host_mod_cpu -mcpu=$host_mod_cpu"
-    fi
-  else
-    if test ! -r $srcdir/cpuinfo.sh; then
-       AC_MSG_ERROR([cpuinfo.sh script not found - do a cvs update])
-    fi
-    AC_MSG_CHECKING(sub-architecture settings)
-    chmod +x $srcdir/cpuinfo.sh
-    if test x$have_x86cpu = xtrue; then
-       ARCHFLAGS=`$srcdir/cpuinfo.sh x86`
-    elif test x$have_ppccpu = xtrue; then
-       ARCHFLAGS=`$srcdir/cpuinfo.sh ppc`
-    fi
-  fi
-  AC_MSG_RESULT($ARCHFLAGS)
-fi
-
 dnl **********************************************************************
 dnl Handle forcing static linkage in key places
 if test "x$enable_static_build" = "xyes" ; then
@@ -550,9 +521,6 @@ dnl *********************************************************************
 dnl Check for what warnings we want gcc to use and adjust the CFLAGS
 dnl as needed. This only works for GCC.
 dnl We do this last as it can screw up library detection etc...
-
-CFLAGS="$ARCHFLAGS $CFLAGS"
-CXXFLAGS="$ARCHFLAGS $CXXFLAGS"
 
 if test "x${GCC}" != "xyes" ; then
   enable_compile_warnings=no
@@ -642,9 +610,6 @@ fi
 if test "$have_ppccpu" = "true" ; then
   AC_MSG_NOTICE([  - PowerPC Optimizations:])
   AC_MSG_NOTICE([    - AltiVec enabled             : ${have_altivec}])
-fi
-if test x"$ARCHFLAGS" != x; then
-  AC_MSG_NOTICE([  - arch/cpu compiler flags       : ${ARCHFLAGS}])
 fi
 if test x"$with_extra_cflags" != "x"; then
   AC_MSG_NOTICE([  - extra_cflags added to CFLAGS: ${with_extra_cflags}])

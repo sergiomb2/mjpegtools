@@ -45,7 +45,6 @@ EXTRA_DIST = \
 	INSTALL \
 	INSTALL.real \
 	TODO \
-	cpuinfo.sh \
 	mjpeg_howto.txt \
 	mjpegtools.spec \
 	mjpegtools.spec.in \
