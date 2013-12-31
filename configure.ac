@@ -5,7 +5,7 @@ AC_CONFIG_SRCDIR([lavtools/lav_io.c])
 
 MJPEG_MAJOR_VERSION=2
 MJPEG_MINOR_VERSION=1
-MJPEG_MICRO_VERSION=0
+MJPEG_MICRO_VERSION=1
 MJPEG_VERSION=$MJPEG_MAJOR_VERSION.$MJPEG_MINOR_VERSION.$MJPEG_MICRO_VERSION
 
 AC_CONFIG_HEADERS([config.h])
@@ -118,22 +118,8 @@ AC_TYPE_SIGNAL
 
 AC_MSG_NOTICE([The host is $host  $host_cpu  $host_vendor  $host_os .])
 
-dnl test for alpha architecture, and Compaq Math Library (cpml) -- much faster
-dnl than GNU libm on this arch.
 LIBM_LIBS="-lm "
 AC_SUBST(LIBM_LIBS)
-AC_MSG_CHECKING([for alpha architecture])
-case $host in
-	alpha*-*-linux-*)
-	    AC_MSG_RESULT([yes])
-	    AC_CHECK_LIB(cpml, asin,
-                         [ LIBM_LIBS="-lcpml"
-                           have_cpml=true ],,)
-            ;;
-        *)
-            AC_MSG_RESULT([no])
-            ;;
-esac
 
 dnl *********************************************************************
 dnl Some host-specific tweaks:
@@ -333,11 +319,6 @@ dnl ********************************************************************
 dnl Test for MMX support if an IA32 platform.  If on a PPC then look for
 dnl Altivec support.  For the IA32 platform see if gcc understands inline 
 dnl MMX instructions.
-dnl
-dnl TODO: host = non intel, target = intel <blah> do the checks also?
-dnl       Remember we are checking that the toolchain can generate the
-dnl       code, not whether the host can execute the code, thats done
-dnl       at run time with the exception of the SSE code.
 
 have_asm_mmx=false
 have_x86cpu=false
@@ -348,41 +329,22 @@ case $host_cpu in
     AC_MSG_RESULT(IA32)
     AC_DEFINE(HAVE_X86CPU,1, [Compiling for x86 architecture CPU])
     have_x86cpu=true
-    PROGRAM_NOPIC="-fno-PIC"
     ;;
   x86_64*)
     AC_MSG_RESULT(x86_64)
     AC_DEFINE(HAVE_X86CPU,1, [Compiling for x86-64 architecture CPU])
     have_x86cpu=true
     have_x86_64cpu=true
-    PROGRAM_NOPIC="-fno-PIC"
     ;;
   powerpc | powerpc64)
     AC_MSG_RESULT(PowerPC)
     AC_DEFINE(HAVE_PPCCPU,1, [Compiling for PowerPC CPU])
     have_ppccpu=true
-    PROGRAM_NOPIC=""
     ;;
   *)
     AC_MSG_RESULT(unknown)
-    PROGRAM_NOPIC=""
     ;;
 esac
-
-dnl Apple's darwin works on multiple hosts now, so add a catchall override
-dnl after processing normal hosts
-case $host in
-  *-apple-darwin*)
-   PROGRAM_NOPIC="-mdynamic-no-pic" # dynamic-no-pic is an Apple gcc option
-   ;;
-esac
-
-dnl This flag is used for PROGRAMS not SHARED LIBRARIES.  PIC code is required
-dnl for shared libraries but is slower than non-pic code.  Compute bound 
-dnl programs such as yuvdenoise and y4mspatialfilter can use this flag by
-dnl simply adding programname_CFLAGS=@PROGRAM_NOPIC@ to the Makefile.am
-
-AC_SUBST(PROGRAM_NOPIC)
 
 if test "$enable_simd_accel" != "false" -a "$enable_simd_accel" != "no"
 then
