@@ -160,9 +160,6 @@ case $host in
   ;; 
 esac])
 
-AS_IF([test "x$have_video4linux" != "xtrue" && test "x$with_v4l" != "xno"],
-        [have_video4linux=false
-	 AC_MSG_WARN([videodev.h not found - please install the linux kernel headers programms needing v4l disabled])])
 AM_CONDITIONAL(HAVE_V4L, test x$have_video4linux = xtrue)
 
 dnl *********************************************************************
@@ -171,10 +168,6 @@ dnl (Creates PTHREAD_LIBS, PTHREAD_CFLAGS, PTHREAD_CC,
 dnl  and defines HAVE_PTHREAD.)
 dnl *********************************************************************
 ACX_PTHREAD
-dnl maddog: The following matches the original pthread-checking behavior
-dnl         in this script, i.e. "If a CFLAG is necessary, use it for 
-dnl         *everything*."  Hopefully, any CFLAGs will eventually go away.
-dnl         The other option is to stick PTHREAD_CFLAGS/CC in Makefile.am....
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
 CC="$PTHREAD_CC"
