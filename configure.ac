@@ -249,21 +249,6 @@ if test x$mjt_cv_extern___progname = xyes ; then
 fi
 
 dnl ********************************************************************
-dnl Check for DGA (for v4l-conf)
-dnl ********************************************************************
-have_dga=false
-if test x$with_dga != xno ; then
-	AC_SUBST(V4LCONF_LIBS)
-	AC_CHECK_LIB(Xxf86dga, XF86DGAQueryExtension,
-		     V4LCONF_LIBS="$X_LIBS -lXxf86dga"
-		     have_dga="true"
-		     AC_DEFINE(HAVE_LIBXXF86DGA,1, [libxf86dga is present]),
-		     have_dga="false",
-		     $X_LIBS $X_PRE_LIBS -lXext $X_EXTRA_LIBS)
-fi
-AM_CONDITIONAL(HAVE_LIBXXF86DGA, test x$have_dga = xtrue)
-
-dnl ********************************************************************
 dnl Check for Gtk+/glib (for glav).  2.4.0 or greater required (should
 dnl not be a problem on recent distributions).
 dnl   (defines GTK_CFLAGS and GTK_LIBS)
