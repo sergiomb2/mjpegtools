@@ -44,6 +44,7 @@ y4mspatialfilter_LDADD = $(LIBMJPEGUTILS) $(LIBM_LIBS)
 
 y4mhist_SOURCES = y4mhist.c
 y4mhist_LDADD = $(SDL_LIBS) $(SDLgfx_LIBS) $(LIBMJPEGUTILS)
+y4mhist_CPPFLAGS = $(AM_CPPFLAGS) $(SDL_CFLAGS)
 
 y4mblack_SOURCES = y4mblack.c
 y4mblack_LDADD = $(LIBMJPEGUTILS)
