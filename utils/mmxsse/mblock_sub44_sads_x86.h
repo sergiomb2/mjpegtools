@@ -18,7 +18,7 @@
  */
 
 #ifndef __MBLOCK_SUB44_SADS_X86_H__
-#define __MBLOCK_SUB44_SADS_X86__
+#define __MBLOCK_SUB44_SADS_X86_H__
 
 #include "mjpeg_types.h"
 
