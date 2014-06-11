@@ -1,5 +1,5 @@
 #ifndef _ONTHEFLYRATECTLPASS2_HH
-#define _ONTHELFYRATECTLPASS2_HH
+#define _ONTHEFLYRATECTLPASS2_HH
 
 /*  (C) 2003 Andrew Stevens */
 
