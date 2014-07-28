@@ -1,6 +1,6 @@
 # Process this file with Automake to produce Makefile.in
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/utils
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/utils
 
 LTCOMPILE = $(LIBTOOL) --mode=compile \
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \

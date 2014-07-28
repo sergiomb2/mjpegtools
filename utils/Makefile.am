@@ -9,7 +9,7 @@ endif
 
 DIST_SUBDIRS = altivec mmxsse
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/utils
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/utils
 
 lib_LTLIBRARIES = libmjpegutils.la
 

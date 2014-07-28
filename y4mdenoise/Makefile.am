@@ -7,7 +7,7 @@ EXTRA_DIST = implementation.html
 AM_CFLAGS = -DNDEBUG -finline-functions
 AM_CXXFLAGS = -DNDEBUG -finline-functions
 
-INCLUDES =  -I$(top_srcdir) -I$(top_srcdir)/utils
+AM_CPPFLAGS =  -I$(top_srcdir) -I$(top_srcdir)/utils
 
 LIBMJPEGUTILS = $(top_builddir)/utils/libmjpegutils.la
 if HAVE_ALTIVEC

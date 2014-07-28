@@ -7,7 +7,7 @@ EXTRA_DIST = ChangeLog README TODO
 AM_CFLAGS = -DNDEBUG -finline-functions -DYS_VERSION_MAJOR=9 -DYS_VERSION_MINOR=0
 AM_CXXFLAGS = -DNDEBUG -finline-functions -DYS_VERSION_MAJOR=9 -DYS_VERSION_MINOR=0
 
-INCLUDES =  -I$(top_srcdir) -I$(top_srcdir)/utils
+AM_CPPFLAGS =  -I$(top_srcdir) -I$(top_srcdir)/utils
 
 LIBMJPEGUTILS = $(top_builddir)/utils/libmjpegutils.la
 if HAVE_ALTIVEC

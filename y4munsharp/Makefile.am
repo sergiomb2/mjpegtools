@@ -2,7 +2,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = -I $(top_srcdir)/utils -I $(top_srcdir)
+AM_CPPFLAGS = -I $(top_srcdir)/utils -I $(top_srcdir)
 
 y4munharp_CFLAGS=
 

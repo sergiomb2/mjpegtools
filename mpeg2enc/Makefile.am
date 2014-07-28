@@ -21,7 +21,7 @@ EXTRA_DIST = NOTES README TODO INSTALL ChangeLog seqstats.cc seqstats.hh
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/utils
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/utils
 
 LIBMJPEGUTILS = $(top_builddir)/utils/libmjpegutils.la
 
