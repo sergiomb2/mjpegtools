@@ -27,8 +27,6 @@
 #include "interact.hpp"
 #include "multiplexor.hpp"
 
-
-
 static void marker_bit (IBitStream &bs, unsigned int what)
 {
     if (what != bs.Get1Bit())
@@ -37,7 +35,6 @@ static void marker_bit (IBitStream &bs, unsigned int what)
         exit (1);
     }
 }
-
 
 void VideoStream::ScanFirstSeqHeader()
 {
@@ -70,9 +67,6 @@ void VideoStream::ScanFirstSeqHeader()
 
 }
 
-
-
-
 void VideoStream::Init ( const int stream_num )
 {
 	mjpeg_debug( "SETTING video buffer to %d", parms->DecodeBufferSize() );
@@ -83,9 +77,7 @@ void VideoStream::Init ( const int stream_num )
 					 muxinto.buffers_in_video,
 					 muxinto.always_buffers_in_video);
     mjpeg_info( "Scanning for header info: Video stream %02x (%s) ",
-                VIDEO_STR_0+stream_num,
-                bs.StreamName()
-                );
+                VIDEO_STR_0+stream_num, bs.StreamName());
 
 	SetBufSize( 4*1024*1024 );
 	ScanFirstSeqHeader();
@@ -160,7 +152,7 @@ void VideoStream::FillAUbuffer(unsigned int frames_to_buffer)
 		syncword = (SYNCWORD_START<<8) + bs.GetBits( 8);
 		if( AU_pict_data )
 		{
-			
+
 			/* Handle the header *ending* an AU...
 			   If we have the AU picture data an AU and have now
 			   reached a header marking the end of an AU fill in the
@@ -172,24 +164,20 @@ void VideoStream::FillAUbuffer(unsigned int frames_to_buffer)
 			switch (syncword) 
 			{
 			case SEQUENCE_HEADER :
-                mjpeg_debug( "Seq hdr @ %lld", bs.bitcount() / 8-4 );
+                	     mjpeg_debug("Seq hdr @ %lld",bs.bitcount() / 8-4);
 			case GROUP_START :
-                mjpeg_debug( "Group hdr @ %lld", bs.bitcount() / 8-4 );
+                	     mjpeg_debug("Group hdr @ %lld",bs.bitcount()/8-4);
 			case PICTURE_START :
 				access_unit.start = AU_start;
 				access_unit.length = static_cast<int>(stream_length - AU_start)>>3;
 				access_unit.end_seq = 0;
 				avg_frames[access_unit.type-1]+=access_unit.length;
 				mjpeg_debug( "AU %d %d %d @ %lld: DTS=%ud", 
-                             decoding_order,
-                             access_unit.type,
-                             access_unit.length,
-                             bs.bitcount() / 8-4,
-							 static_cast<unsigned int>(access_unit.DTS/300) );
-
-
-				aunits.Append( access_unit );					
-                decoding_order++;
+                             	   decoding_order, access_unit.type, 
+				   access_unit.length, bs.bitcount() / 8-4,
+				   static_cast<unsigned int>(access_unit.DTS/300) );
+				aunits.Append( access_unit );
+                		decoding_order++;
 				AU_hdr = syncword;
 				AU_start = stream_length;
 				AU_pict_data = 0;
@@ -214,10 +202,10 @@ void VideoStream::FillAUbuffer(unsigned int frames_to_buffer)
 				}
 				else
 				{
-					if( !bs.eos() && muxinto.split_at_seq_end )
-						mjpeg_warn("No seq. header starting new sequence after seq. end!");
+				if( !bs.eos() && muxinto.split_at_seq_end )
+					mjpeg_warn("No seq. header starting new sequence after seq. end!");
 				}
-                decoding_order++;
+                		decoding_order++;
 				num_seq_end++;
 				break;
 			}
@@ -231,91 +219,102 @@ void VideoStream::FillAUbuffer(unsigned int frames_to_buffer)
 			 streams where parameters change on-the-fly... */
 			num_sequence++;
 			break;
-			
 		case GROUP_START:
 			num_groups++;
 			break;
-			
 		case PICTURE_START:
 			/* We have reached AU's picture data... */
 			AU_pict_data = 1;
-            mjpeg_debug( "Picture start @ %lld", bs.bitcount() / 8-4 );
-			
-            prev_temp_ref = temporal_reference;
+            		mjpeg_debug("Picture start @ %lld",bs.bitcount() / 8-4);
+            		prev_temp_ref = temporal_reference;
 			temporal_reference = bs.GetBits( 10);
 			access_unit.type   = bs.GetBits( 3);
 
-			/* Now scan forward a little for an MPEG-2 picture coding extension
-			   so we can get pulldown info (if present). We ignore the possibility
-               MPEG-1's ghastly 'extra_information_picture' bytes. So the extension 
-               must come in under 9 bytes (4 for the sync-code itself 5 for the rest 
-               of the picture header)
-            */
-			if( bs.SeekSync(EXT_START_CODE, 32, 9) && bs.GetBits(4) == CODING_EXT_ID)
+	/* Now scan forward a little for an MPEG-2 picture coding extension
+	 so we can get pulldown info (if present). We ignore the possibility
+         MPEG-1's ghastly 'extra_information_picture' bytes. So the extension 
+         must come in under 9 bytes (4 for the sync-code itself 5 for the rest 
+         of the picture header)
+        */
+		if ( bs.SeekSync(EXT_START_CODE, 32, 9) && bs.GetBits(4) == CODING_EXT_ID)
 			{
-				/* Skip: 4 F-codes (4)... */
-				(void)bs.GetBits(16); 
-                /* Skip: DC Precision(2) */
-                (void)bs.GetBits(2);
-                pict_struct = bs.GetBits(2);
-                /* Skip: topfirst (1) frame pred dct (1),
-                   concealment_mv(1), q_scale_type (1), */
-				(void)bs.GetBits(4);	
-				/* Skip: intra_vlc_format(1), alternate_scan (1) */
-				(void)bs.GetBits(2);	
-				repeat_first_field = bs.Get1Bit();
-				pulldown_32 |= repeat_first_field;
+			/* Skip: 4 F-codes (4)... */
+			(void)bs.GetBits(16); 
+                	/* Skip: DC Precision(2) */
+                	(void)bs.GetBits(2);
+                	pict_struct = bs.GetBits(2);
+                	/* Skip: topfirst (1) frame pred dct (1),
+                   	concealment_mv(1), q_scale_type (1), */
+			(void)bs.GetBits(4);
+			/* Skip: intra_vlc_format(1), alternate_scan (1) */
+			(void)bs.GetBits(2);
+			repeat_first_field = bs.Get1Bit();
+			pulldown_32 |= repeat_first_field;
 			}
-			else
+		else
 			{
-				repeat_first_field = 0;
-                pict_struct = PIC_FRAME;
+			repeat_first_field = 0;
+                	pict_struct = PIC_FRAME;
 			}
-				
-			if( access_unit.type == IFRAME )
+
+		if ( access_unit.type == IFRAME )
 			{
-                double bits_persec = 
-                    static_cast<double>( stream_length - prev_offset) 
-                    * 2.0 * frame_rate  
-                    / static_cast<double>(fields_presented - group_start_field);
+                	double bits_persec = 
+                    		static_cast<double>(stream_length - prev_offset)
+				* 2.0 * frame_rate / static_cast<double>(fields_presented - group_start_field);
                 
-				if( bits_persec > max_bits_persec )
+			if ( bits_persec > max_bits_persec )
 				{
-					max_bits_persec = bits_persec;
+				max_bits_persec = bits_persec;
 				}
-				prev_offset = stream_length;
-				group_start_pic = decoding_order;
-				group_start_field = fields_presented;
+			prev_offset = stream_length;
+			group_start_pic = decoding_order;
+			group_start_field = fields_presented;
 			}
 
 			NextDTSPTS( );
 
 			access_unit.dorder = decoding_order;
 			access_unit.porder = temporal_reference + group_start_pic;
-
 			access_unit.seq_header = ( AU_hdr == SEQUENCE_HEADER);
 
 			if ((access_unit.type>0) && (access_unit.type<5))
-			{
 				num_frames[access_unit.type-1]++;
-			}
 
-			
 			if ( decoding_order >= old_frames+1000 )
-			{
-				mjpeg_debug("Got %d picture headers.", decoding_order);
-				old_frames = decoding_order;
-			}
-			
+			   {
+			   mjpeg_debug("Got %d picture headers",decoding_order);
+			   old_frames = decoding_order;
+			   }
 			break;		    
-
-  
-				
 		}
 	}
 
+    // make sure the last AU gets added at the end of the stream
+    if (bs.eos() && AU_pict_data)
+        {
+        stream_length = bs.bitcount();
+        access_unit.start = AU_start;
+        access_unit.length = static_cast<int>(stream_length - AU_start)>>3;
+        access_unit.end_seq = 0;
+        avg_frames[access_unit.type-1]+=access_unit.length;
+
+        mjpeg_debug( "LAST AU %d %d %d @ %lld: DTS=%ud",
+                     decoding_order,
+                     access_unit.type,
+                     access_unit.length,
+                     bs.bitcount() / 8-4,
+                     static_cast<unsigned int>(access_unit.DTS/300) );
+
+        aunits.Append( access_unit );
+        decoding_order++;
+        AU_hdr = syncword;
+        AU_start = stream_length;
+        AU_pict_data = 0;
+        }
+
 	last_buffered_AU = decoding_order;
-	num_pictures = decoding_order;	
+	num_pictures = decoding_order;
 	eoscan = bs.eos() || muxinto.AfterMaxPTS(access_unit.PTS);
 }
 
@@ -325,18 +324,18 @@ void VideoStream::Close()
     unsigned int peak_bit_rate  ;
 
     stream_length = bs.bitcount() / 8;
-    for( int i=0; i<4; i++)
+    for ( int i=0; i<4; i++)
 	{
-		avg_frames[i] /= num_frames[i] == 0 ? 1 : num_frames[i];
+	avg_frames[i] /= num_frames[i] == 0 ? 1 : num_frames[i];
 	}
 
 	/* Average and Peak bit rate in 50B/sec units... */
     comp_bit_rate = 
-        static_cast<unsigned int>( static_cast<unsigned int>( stream_length / fields_presented * 2 ) 
-                                   * frame_rate  + 25) / 50;
+        static_cast<unsigned int>( static_cast<unsigned int>( stream_length / fields_presented * 2 ) * frame_rate  + 25) / 50;
 
-	peak_bit_rate = static_cast<unsigned int>((max_bits_persec / 8 + 25) / 50);
-	mjpeg_info ("VIDEO_STATISTICS: %02x", stream_id); 
+    peak_bit_rate = static_cast<unsigned int>((max_bits_persec / 8 + 25) / 50);
+
+    mjpeg_info ("VIDEO_STATISTICS: %02x", stream_id); 
     mjpeg_info ("Video Stream length: %11llu bytes", stream_length);
     mjpeg_info ("Sequence headers: %8u",num_sequence);
     mjpeg_info ("Sequence ends   : %8u",num_seq_end);
@@ -350,11 +349,7 @@ void VideoStream::Close()
 			  num_frames[2], (uint32_t)avg_frames[2]);
     mjpeg_info("Average bit-rate : %8u bits/sec",comp_bit_rate*400);
     mjpeg_info("Peak bit-rate    : %8u  bits/sec",peak_bit_rate*400);
-	
 }
-	
-
-
 
 /*************************************************************************
 	OutputSeqHdrInfo
@@ -363,37 +358,36 @@ void VideoStream::Close()
 
 void VideoStream::OutputSeqhdrInfo ()
 {
-	const char *str;
-	mjpeg_info("VIDEO STREAM: %02x", stream_id);
+    const char *str;
 
+    mjpeg_info("VIDEO STREAM: %02x", stream_id);
     mjpeg_info ("Frame width     : %u",horizontal_size);
     mjpeg_info ("Frame height    : %u",vertical_size);
-	if (mpeg_valid_aspect_code(muxinto.mpeg, aspect_ratio))
-		str =  mpeg_aspect_code_definition(muxinto.mpeg,aspect_ratio);
-	else
-		str = "forbidden";
+
+    if (mpeg_valid_aspect_code(muxinto.mpeg, aspect_ratio))
+	str =  mpeg_aspect_code_definition(muxinto.mpeg,aspect_ratio);
+    else
+	str = "forbidden";
+
     mjpeg_info ("Aspect ratio    : %s", str );
-				
 
     if (picture_rate == 0)
-		mjpeg_info( "Picture rate    : forbidden");
+	mjpeg_info( "Picture rate    : forbidden");
     else if (mpeg_valid_framerate_code(picture_rate))
-		mjpeg_info( "Picture rate    : %2.3f frames/sec",
-					Y4M_RATIO_DBL(mpeg_framerate(picture_rate)) );
+	mjpeg_info( "Picture rate    : %2.3f frames/sec",
+			Y4M_RATIO_DBL(mpeg_framerate(picture_rate)) );
     else
-		mjpeg_info( "Picture rate    : %x reserved",picture_rate);
+	mjpeg_info( "Picture rate    : %x reserved",picture_rate);
 
     if (bit_rate == 0x3ffff)
-		{
-			bit_rate = 0;
-			mjpeg_info( "Bit rate        : variable"); 
-		}
+	{
+	bit_rate = 0;
+	mjpeg_info( "Bit rate        : variable"); 
+	}
     else if (bit_rate == 0)
 		mjpeg_info( "Bit rate       : forbidden");
     else
-		mjpeg_info( "Bit rate        : %u bits/sec",
-					bit_rate*400);
-
+		mjpeg_info( "Bit rate        : %u bits/sec", bit_rate*400);
     mjpeg_info("Vbv buffer size : %u bytes",vbv_buffer_size*2048);
     mjpeg_info("CSPF            : %u",CSPF);
 }
@@ -423,7 +417,6 @@ int gopfields_32pd( int temporal_ref, bool repeat_first_field )
     }
 
     return frames2field*2 + frames3field*3;
-
 }
 
 /****************************************************
@@ -443,12 +436,12 @@ void VideoStream::NextDTSPTS()
     int decode_fields, present_fields;
     if( pict_struct != PIC_FRAME )
     {
-		decode_fields = fields_presented;
+	decode_fields = fields_presented;
         present_fields = temporal_reference*2 + group_start_field+decode_delay/2;
-        if( temporal_reference == prev_temp_ref )
+        if (temporal_reference == prev_temp_ref)
             present_fields += 1;
         fields_presented += 1;
-    }	
+    }
     else if( pulldown_32 )
 	{
         present_fields = group_start_field  + startup_skew + decode_delay +
@@ -467,9 +460,7 @@ void VideoStream::NextDTSPTS()
             prev_ref_present = present_fields;
         }
         else
-        {
             decode_fields = present_fields - decode_delay;
-        }
         fields_presented += repeat_first_field ? 3 : 2;
 	}
     else
@@ -486,15 +477,3 @@ void VideoStream::NextDTSPTS()
     access_unit.PTS = static_cast<clockticks>
         (present_fields * (double)(CLOCKS/2) / frame_rate);
 }
-
-
-
-
-
-/* 
- * Local variables:
- *  c-file-style: "stroustrup"
- *  tab-width: 4
- *  indent-tabs-mode: nil
- * End:
- */
