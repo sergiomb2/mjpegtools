@@ -290,28 +290,27 @@ void VideoStream::FillAUbuffer(unsigned int frames_to_buffer)
 		}
 	}
 
-    // make sure the last AU gets added at the end of the stream
-    if (bs.eos() && AU_pict_data)
-        {
-        stream_length = bs.bitcount();
-        access_unit.start = AU_start;
-        access_unit.length = static_cast<int>(stream_length - AU_start)>>3;
-        access_unit.end_seq = 0;
-        avg_frames[access_unit.type-1]+=access_unit.length;
+	// make sure the last AU gets added at the end of the stream,
+	// unless the stream contains a sequence end header
+	if  (bs.eos() && AU_pict_data && num_seq_end == 0)
+	    {
+	    stream_length = bs.bitcount();
+	    access_unit.start = AU_start;
+	    access_unit.length = static_cast<int>(stream_length - AU_start)>>3;
+	    access_unit.end_seq = 0;
+	    avg_frames[access_unit.type-1]+=access_unit.length;
 
-        mjpeg_debug( "LAST AU %d %d %d @ %lld: DTS=%ud",
-                     decoding_order,
-                     access_unit.type,
-                     access_unit.length,
-                     bs.bitcount() / 8-4,
-                     static_cast<unsigned int>(access_unit.DTS/300) );
+	    mjpeg_debug( "LAST AU %d %d %d @ %lld: DTS=%ud",
+		decoding_order, access_unit.type, access_unit.length,
+		bs.bitcount() / 8-4, 
+		static_cast<unsigned int>(access_unit.DTS/300) );
 
-        aunits.Append( access_unit );
-        decoding_order++;
-        AU_hdr = syncword;
-        AU_start = stream_length;
-        AU_pict_data = 0;
-        }
+	    aunits.Append( access_unit );
+	    decoding_order++;
+	    AU_hdr = syncword;
+	    AU_start = stream_length;
+	    AU_pict_data = 0;
+	    }
 
 	last_buffered_AU = decoding_order;
 	num_pictures = decoding_order;
