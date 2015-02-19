@@ -7,10 +7,10 @@ lavtools: Linux Audio and Video TOOLS for Motion JPEG and MPEG
 ==============================================================
 
 Programs for MJPEG recording and playback and simple cut-and-paste
-editting and MPEG compression of audio and video under Linux.
+editing and MPEG compression of audio and video under Linux.
 
-N.b. Only the "lav" programs have been written whooly from scratch.
-The rest are from diverse open source originals, modified to work with
+Only the "lav" programs have been written entirely from scratch.
+The rest are from diverse open source originals modified to work with
 the lav tools edit lists and AVI and quicktime files.  Some
 (especially the MPEG tools) have had also more major perfomance and
 functionality enhancements.  
@@ -18,8 +18,7 @@ functionality enhancements.
 * The lavtools, xlav and utils directories
 
 The latest and greatest versions of Rainer Johanni's original
-lavtools.  Plus some extra goodies to link them to the MPEG
-compression tools.
+lavtools plus some extra goodies to link them to the MPEG compression tools.
 
 - "lavrec" is a program to record AVI and Quicktime MJPEG files with
    the Iomega BUZ etc including sound recording from the soundcard.
@@ -33,7 +32,7 @@ compression tools.
   "edit list" file with pointers to the relevant bits of the original files.
   The lav tools and MPEG encoding tools can all work directly with these files
   as well as Quicktime and AVI files.  Since these files have simple plain-text
-  format they can easily be manually editted or use for other tools.
+  format they can easily be manually edited or use for other tools.
 	
 - "lavtrans" (in directory utils) converts a mixture of AVI files,
   Quicktime files or Edit Lists into a single AVI or Quicktime file
@@ -56,11 +55,6 @@ compression tools.
   streams will  work fine with this, ending cleanly when they reach the
   actual end.
 
-- "lav2dfilter".  A median filter for noise reduction.  Useful when MPEG
-  encoding TV material.
-
-- "v4l-conf" is used in X to set up your video framebuffer address
-
 - "yuv2lav", "ypipe" and "transist.flt" for (first decode an mjpeg 
   input file into raw yuv data (lav2yuv)) putting the data of more than 
   one yuv stream together (ypipe), making a transition between the two
@@ -77,17 +71,12 @@ contains several useful shell scripts that automagically
 do the right thing for common encoding tasks. They're also
 intended as examples of typical uses.
 
-
 * The mpeg2enc directory
 
 - "mpeg2enc" for encoding the output of lav2yuv or suitable
   output plugins in mpeg2dec to MPEG-1/2 video streams.
 
 See the README for further details.
-In the current beta release MPEG-2 is untested and variable
-bit-rate probably won't work.  HOWEVER: speed and quality for
-MPEG-1 are really rather good. Encoding 352x288 PAL at 18
-fps on a 700Mhz Duron or 11ps on a 450Mhz P-III.
 
 * The aenc directory - 
 
@@ -97,7 +86,6 @@ included for simplicity and completeness.  It also has the virtue
 that for transcoding applications (e.g. AC3 to mp2) it can do
 sampling rate conversions.  You need this to compress audio.
 
-	
 In general, however, you'd be better off with the faster and more
 capable "toolame" encoder.  For transcoding applications the good old
 stand-by "sox" will convert sampling rates very nicely (albeit it'll 
@@ -117,23 +105,16 @@ This multiplexes (interleaves) MPEG-1/2 video and audio streams
 into a combined "system stream" that can be played back smoothly.
 This is *not* quite as trivial a task as it might seem (see the
 original authors paper on the subject - copy is in the
-documentation). Note that the program has been pretty heavily
-modified since then.
-MPEG-2 multiplexing is implemented but is currently untested.
-DVD VOB multiplexing (AC3 audio in addition to MPEG) is not implemented.
+documentation). Note that the program has been heavily modified since then.
 
-
-See the README's of the various programs for further details
+See the READMEs of the various programs for further details
 of authorship, usage, and implementation/compilation details.
 
-
-Attention: lavplay is mainly intended to play back files created by
-lavrec and should also be able to play back MJPEG AVI files created
-from the Iomega BUZ under Win98 or the xawtv capture tool under linux.
+Attention: lavplay is mainly intended to play back files created by lavrec.
 The vast majority of AVI/Quicktime files will not be played by
-lavplay!!!  (see http://dix.euro.ru for such codecs) The reason is
-that lavplay only handles AVI that use an MJPG codec, all other files
-don't use that codec and can therefore not be played back by the BUZ.
+lavplay!  (see http://dix.euro.ru for such codecs) The reason is
+that lavplay only handles AVI that use an MJPG codec and other files
+do not use that codec.
 
 * Contact
 
