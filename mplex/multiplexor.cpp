@@ -322,7 +322,7 @@ void Multiplexor::InitInputStreamsForStills(MultiplexJob & job )
     switch( job.mux_format )
     {
     case MPEG_FORMAT_VCD_STILL :
-        mjpeg_info( "Multiplexing VCD stills: %d stills streams.", video_strms.size() );
+        mjpeg_info( "Multiplexing VCD stills: %lu stills streams.", video_strms.size() );
         {
             frame_interval = 30; // 30 Frame periods
             if( mpa_strms.size() > 0 && video_strms.size() > 2  )
@@ -352,7 +352,7 @@ void Multiplexor::InitInputStreamsForStills(MultiplexJob & job )
         }
         break;
     case MPEG_FORMAT_SVCD_STILL :
-        mjpeg_info( "Multiplexing SVCD stills: %d stills streams %d audio streams", video_strms.size(), mpa_strms.size() );
+        mjpeg_info( "Multiplexing SVCD stills: %lu stills streams %lu audio streams", video_strms.size(), mpa_strms.size() );
         frame_interval = 30;
         if( video_strms.size() > 1 )
         {
