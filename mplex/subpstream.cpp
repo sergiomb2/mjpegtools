@@ -308,7 +308,7 @@ unsigned int SUBPStream::ReadPacketPayload(uint8_t *dst, unsigned int to_read)
 
 
     decode_time = RequiredDTS();
-    mjpeg_debug("SUBPStream: Required DTS is %lld",decode_time/300.0);
+    mjpeg_debug("SUBPStream: Required DTS is %f",decode_time/300.0);
 
     if (!finished_pack)
     {
