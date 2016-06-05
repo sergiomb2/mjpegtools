@@ -4,8 +4,8 @@ MAINTAINERCLEANFILES = Makefile.in
 
 EXTRA_DIST = implementation.html
 
-AM_CFLAGS = -DNDEBUG -finline-functions
-AM_CXXFLAGS = -DNDEBUG -finline-functions
+AM_CFLAGS = -DNDEBUG 
+AM_CXXFLAGS = -DNDEBUG
 
 AM_CPPFLAGS =  -I$(top_srcdir) -I$(top_srcdir)/utils
 
