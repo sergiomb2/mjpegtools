@@ -202,16 +202,12 @@ private:
 	
 };
 
-
-
 IFileBitStream::IFileBitStream( const char *bs_filename,
                                 unsigned int buf_size) :
     IBitStream()
 {
 	if ((fileh = fopen(bs_filename, "rb")) == NULL)
-	{
-		mjpeg_error_exit1( "Unable to open file %s for reading.", bs_filename);
-	}
+	   mjpeg_error_exit1( "Unable to open file %s for reading.", bs_filename);
 	filename = strcpy( new char[strlen(bs_filename)+1], bs_filename );
     streamname = filename;
 
@@ -219,14 +215,11 @@ IFileBitStream::IFileBitStream( const char *bs_filename,
 	eobs = false;
     byteidx = 0;
 	if (!ReadIntoBuffer())
-	{
-		if (buffered==0)
-		{
-			mjpeg_error_exit1( "Unable to read from %s.", bs_filename);
-		}
-	}
+	   {
+	   if (buffered==0)
+	      mjpeg_error_exit1( "Unable to read from %s.", bs_filename);
+	   }
 }
-
 
 /**
    Destructor: close the device containing the bit stream after a read
@@ -621,10 +614,9 @@ bool CmdLineMultiplexJob::ParseWorkaroundOpt( const char *optarg )
                 if( flag_table[flag].longname != 0 )
                     message += sep;
             }
-            mjpeg_error( message.c_str() );
+            mjpeg_error("%s", message.c_str() );
             return false;
         }
-
     } 
     return true;
 }
