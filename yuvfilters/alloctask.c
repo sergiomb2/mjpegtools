@@ -26,7 +26,7 @@ YfAllocateTask(const YfTaskClass_t *filter, size_t size, const YfTaskCore_t *h0)
 {
   YfTaskCore_t *h = malloc(size);
   if (!h) {
-    perror("malloc");
+    mjpeg_error("malloc");
     return NULL;
   }
   memset(h, 0, size);

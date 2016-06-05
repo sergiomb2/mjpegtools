@@ -23,13 +23,11 @@
 #include <mpegconsts.h>
 #include "yuvfilters.h"
 
-DEFINE_STD_YFTASKCLASS(yuvstdin);
+static	YfTaskCore_t *do_init(int, char **, const YfTaskCore_t *);
+static	void do_fini(YfTaskCore_t *);
+static	int do_frame(YfTaskCore_t *, const YfTaskCore_t *, const YfFrame_t *);
 
-static const char *
-do_usage(void)
-{
-  return "";
-}
+const	YfTaskClass_t yuvstdin = { do_init, do_fini, do_frame };
 
 static YfTaskCore_t *
 do_init(int argc, char **argv, const YfTaskCore_t *h0)

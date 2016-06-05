@@ -27,7 +27,7 @@ YfInitFrame(YfFrame_t *frame, const YfTaskCore_t *h0)
 {
   if (!frame) {
     if (!(frame = malloc(FRAMEBYTES(y4m_si_get_chroma(&h0->si), h0->width, h0->height)))) {
-      perror("malloc");
+      mjpeg_error("malloc");
       return NULL;
     }
   }

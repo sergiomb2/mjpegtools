@@ -23,13 +23,11 @@
 #include <mpegconsts.h>
 #include "yuvfilters.h"
 
-DEFINE_STD_YFTASKCLASS(yuvstdout);
+static  YfTaskCore_t *do_init(int, char **, const YfTaskCore_t *);
+static  void do_fini(YfTaskCore_t *);
+static  int do_frame(YfTaskCore_t *, const YfTaskCore_t *, const YfFrame_t *);
 
-static const char *
-do_usage(void)
-{
-  return "";
-}
+const   YfTaskClass_t yuvstdout = { do_init, do_fini, do_frame };
 
 static YfTaskCore_t *
 do_init(int argc, char **argv, const YfTaskCore_t *h0)
@@ -59,6 +57,7 @@ static int
 do_frame(YfTaskCore_t *handle, const YfTaskCore_t *h0, const YfFrame_t * frame0)
 {
   uint8_t * yuv[3];
+
   yuv[0] = (uint8_t*)frame0->data;
   yuv[1] = yuv[0] + (handle->width * handle->height);
   yuv[2] = yuv[1] + ((handle->width  / CWDIV(y4m_si_get_chroma(&handle->si))) *

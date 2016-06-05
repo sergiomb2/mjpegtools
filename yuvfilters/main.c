@@ -23,37 +23,16 @@
 #include <unistd.h>
 #include "yuvfilters.h"
 
-#ifdef FILTER
-#  define MODULE FILTER
-#else
-# ifdef READER
-#  define MODULE READER
-# else
-#  define MODULE WRITER
-# endif
-#endif
-#ifndef READER
-#define READER yuvstdin
-#endif
-#ifndef WRITER
-#define WRITER yuvstdout
-#endif
-
-DECLARE_YFTASKCLASS(READER);
-DECLARE_YFTASKCLASS(WRITER);
-#ifdef FILTER
-DECLARE_YFTASKCLASS(FILTER);
-#endif
+extern const YfTaskClass_t yuvstdin;
+extern const YfTaskClass_t yuvstdout;
+extern const YfTaskClass_t FILTER;
 
 int verbose = 1;
 
 static void
 usage(char **argv)
 {
-  char buf[1024];
-
-  sprintf(buf, "Usage: %s %s", argv[0], (*MODULE.usage)());
-  WERRORL(buf);
+  mjpeg_error("Usage: %s %s", argv[0], (*FILTER.usage)());
 }
 
 int
@@ -75,23 +54,18 @@ main(int argc, char **argv)
    y4m_accept_extensions(1);
 
   ret = 1;
-#ifndef FILTER
-  if (!(hreader = YfAddNewTask(&READER, argc, argv, NULL)))
-    goto RETURN;
-#else
-  if (!(hreader = YfAddNewTask(&READER, argc, argv, NULL)))
+  if (!(hreader = YfAddNewTask(&yuvstdin, argc, argv, NULL)))
     goto RETURN;
   if (!YfAddNewTask(&FILTER, argc, argv, hreader))
     goto FINI;
-#endif
-  if (!YfAddNewTask(&WRITER, argc, argv, hreader))
+  if (!YfAddNewTask(&yuvstdout, argc, argv, hreader))
     goto FINI;
 
-  ret = (*READER.frame)(hreader, NULL, NULL);
+  ret = (*yuvstdin.frame)(hreader, NULL, NULL);
   if (ret == Y4M_ERR_EOF)
     ret = Y4M_OK;
   if (ret != Y4M_OK)
-    WERRORL(y4m_strerr(ret));
+    mjpeg_error("%s", y4m_strerr(ret));
 
  FINI:
   for (h = hreader; h; h = hreader) {

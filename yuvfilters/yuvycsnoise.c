@@ -40,7 +40,11 @@ typedef struct {
 #define    CHROMA 16
 #define ALLMETHODS (TRIFRAME|BIFRAME|INFIELD|CHROMA)
 
-DEFINE_STD_YFTASKCLASS(yuvycsnoise);
+static  YfTaskCore_t *do_init(int, char **, const YfTaskCore_t *);
+static  void do_fini(YfTaskCore_t *);
+static  int do_frame(YfTaskCore_t *, const YfTaskCore_t *, const YfFrame_t *);
+
+const   YfTaskClass_t yuvycsnoise = { do_init, do_fini, do_frame };
 
 static const char *
 do_usage(void)
@@ -110,22 +114,21 @@ do_init(int argc, char **argv, const YfTaskCore_t *h0)
       maxb < min || 255 < maxb ||
       maxi < min || 255 < maxi ||
       maxc < min || 255 < maxi) {
-    WERROR("illeagal threshold");
+    mjpeg_error("illegal threshold");
     return NULL;
   }
   if (errt < 1 || 255 < errt ||
       errb < 1 || 255 < errb ||
       erri < 1 || 255 < erri ||
       errc < 1 || 255 < errc) {
-    WERROR("illeagal error");
+    mjpeg_error("illegal error");
     return NULL;
   }
   if (y4m_si_get_interlace(&h0->si) == Y4M_ILACE_BOTTOM_FIRST) {
-    WERROR("unsupported field order");
+    mjpeg_error("unsupported field order");
     return NULL;
   }
-  if (h0->height != 480 || h0->fpscode != 4)
-    WWARN("input doesn't seem NTSC full height / full motion video");
+
   h = (YfTask_t *)
     YfAllocateTask(&yuvycsnoise,
 		   (sizeof *h + DATABYTES(y4m_si_get_chroma(&h0->si), h0->width, h0->height) + /* frame */
@@ -412,4 +415,51 @@ do_frame(YfTaskCore_t *handle, const YfTaskCore_t *h0, const YfFrame_t *frame0)
   memcpy(frprv, frnxt, databytes); /* frprv: frnow at next */
   h->iframe++;
   return 0;
+}
+
+
+extern const YfTaskClass_t yuvstdin;
+extern const YfTaskClass_t yuvstdout;
+extern const YfTaskClass_t yuvycsnoise;
+
+int verbose = 1;
+
+int
+main(int argc, char **argv)
+{
+  YfTaskCore_t *h, *hreader;
+  int ret;
+  char *p;
+
+  if (1 < argc && (!strcmp(argv[1], "-?") ||
+		   !strcmp(argv[1], "-h") ||
+		   !strcmp(argv[1], "--help"))) {
+    mjpeg_error_exit1("Usage: %s", do_usage());
+  }
+  if ((p = getenv("MJPEG_VERBOSITY")))
+    verbose = atoi(p);
+
+   y4m_accept_extensions(1);
+
+  ret = 1;
+  if (!(hreader = YfAddNewTask(&yuvstdin, argc, argv, NULL)))
+    goto RETURN;
+  if (!YfAddNewTask(&yuvycsnoise, argc, argv, hreader))
+    goto FINI;
+  if (!YfAddNewTask(&yuvstdout, argc, argv, hreader))
+    goto FINI;
+
+  ret = (*yuvstdin.frame)(hreader, NULL, NULL);
+  if (ret == Y4M_ERR_EOF)
+    ret = Y4M_OK;
+  if (ret != Y4M_OK)
+    mjpeg_error("%s", y4m_strerr(ret));
+
+ FINI:
+  for (h = hreader; h; h = hreader) {
+    hreader = h->handle_outgoing;
+    (*h->method->fini)(h);
+  }
+ RETURN:
+  return ret;
 }
