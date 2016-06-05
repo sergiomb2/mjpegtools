@@ -2674,7 +2674,7 @@ int lavplay_open(lavplay_t *info, char **files, int num_files)
    else if (editlist->video_width == new_eli->video_width &&
       editlist->video_height == new_eli->video_height &&
       editlist->video_inter == new_eli->video_inter &&
-      abs(editlist->video_fps - new_eli->video_fps) < 0.0000001 &&
+      fabs(editlist->video_fps - new_eli->video_fps) < 0.0000001 &&
       editlist->has_audio == new_eli->has_audio &&
       editlist->audio_rate == new_eli->audio_rate &&
       editlist->audio_chans == new_eli->audio_chans &&
