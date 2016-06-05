@@ -274,7 +274,7 @@ char            **encoded_file_name;
 
     *encoded_file_name = strdup(outfilename);
     if (*encoded_file_name == NULL)
-       mjpeg_error_exit1("can not malloc %d bytes", strlen(outfilename));
+       mjpeg_error_exit1("can not malloc %ld bytes", strlen(outfilename));
 
     /* Read the WAV file header, make sanity checks */
     if(!raw_in)
