@@ -312,7 +312,7 @@ temporal_filter_planes_MC (int idx, int w, int h, int t)
 		v /= 16;
 
 		// add weighted and translated but non-filtered test-pixel
-		d = t - abs (r-v);
+		d = t - r-v;
 		d = d<0? 0:d;
 	  	c += d;
           	m += *(f1+(x+sx+x1)+(y+sy+y1)*w)*d;
@@ -334,7 +334,7 @@ temporal_filter_planes_MC (int idx, int w, int h, int t)
 		v /= 16;
 
 		// add weighted and translated but non-filtered test-pixel
-		d = t - abs (r-v);
+		d = t - r-v;
 		d = d<0? 0:d;
 	  	c += d;
           	m += *(f2+(x+sx+x2)+(y+sy+y2)*w)*d;
@@ -356,7 +356,7 @@ temporal_filter_planes_MC (int idx, int w, int h, int t)
 		v /= 16;
 
 		// add weighted and translated but non-filtered test-pixel
-		d = t - abs (r-v);
+		d = t - r-v;
 		d = d<0? 0:d;
 	  	c += d;
           	m += *(f3+(x+sx+x3)+(y+sy+y3)*w)*d;
@@ -378,7 +378,7 @@ temporal_filter_planes_MC (int idx, int w, int h, int t)
 		v /= 16;
 
 		// add weighted and translated but non-filtered test-pixel
-		d = t - abs (r-v);
+		d = t - r-v;
 		d = d<0? 0:d;
 	  	c += d;
           	m += *(f5+(x+sx+x5)+(y+sy+y5)*w)*d;
@@ -400,7 +400,7 @@ temporal_filter_planes_MC (int idx, int w, int h, int t)
 		v /= 16;
 
 		// add weighted and translated but non-filtered test-pixel
-		d = t - abs (r-v);
+		d = t - r-v;
 		d = d<0? 0:d;
 	  	c += d;
           	m += *(f6+(x+sx+x6)+(y+sy+y6)*w)*d;
@@ -422,7 +422,7 @@ temporal_filter_planes_MC (int idx, int w, int h, int t)
 		v /= 16;
 
 		// add weighted and translated but non-filtered test-pixel
-		d = t - abs (r-v);
+		d = t - r-v;
 		d = d<0? 0:d;
 	  	c += d;
           	m += *(f7+(x+sx+x7)+(y+sy+y7)*w)*d;
@@ -708,7 +708,7 @@ void temporal_filter_planes_p (int idx, int w, int h, int t)
 		d += *(f3+1+w);
 		d /= 16;
 
-		d = t - abs (r-d);
+		d = t - r - d;
 		d = d<0? 0:d;
 		c += d;
 		m += *(f3)*d*2;
@@ -724,7 +724,7 @@ void temporal_filter_planes_p (int idx, int w, int h, int t)
 		d += *(f2+1+w);
 		d /= 16;
 
-		d = t - abs (r-d);
+		d = t - r-d;
 		d = d<0? 0:d;
 		c += d;
 		m += *(f2)*d*2;
@@ -740,7 +740,7 @@ void temporal_filter_planes_p (int idx, int w, int h, int t)
 		d += *(f1+1+w);
 		d /= 16;
 
-		d = t - abs (r-d);
+		d = t - r-d;
 		d = d<0? 0:d;
 		c += d;
 		m += *(f1)*d*2;
@@ -756,7 +756,7 @@ void temporal_filter_planes_p (int idx, int w, int h, int t)
 		d += *(f5+1+w);
 		d /= 16;
 
-		d = t - abs (r-d);
+		d = t - r-d;
 		d = d<0? 0:d;
 		c += d;
 		m += *(f5)*d*2;
@@ -772,7 +772,7 @@ void temporal_filter_planes_p (int idx, int w, int h, int t)
 		d += *(f6+1+w);
 		d /= 16;
 
-		d = t - abs (r-d);
+		d = t - r-d;
 		d = d<0? 0:d;
 		c += d;
 		m += *(f6)*d*2;
@@ -788,7 +788,7 @@ void temporal_filter_planes_p (int idx, int w, int h, int t)
 		d += *(f7+1+w);
 		d /= 16;
 
-		d = t - abs (r-d);
+		d = t - r-d;
 		d = d<0? 0:d;
 		c += d;
 		m += *(f7)*d*2;
@@ -810,8 +810,6 @@ void temporal_filter_planes_p (int idx, int w, int h, int t)
 /* 4 to 5 times faster */
 void filter_plane_median_sse2(uint8_t *plane, int w, int h, int level) {
 	int i;
-	int avg; /*should not be needed any more */
-	int cnt; /* should not be needed any more */
 	uint8_t * p;
 	uint8_t * d;
 	
