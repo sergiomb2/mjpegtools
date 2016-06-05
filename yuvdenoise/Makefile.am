@@ -9,7 +9,7 @@ if HAVE_ALTIVEC
 LIBMJPEGUTILS += $(top_builddir)/mpeg2enc/libmpeg2encpp.la
 endif
 
-AM_CFLAGS = -O3 -funroll-all-loops -ffast-math
+AM_CFLAGS = -O2 -ffast-math
 
 bin_PROGRAMS = yuvdenoise
 
