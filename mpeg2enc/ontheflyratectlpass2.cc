@@ -150,7 +150,7 @@ void OnTheFlyPass2::GopSetup( std::deque<Picture *>::iterator gop_begin,
   double sum_Xhi = 0.0;
   for( i = gop_begin; i != gop_end; ++i )
   {
-    //mjpeg_info( "P2RC: %d xhi = %.0f", (*i)->decode, (*i)->ABQ * (*i)->EncodedSize() );
+    //mjpeg_debug( "P2RC: %d xhi = %.0f", (*i)->decode, (*i)->ABQ * (*i)->EncodedSize() );
 	double frame_Xhi = (*i)->ABQ * (*i)->EncodedSize();
     sum_Xhi += frame_Xhi;
   }
@@ -177,7 +177,7 @@ void OnTheFlyPass2::InitGOP(  )
   fields_in_gop = fields_per_pict * gop_stats.pictures;
   gop_Xhi = gop_stats.Xhi;
 
-  //mjpeg_info( "P2RC: GOP actual size %.0f total xhi = %0.f",total_size, gop_Xhi);
+  //mjpeg_debug( "P2RC: GOP actual size %.0f total xhi = %0.f",total_size, gop_Xhi);
   // Sanity check complexity based allocation to ensure it doesn't cause
   // buffer underflow
 
@@ -237,7 +237,7 @@ void OnTheFlyPass2::InitGOP(  )
   m_mean_strm_Xhi = m_encoded_frames > 0
 					? m_strm_Xhi / m_encoded_frames
 					: m_mean_gop_Xhi;
-  mjpeg_info( "Mean strm Xhi = %.0f mean gop Xhi = %.0f pXhibr=%.4f cbr/abr=%d/%.0f under=%.0f",
+  mjpeg_debug( "Mean strm Xhi = %.0f mean gop Xhi = %.0f pXhibr=%.4f cbr/abr=%d/%.0f under=%.0f",
 			  m_mean_strm_Xhi, m_mean_gop_Xhi,
 			  m_picture_xhi_bitrate,
 			  m_seq_ctrl_bitrate,
@@ -410,7 +410,7 @@ void OnTheFlyPass2::InitPict(Picture &picture)
   cur_mquant = ScaleQuant( picture.q_scale_type, cur_int_base_Q );
 
 
-  mjpeg_info( "%s: %d - reencode actual %d (%.1f) target %d Q=%.1f BV  = %.2f cbr=%.0f",
+  mjpeg_debug( "%s: %d - reencode actual %d (%.1f) target %d Q=%.1f BV  = %.2f cbr=%.0f",
                 reencode ? "RENC" : "SKIP",
                 picture.decode, actual_bits, picture.ABQ, target_bits, base_Q,
                 buffer_variation/((double)encparams.video_buffer_size), ctrl_bitrate );
