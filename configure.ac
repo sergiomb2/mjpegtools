@@ -310,7 +310,7 @@ case $host_cpu in
     ;;
   x86_64*)
     AC_MSG_RESULT(x86_64)
-    AC_DEFINE(HAVE_X86CPU,1, [Compiling for x86-64 architecture CPU])
+    AC_DEFINE(HAVE_X86CPU,1, [Compiling for x86_64 architecture CPU])
     have_x86cpu=true
     have_x86_64cpu=true
     ;;
