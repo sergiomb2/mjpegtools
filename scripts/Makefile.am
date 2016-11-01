@@ -7,12 +7,4 @@ bin_SCRIPTS = \
 	lavtc.sh \
 	mpegtranscode
 
-EXTRA_DIST = \
-	$(bin_SCRIPTS) \
-	makePLI.py \
-	codiere \
-	berechne \
-	aufnahme \
-	frameber
-
 MAINTAINERCLEANFILES = Makefile.in
