@@ -812,9 +812,9 @@ void filter_plane_median_sse2(uint8_t *plane, int w, int h, int level) {
 	int i;
 	uint8_t * p;
 	uint8_t * d;
-	
-	if(level==0) return;
-	
+
+	if (level==0)
+		return;
 	p = plane;
 	d = scratchplane1;
 
@@ -989,9 +989,10 @@ void filter_plane_median_sse2(uint8_t *plane, int w, int h, int level) {
 		uint32_t tmp;
 		
 #if defined(__SSE3__)
-		int j;
+		int j, avg, cnt;
 		__m128 f0, f1, f2, flvl;
 		__m128i zero, vv;
+
 		flvl = _mm_set1_ps((float)level);
 		zero = _mm_setzero_si128();
 		vv = _mm_set_epi32((k6 >> 40) & 0xff, (k6 >> 32) & 0xff, (k6 >> 24) & 0xff, (k6 >> 16) & 0xff);
