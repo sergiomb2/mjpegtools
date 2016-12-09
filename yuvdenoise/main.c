@@ -808,10 +808,14 @@ void temporal_filter_planes_p (int idx, int w, int h, int t)
 
 #if defined(__SSE2__)
 /* 4 to 5 times faster */
-void filter_plane_median_sse2(uint8_t *plane, int w, int h, int level) {
+void filter_plane_median_sse2(uint8_t *plane, int w, int h, int level)
+	{
 	int i;
 	uint8_t * p;
 	uint8_t * d;
+#if !defined(__SSE3__)
+	int	avg, cnt;
+#endif
 
 	if (level==0)
 		return;
@@ -821,7 +825,8 @@ void filter_plane_median_sse2(uint8_t *plane, int w, int h, int level) {
 	// remove strong outliers from the image. An outlier is a pixel which lies outside
 	// of max-thres and min+thres of the surrounding pixels. This should not cause blurring
 	// and it should leave an evenly spread noise-floor to the image.
-	for (i=0; i<=(w*h); i+=14) {
+	for (i=0; i<=(w*h); i+=14)
+		{
 		__m128i t, c, b, min, max, minmin, maxmax;
 		
 		t = _mm_loadu_si128((__m128i *)&p[i-1-w]);
@@ -844,7 +849,7 @@ void filter_plane_median_sse2(uint8_t *plane, int w, int h, int level) {
 		/* write 14 valid pixels, the 2 remaining bytes are overwritten subsequently
 		 * or lie outside the frame area */
 		_mm_storeu_si128((__m128i *)&d[i], c);
-	}
+		}
 	
 	// in the second stage we try to average similar spatial pixels, only. This, like
 	// a median, should also not reduce sharpness but flatten the noisefloor. This
@@ -870,7 +875,7 @@ void filter_plane_median_sse2(uint8_t *plane, int w, int h, int level) {
 #endif
 	
 	for (i=0; i<=(w*h); i+=4)
-	{
+		{
 		uint64_t k0, k1, k2, k3, k6;
 		__m128i c0, c1, v[4], t[4], e[4], a[4];
 		
@@ -989,7 +994,7 @@ void filter_plane_median_sse2(uint8_t *plane, int w, int h, int level) {
 		uint32_t tmp;
 		
 #if defined(__SSE3__)
-		int j, avg, cnt;
+		int j;
 		__m128 f0, f1, f2, flvl;
 		__m128i zero, vv;
 
@@ -1072,11 +1077,11 @@ void filter_plane_median_sse2(uint8_t *plane, int w, int h, int level) {
 		
 		d += 4;
 		p += 4;
-	}
+		}
 	_mm_empty();
 	
 	memcpy(plane,scratchplane2,w*h);
-}
+	}
 #endif
 
 void filter_plane_median_p ( uint8_t * plane, int w, int h, int level)
