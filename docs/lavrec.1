@@ -276,6 +276,8 @@ Besides that, software JPEG encoding seems, for some people, to cause
 small out-of-sync'ness. SMP support for JPEG encoding is currently
 work-in-progress.
 
+Lavrec uses OSS for recording the audio. ALSA emulates OSS, and that can cause problems with the kernel of th 4.x.x series. So we recommend to use a older kernel. There are currently no plans to convert the audio to native ALSA. 
+
 .SH AUTHOR
 This man page was written by Ronald Bultje.
 .br
