@@ -1308,7 +1308,7 @@ static int lavrec_software_init(lavrec_t *info)
           }
           settings->YUVP_convert[loop].mmap=mmap( 0, size, PROT_READ|PROT_WRITE, MAP_SHARED, settings->video_fd,
                                                 offset );
-          if( settings->YUVP_convert[loop].mmap == NULL )
+          if( settings->YUVP_convert[loop].mmap == MAP_FAILED )
           {
               lavrec_msg (LAVREC_MSG_ERROR, info,
                  "Packed YUV mmap error");
