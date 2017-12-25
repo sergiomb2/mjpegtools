@@ -6,16 +6,10 @@ INSTALL - How to install this package
 lavtools: Linux Audio and Video TOOLS for Motion JPEG and MPEG
 ==============================================================
 
-Programs for MJPEG recording and playback and simple cut-and-paste
-editing and MPEG compression of audio and video under Linux.
+Programs for MJPEG recording and playback, MPEG compression and multiplexing
+of audio and video.
 
-Only the "lav" programs have been written entirely from scratch.
-The rest are from diverse open source originals modified to work with
-the lav tools edit lists and AVI and quicktime files.  Some
-(especially the MPEG tools) have had also more major perfomance and
-functionality enhancements.  
-
-* The lavtools, xlav and utils directories
+* The lavtools/ and utils/ directories
 
 The latest and greatest versions of Rainer Johanni's original
 lavtools plus some extra goodies to link them to the MPEG compression tools.
@@ -26,14 +20,6 @@ lavtools plus some extra goodies to link them to the MPEG compression tools.
 - "lavplay" plays back AVI and Quicktime MJPEG files or "xlav" produced
   edit files with the Iomega BUZ etc  (including sound).
 
-- "xlav" in the directory xlav is a GUI for lavplay which permits
-  fast forward/reverse, single frame stepping and simple non-destructive 
-  editing.  Instead of writing new AVI or Quicktime files xlav creates an
-  "edit list" file with pointers to the relevant bits of the original files.
-  The lav tools and MPEG encoding tools can all work directly with these files
-  as well as Quicktime and AVI files.  Since these files have simple plain-text
-  format they can easily be manually edited or use for other tools.
-	
 - "lavtrans" (in directory utils) converts a mixture of AVI files,
   Quicktime files or Edit Lists into a single AVI or Quicktime file
   into single images or into WAV files.
@@ -55,10 +41,10 @@ lavtools plus some extra goodies to link them to the MPEG compression tools.
   streams will  work fine with this, ending cleanly when they reach the
   actual end.
 
-- "yuv2lav", "ypipe" and "transist.flt" for (first decode an mjpeg 
-  input file into raw yuv data (lav2yuv)) putting the data of more than 
+- "yuv2lav", "ypipe" and "transist.flt" for (first decode an mjpeg
+  input file into raw yuv data (lav2yuv)) putting the data of more than
   one yuv stream together (ypipe), making a transition between the two
-  input streams (transist.flt) and for making an mjpeg file out of the 
+  input streams (transist.flt) and for making an mjpeg file out of the
   resulting yuv data (yuv2lav). Read README.transist for more info on
   how to use this.
 
@@ -76,9 +62,7 @@ intended as examples of typical uses.
 - "mpeg2enc" for encoding the output of lav2yuv or suitable
   output plugins in mpeg2dec to MPEG-1/2 video streams.
 
-See the README for further details.
-
-* The aenc directory - 
+* The aenc directory -
 
 Contains the source files for "mp2enc" the MPEG-1 layer 2 audio
 compressor. It is not particularly good as encoders go, but is
@@ -88,15 +72,13 @@ sampling rate conversions.  You need this to compress audio.
 
 In general, however, you'd be better off with the faster and more
 capable "toolame" encoder.  For transcoding applications the good old
-stand-by "sox" will convert sampling rates very nicely (albeit it'll 
-print a few warnings about incorrect headers if you use it in a
-pipeline).
+stand-by "sox" will convert sampling rates (albeit it'll print a few 
+warnings about incorrect headers if you use it in a pipeline).
 
-You may wish to try  using your favourite MPEG 1 layer 3 "MP3" 
-encoder for better quality results.  However, make sure you 
-use constant bit-rate  and turn of any extensions to the format.  
-I have no idea how many players actually cope with layer 3.  Drop
-andrew.stevens@nexgo.de an email if you get it to work!
+You may wish to try  using your favourite MPEG 1 layer 3 "MP3"
+encoder for better quality results.  However, make sure you
+use constant bit-rate  and turn of any extensions to the format.
+It is unknown how many players actually cope with layer 3.
 
 * The mplex directory
 
@@ -118,15 +100,13 @@ do not use that codec.
 
 * Contact
 
-You reach us by email.
-
-If you have questions, remarks, problems or you just want to contact 
+If you have questions, remarks, problems or you just want to contact
 the developers, the main mailing list for the MJPEG-tools is:
   mjpeg-users@lists.sourceforge.net
 
-Although little bits have been done by everyone the main work was
-roughly as follows:
+Although many developers have contributed the work for the important core
+components was done by:
 
 lav* : Rainer Johanni and Gernot Ziegler <gz@lysator.liu.se>
-mpeg2enc mplex : Andrew.Stevens@nexgo.de
+mpeg2enc mplex : Andrew.Stevens@mnet-online.de
 libmjpeg: Gernot Ziegler <gz@lysator.liu.se>
