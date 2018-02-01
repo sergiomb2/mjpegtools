@@ -9,8 +9,7 @@ The mjpegtools are a set of utilities for video-decoding, -recording,
 -playback, -editing and -encoding. Most parts of this software are
 distributed under the terms of the Gnu Public License (GPL). See
 the individual source files for the exact terms.  Mjpegtools is known to build 
-and install on Linux, BSD and OS/X.  On other systems you are on yor own - maybe
-you'll be lucky.
+and install on Linux, BSD and OS/X.
 
 REQUIRED/RECOMMENDED SOFTWARE
 =============================
@@ -32,18 +31,13 @@ Gtk+           : http://www.gtk.org/
 libDV          : http://libdv.sourceforge.net/
 SDL            : http://www.libsdl.org/
 
-Some of these are not installed by default with some distributions. If any
-of them are not found this will be logged during the ./configure process.
+Note: SDL must NOT be version 2.0.  Only the historic SDL-1.2 or 1.3 is usable!
 
 COMPILING SUPPORT LIBRARIES
 ===========================
 The following library is highly recommended for compiling the mjpegtools:
 
 libquicktime   : http://libquicktime.sourceforge.net/
-
-Lastly unpack libquicktime and run './configure', 'make' and 'make install'.
-As usual when installing new libraries it may be necessary to run 'ldconfig' 
-after 'make install'.
 
 COMPILING THE MJPEGTOOLS
 ========================
@@ -56,13 +50,6 @@ If you do NOT want to include quicktime support you may specify
 '--with-quicktime=no', otherwise the presence of libquicktime will be 
 autodetected.  This is not recommended since Quicktime is a very useful 
 format.
-
-You can possibly use other options, such as '--enable-large-file' to enable 
-support for > 2GB file support.  This is NOT needed by default since autoconf
-automatically generates the checks for largefile support.  Binaries compiled 
-with large file support will *not* run on systems lacking large file support!  
-Next, run 'make' and 'make install'. You're now ready to use the mjpegtools!
-The MJPEG HOWTO (mjpeg_howto.txt or 'man mjpegtools') is a good place to start.
 
 HELP
 ====
