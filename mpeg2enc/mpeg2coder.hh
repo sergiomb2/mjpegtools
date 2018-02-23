@@ -25,7 +25,6 @@
 
 #include <stdlib.h>
 #include "mjpeg_types.h"
-#include "synchrolib.h"
 #include "elemstrmwriter.hh"
 
 class Picture;

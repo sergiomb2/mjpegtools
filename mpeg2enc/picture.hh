@@ -24,7 +24,6 @@
 
 #include "mjpeg_types.h"
 #include "encoderparams.hh"
-#include "synchrolib.h"
 #include "macroblock.hh"
 #include <vector>
 #include "mpeg2syntaxcodes.h"
