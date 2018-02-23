@@ -54,7 +54,7 @@ libmpeg2encpp_la_SOURCES = conform.cc elemstrmwriter.cc encoderparams.cc \
 		imageplanes.cc mpeg2encoder.cc \
 		picture.cc picturereader.cc predict.cc putpic.cc \
 		streamstate.cc seqencoder.cc \
-		quantize.cc ratectl.cc stats.cc synchrolib.cc tables.c \
+		quantize.cc ratectl.cc stats.cc tables.c \
 		transfrm.cc $(mpeg2enc_REF) \
 		$(SIMD_INLINE) ontheflyratectlpass1.cc ontheflyratectlpass2.cc \
 	rate_complexity_model.cc
@@ -67,7 +67,7 @@ libmpeg2encpp_includedir = $(pkgincludedir)/mpeg2enc
 libmpeg2encpp_include_HEADERS = elemstrmwriter.hh encoderparams.hh \
 	encodertypes.h macroblock.hh mpeg2coder.hh mpeg2encoder.hh mpeg2encoptions.hh \
 	mpeg2encparams.h picture.hh picturereader.hh quantize.hh quantize_ref.h ratectl.hh \
-	streamstate.h seqencoder.hh synchrolib.h syntaxconsts.h $(mpeg2enc_inst_header_REF) \
+	streamstate.h seqencoder.hh syntaxconsts.h $(mpeg2enc_inst_header_REF) \
 	ontheflyratectlpass1.hh ontheflyratectlpass2.hh \
 	mpeg2syntaxcodes.h imageplanes.hh
 
