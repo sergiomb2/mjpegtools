@@ -78,7 +78,6 @@ search using sub-sampled data and use this to choose the places to
 search for detailed single pixel and sub-pixel matches.
 This reduces the amount of search *dramatically*.  
 
-
 Since a good exact matches (down to half-pixels) will also give a good
 2*2 match we know the best match should be in amoungst the best 2*2
 matches. Similarly for the 2*2 in the 4*4 matches.  However, there may
@@ -227,8 +226,7 @@ It is interesting to note the how much less efficient the Intel CPU's are at
 the motion compensation searches controlled by the -4 and -2 flags.  I can 
 only assume an Athlon would absolutely *fly* at this workload.
 
-
-VARIABLE SIZE GOOP's
+VARIABLE SIZE GOPs
 
 The encoder can be told to dynamically vary the size of groups of
 pictures to try to avoid scene changes in the middle of groups of
@@ -252,20 +250,3 @@ than the original P-III Katmai's.
 BETTER QUALITY?
 
 - There is still a lot of room for improvements to bit-allocation.
-
-- It should also be possible to intelligently use switching of
-quantisation matrices to suppress mosaicing in very active scenes. I.e.
-to "blur" rather than "mosaic".
-
-- Some minor gains could be made by intelligently selecting f-code's
-
-- There are easy gains to be made (for people intending to use
-software decoders or suitable hardware) by gettting veriable-bit-rate
-encoding working once again.  This is one of the next things on the
-list and should be pretty easy.
-
-
-
-
-
-
